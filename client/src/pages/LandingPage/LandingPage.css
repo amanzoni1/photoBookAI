@@ -1,0 +1,55 @@
+/* client/src/pages/LandingPage/LandingPage.css */
+
+.landing-container {
+    height: calc(100vh - 70px); /* Adjust for navbar height */
+    display: flex;
+    align-items: center;
+    background-color: #000000; /* Black background */
+    color: #f0ead6; /* Pearl color for text */
+  }
+  
+  .landing-content {
+    margin-left: 7%;
+    width: 53%; 
+  }
+  
+  .gradient-text {
+    font-size: 4rem; /* Responsive font size */
+    font-weight: bold;
+    line-height: 1.2;
+    background: linear-gradient(to right, pink, lightblue);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    color: #f0ead6; /* Pearl color */
+  }
+  
+  .cta-button {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.8rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #f0ead6; /* Pearl color */
+    text-decoration: none;
+    border-radius: 30px;
+    background-color: #000000; /* Black background */
+    border: 2px solid transparent;
+    /* background-image: linear-gradient(to right, pink, lightblue), linear-gradient(to right, #000000, #000000); */
+    border-color: #f0ead6;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    transition: all 0.3s ease;
+  }
+  
+  .cta-button:hover {
+    color: #ffffff;
+    filter: brightness(1.1);
+  }

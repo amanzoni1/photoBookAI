@@ -1,0 +1,65 @@
+/* client/src/components/Navbar/Navbar.css */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 2%;
+    background-color: #000000;
+  }
+  
+  .navbar-logo a {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #f0ead6;
+    text-decoration: none;
+  }
+  
+  .navbar-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .navbar-links li a {
+    color: #f0ead6;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+  
+  .navbar-auth {
+    display: flex;
+  }
+  
+  .auth-button {
+    position: relative;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-left: 1rem;
+    color: #f0ead6;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 30px;
+    background-color: #000000;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-color: #f0ead6;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    transition: all 0.3s ease;
+  }
+  
+  .auth-button:hover {
+    color: #ffffff;
+    filter: brightness(1.1);
+  }
+  
+  .logout-button {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin-left: 1rem;
+  }

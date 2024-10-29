@@ -1,0 +1,15 @@
+/* client/src/index.css */
+
+/* Reset default margins and paddings */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Set body background color and default text color */
+body {
+  background-color: #000000; /* Black background */
+  color: #f0ead6; /* Pearl color for text */
+  font-family: Arial, sans-serif;
+}
