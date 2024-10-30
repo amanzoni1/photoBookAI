@@ -1,0 +1,55 @@
+/* src/components/ModelForm.css */
+
+.model-form {
+    padding: 20px;
+    border-radius: 10px;
+    color: #cccccc;
+    height: 90%;
+    /* Take up 90% of the left menu's height */
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.model-form h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+}
+
+.model-form-image {
+    width: 100px;
+    height: 100px;
+    margin: 20px 0;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+.model-form p {
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.photobook-list {
+    margin-top: 20px;
+}
+
+.photobook-list label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.create-photobook-button {
+    width: 100%;
+    padding: 20px;
+    margin-top: 30px;
+    background: linear-gradient(to right, pink, lightblue);
+    color: #000000;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.create-photobook-button:hover {
+    opacity: 0.9;
+}

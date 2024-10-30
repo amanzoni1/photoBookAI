@@ -14,11 +14,11 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
   const [fileMessage, setFileMessage] = useState('No files uploaded');
   const [message, setMessage] = useState('');
 
-  const handleInputChange = e => {
+  const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = e => {
+  const handleFileChange = (e) => {
     const files = e.target.files;
     if (files.length < 5 || files.length > 30) {
       alert('Please upload between 5 and 30 pictures.');
@@ -34,7 +34,7 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
     }
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate that name is provided
@@ -49,8 +49,17 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
       return;
     }
 
+    // Combine ageYears and ageMonths into a string
+    let ageString = '';
+    if (formData.ageYears) {
+      ageString += `${formData.ageYears} year(s) `;
+    }
+    if (formData.ageMonths) {
+      ageString += `${formData.ageMonths} month(s)`;
+    }
+
     // Notify parent component that training has started
-    onTrainingStart(formData.name);
+    onTrainingStart(formData.name, ageString.trim());
 
     // Prepare form data
     const data = new FormData();
