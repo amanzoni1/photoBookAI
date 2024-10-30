@@ -1,24 +1,27 @@
-/* client/src/pages/Dashboard/Dashboard.css */
+/* Dashboard.css */
 
 .dashboard-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #000000;
-    color: #f0ead6;
-    border-radius: 8px;
-  }
-  
-  .dashboard-container h1 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .dashboard-container p {
-    font-size: 1.2rem;
-  }
-  
-  .error-message {
-    color: red;
-    margin: 1rem;
-  }
+  background-color: #000000;
+}
+
+.dashboard-title {
+  text-align: center;
+  font-size: 3rem;
+  margin-top: 20px;
+  background: linear-gradient(to right, pink, lightblue);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard {
+  display: flex;
+  height: calc(100vh - 70px - 80px);
+}
+
+.error-message {
+  color: red;
+  margin: 1rem;
+}

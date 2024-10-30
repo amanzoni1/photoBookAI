@@ -1,0 +1,71 @@
+/* RightContent.css */
+
+.right-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #000000; /* Dark background */
+    color: #444444; /* Text color matches border */
+    overflow-y: auto;
+    border: 1px solid #444444; /* Soft grey border */
+    border-radius: 10px;
+    margin: 30px 20px 0px 5px;
+    text-align: center;
+    box-sizing: border-box;
+    max-height: calc(100vh - 130px); /* Adjust height based on viewport */
+  }
+  
+  .right-title {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: #cccccc;
+  }
+  
+  .image-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .image-gallery img {
+    width: calc(33.333% - 10px);
+    height: auto;
+    border-radius: 5px;
+  }
+
+  .image-placeholder {
+    height: 92%;
+    border: 1px solid #444444; /* Soft grey border */
+    background-color: #161616; /* Slightly lighter background */
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .image-placeholder p {
+    color: #444444;
+    padding: 10px;
+  }
+  
+  /* Style scrollbar */
+  .right-content::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .right-content::-webkit-scrollbar-track {
+    background: #000000; /* Dark background */
+  }
+  
+  .right-content::-webkit-scrollbar-thumb {
+    background: #444444; /* Soft grey */
+    border-radius: 5px;
+  }
+  
+  .right-content::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+  }
+  
+  /* For Firefox */
+  .right-content {
+    scrollbar-width: thin;
+    scrollbar-color: #444444 #000000;
+  }
