@@ -1,0 +1,12 @@
+# Node modules
+client/node_modules/
+
+# Python virtual environment
+server/venv/
+
+# PyCache
+server/__pycache__/
+
+# Environment files
+*.env
+

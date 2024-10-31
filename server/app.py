@@ -1,13 +1,14 @@
 # server/app.py
 
 from flask import Flask
-from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from config import Config
 
+# Initialize Flask extensions
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
@@ -24,18 +25,34 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
 
     # Configure CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, 
-         supports_credentials=True, 
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    CORS(app, 
+        resources={r"/api/*": {"origins": "*"}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        # expose_headers=["Content-Range", "X-Content-Range"]
+    )
 
-
-    # Import and register blueprints
-    from routes import main as main_blueprint
-    app.register_blueprint(main_blueprint)
+    with app.app_context():
+        # Initialize services first
+        from routes import init_services
+        init_services(app)
+        
+        # Then register blueprints
+        from routes import init_app as init_routes
+        init_routes(app)
+        
+        # Verify services
+        if not app.config.get('storage_service'):
+            app.logger.error("Storage service not initialized!")
+        if not app.config.get('model_cache'):
+            app.logger.error("Model cache not initialized!")
+        if not app.config.get('storage_monitor'):
+            app.logger.error("Storage monitor not initialized!")
 
     return app
 
+# Create the app instance
 app = create_app()
 
 if __name__ == '__main__':
