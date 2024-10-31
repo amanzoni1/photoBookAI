@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Save as test_uploads.sh and make executable with: chmod +x test_uploads.sh
-
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -24,7 +22,7 @@ token=$(echo $login_response | jq -r '.token')
 if [ "$token" != "null" ] && [ "$token" != "" ]; then
     echo -e "\n${GREEN}Testing File Uploads${NC}"
     
-    # Test image upload (replace with actual image path)
+    # Test image upload 
     echo -e "\nTesting single image upload..."
     curl -X POST "${BASE_URL}/api/storage/upload" \
         -H "Authorization: Bearer $token" \

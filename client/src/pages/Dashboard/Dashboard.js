@@ -13,7 +13,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('/api/user');
+        const res = await axios.get('/api/user/profile');
         setUser(res.data.user);
       } catch (err) {
         console.error(err.response?.data);

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Save as test_endpoints.sh and make executable with: chmod +x test_endpoints.sh
-
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -33,7 +31,7 @@ login_response=$(curl -X POST "${BASE_URL}/api/auth/login" \
     }')
 echo "Login Response: $login_response"
 
-# Extract token (requires jq - install with: brew install jq)
+# Extract token 
 token=$(echo $login_response | jq -r '.token')
 echo "Token: $token"
 

@@ -10,7 +10,3 @@ server/__pycache__/
 # Environment files
 *.env
 
-
-
-
-You may have installed Python packages into your global environment, which can cause conflicts between package versions. Would you like to create a virtual environment with these packages to isolate your dependencies?

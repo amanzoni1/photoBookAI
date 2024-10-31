@@ -23,7 +23,7 @@ function Login({ setIsAuthenticated }) {
     e.preventDefault();
     setErrorMessage('');
     try {
-      const res = await axios.post('/api/login', formData);
+      const res = await axios.post('/api/auth/login', formData);
       console.log(res.data);
       // Save the token in localStorage
       localStorage.setItem('token', res.data.token);

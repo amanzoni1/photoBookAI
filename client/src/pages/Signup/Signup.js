@@ -24,7 +24,7 @@ function Signup() {
     e.preventDefault();
     setErrorMessage('');
     try {
-      const res = await axios.post('/api/register', formData);
+      const res = await axios.post('/api/auth/register', formData);
       console.log(res.data);
       // Redirect to login page or dashboard after successful signup
       navigate('/login');
