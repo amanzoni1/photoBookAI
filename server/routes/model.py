@@ -10,7 +10,8 @@ from . import model_bp
 from .auth import token_required
 from app import db
 from models import TrainedModel, UserImage, JobStatus
-from . import get_storage_service, get_model_cache
+from services.queue import JobType
+from . import get_storage_service, get_model_cache, get_job_queue, get_credit_service
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,11 @@ def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
 @token_required
 def create_model(current_user):
     try:
+        # Check credits first
+        credit_service = get_credit_service()
+        if not credit_service.use_credits(current_user, 'MODEL_TRAINING'):
+            return jsonify({'message': 'Insufficient credits for model training'}), 403
+
         if 'files' not in request.files:
             return jsonify({'message': 'No files provided'}), 400
 
@@ -40,13 +46,14 @@ def create_model(current_user):
             return jsonify({'message': 'Please provide either age in years or months'}), 400
 
         # Upload training images
+        storage_service = get_storage_service()
         uploaded_files = []
+        
         for file in files:
             if file and allowed_file(file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
                 filename = secure_filename(file.filename)
                 destination = f"users/{current_user.id}/training_images/{datetime.utcnow().strftime('%Y/%m/%d')}/{filename}"
                 
-                storage_service = get_storage_service()
                 location, image_info = storage_service.upload_image(
                     file,
                     destination,
@@ -83,18 +90,55 @@ def create_model(current_user):
         db.session.add(model)
         db.session.commit()
 
-        # Queue training job (implementation pending)
-        logger.info(f"Started AI training for user {current_user.id}, model {model.id}")
+        # Enqueue training job
+        job_queue = get_job_queue()
+        job_id = job_queue.enqueue_job(
+            JobType.MODEL_TRAINING,
+            current_user.id,
+            {
+                'model_id': model.id,
+                'image_ids': [img.id for img in uploaded_files],
+                'name': name,
+                'config': {
+                    'age_years': age_years,
+                    'age_months': age_months
+                }
+            }
+        )
+
+        logger.info(f"Queued training job {job_id} for user {current_user.id}, model {model.id}")
 
         return jsonify({
             'message': 'Model training started successfully',
-            'model_id': model.id
+            'model_id': model.id,
+            'job_id': job_id
         }), 200
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"Model creation error: {str(e)}")
         return jsonify({'message': f'Model creation failed: {str(e)}'}), 500
+
+@model_bp.route('/job/<job_id>/status', methods=['GET'])
+@cross_origin()
+@token_required
+def get_job_status(current_user, job_id):
+    """Get job status"""
+    try:
+        job_queue = get_job_queue()
+        status = job_queue.get_job_status(job_id)
+        
+        if not status:
+            return jsonify({'message': 'Job not found'}), 404
+            
+        if str(status['user_id']) != str(current_user.id):
+            return jsonify({'message': 'Unauthorized'}), 403
+            
+        return jsonify(status), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting job status: {str(e)}")
+        return jsonify({'message': str(e)}), 500
 
 @model_bp.route('/<int:model_id>/cache', methods=['POST'])
 @token_required
@@ -134,3 +178,30 @@ def list_models(current_user):
             'config': model.config
         } for model in models]
     }), 200
+
+@model_bp.route('/stats', methods=['GET'])
+@cross_origin()
+@token_required
+def get_job_stats(current_user):
+    """Get job statistics for current user"""
+    try:
+        job_monitor = current_app.job_monitor
+        stats = job_monitor.get_job_stats(current_user.id)
+        return jsonify(stats), 200
+    except Exception as e:
+        logger.error(f"Error getting job stats: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+
+@model_bp.route('/metrics', methods=['GET'])
+@cross_origin()
+@token_required
+def get_job_metrics(current_user):
+    """Get overall job metrics (admin only)"""
+    try:
+        # Add admin check here if needed
+        job_monitor = current_app.job_monitor
+        metrics = job_monitor.get_metrics()
+        return jsonify(metrics), 200
+    except Exception as e:
+        logger.error(f"Error getting metrics: {str(e)}")
+        return jsonify({'message': str(e)}), 500

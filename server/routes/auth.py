@@ -2,36 +2,40 @@
 
 from flask import request, jsonify
 from flask_cors import cross_origin
-from flask_login import login_user, logout_user
-import jwt
-from datetime import datetime, timedelta
 from functools import wraps
-
-from . import auth_bp
+from . import auth_bp, get_token_manager
 from app import db
 from models import User
-from config import Config
+
 
 def token_required(f):
+    """Decorator for protected routes"""
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(' ')[1]
-
+            try:
+                token = request.headers['Authorization'].split(" ")[1]
+            except IndexError:
+                return jsonify({'message': 'Invalid token format'}), 401
+        
         if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
-
-        try:
-            data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
-            current_user = User.query.get(data['user_id'])
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired!'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': 'Invalid token!'}), 401
-
+            return jsonify({'message': 'Token is missing'}), 401
+        
+        token_manager = get_token_manager()
+        payload = token_manager.verify_token(token)
+        
+        if not payload:
+            return jsonify({'message': 'Invalid or expired token'}), 401
+        
+        current_user = User.query.get(payload['user_id'])
+        if not current_user:
+            return jsonify({'message': 'User not found'}), 401
+        
         return f(current_user, *args, **kwargs)
+    
     return decorated
+
 
 @auth_bp.route('/register', methods=['POST'])
 @cross_origin()
@@ -56,25 +60,32 @@ def register():
 @cross_origin()
 def login():
     data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    user = User.query.filter_by(email=data.get('email')).first()
 
-    user = User.query.filter_by(email=email).first()
-
-    if user and user.check_password(password):
-        token = jwt.encode(
-            {
-                'user_id': user.id,
-                'exp': datetime.utcnow() + timedelta(hours=1)
-            },
-            Config.SECRET_KEY,
-            algorithm='HS256'
-        )
-        return jsonify({'token': token}), 200
+    if user and user.check_password(data.get('password')):
+        token_manager = get_token_manager()
+        tokens = token_manager.create_token(user.id)
+        return jsonify(tokens), 200
+    
     return jsonify({'message': 'Invalid email or password'}), 401
+
+@auth_bp.route('/refresh', methods=['POST'])
+@cross_origin()
+def refresh_token():
+    refresh_token = request.json.get('refresh_token')
+    if not refresh_token:
+        return jsonify({'message': 'Refresh token required'}), 400
+    
+    token_manager = get_token_manager()
+    new_tokens = token_manager.refresh_access_token(refresh_token)
+    
+    if new_tokens:
+        return jsonify(new_tokens), 200
+    return jsonify({'message': 'Invalid refresh token'}), 401
 
 @auth_bp.route('/logout', methods=['POST'])
 @token_required
 def logout(current_user):
-    # Nothing to do for JWT tokens, but keeping endpoint for consistency
+    token_manager = get_token_manager()
+    token_manager.revoke_tokens(current_user.id)
     return jsonify({'message': 'Logged out successfully'}), 200

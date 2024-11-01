@@ -7,12 +7,15 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from config import Config
+import logging
 
 # Initialize Flask extensions
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
+
+logger = logging.getLogger(__name__)
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -25,30 +28,40 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
 
     # Configure CORS
-    CORS(app, 
+    CORS(app,
         resources={r"/api/*": {"origins": "*"}},
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization"],
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        # expose_headers=["Content-Range", "X-Content-Range"]
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     )
 
     with app.app_context():
         # Initialize services first
         from routes import init_services
         init_services(app)
-        
+
         # Then register blueprints
         from routes import init_app as init_routes
         init_routes(app)
-        
-        # Verify services
-        if not app.config.get('storage_service'):
-            app.logger.error("Storage service not initialized!")
-        if not app.config.get('model_cache'):
-            app.logger.error("Model cache not initialized!")
-        if not app.config.get('storage_monitor'):
-            app.logger.error("Storage monitor not initialized!")
+
+        # Verify all services
+        required_services = [
+            'storage_service',
+            'model_cache',
+            'storage_monitor',
+            'credit_service',
+            'token_manager',
+            'job_queue',
+            'worker_service',
+            'job_monitor'
+        ]
+
+        for service in required_services:
+            if not app.config.get(service):
+                logger.error(f"{service} not initialized!")
+                raise RuntimeError(f"{service} failed to initialize")
+            else:
+                logger.info(f"{service} initialized successfully")
 
     return app
 
