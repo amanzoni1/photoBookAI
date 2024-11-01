@@ -41,6 +41,29 @@ class Config:
     JOB_CLEANUP_HOURS = 24
     JOB_RETENTION_DAYS = 7
     JOB_MONITOR_ENABLED = True
+
+     # Worker settings
+    MIN_WORKERS = 2
+    MAX_WORKERS = 10
+    SCALING_THRESHOLD = 5
+    JOB_MAX_RETRIES = 3
+    JOB_RETRY_DELAY = 300  # 5 minutes
+    JOB_CLEANUP_HOURS = 24
+    JOB_RETENTION_DAYS = 7
+
+    # Alert settings
+    ALERT_EMAIL_ENABLED = False  
+    ALERT_SLACK_ENABLED = False  
+    
+    # Email settings 
+    SMTP_HOST = 'smtp.gmail.com'
+    SMTP_PORT = 587
+    SMTP_USER = os.environ.get('SMTP_USER')
+    SMTP_PASS = os.environ.get('SMTP_PASS')
+    ALERT_EMAIL = os.environ.get('ALERT_EMAIL')
+    
+    # Slack settings (if using Slack alerts)
+    SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL')
     
     # Image quality settings
     IMAGE_QUALITY_PRESET = os.environ.get('IMAGE_QUALITY_PRESET', 'high')

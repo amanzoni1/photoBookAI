@@ -11,7 +11,7 @@ from .auth import token_required
 from app import db
 from models import TrainedModel, UserImage, JobStatus
 from services.queue import JobType
-from . import get_storage_service, get_model_cache, get_job_queue, get_credit_service
+from . import get_storage_service, get_model_cache, get_job_queue, get_credit_service, get_worker_service
 
 logger = logging.getLogger(__name__)
 
@@ -204,4 +204,17 @@ def get_job_metrics(current_user):
         return jsonify(metrics), 200
     except Exception as e:
         logger.error(f"Error getting metrics: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+    
+@model_bp.route('/worker-status', methods=['GET'])
+@cross_origin()
+@token_required
+def get_worker_status(current_user):
+    """Get worker service status"""
+    try:
+        worker_service = get_worker_service()
+        status = worker_service.get_status()
+        return jsonify(status), 200
+    except Exception as e:
+        logger.error(f"Error getting worker status: {str(e)}")
         return jsonify({'message': str(e)}), 500

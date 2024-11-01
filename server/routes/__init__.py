@@ -9,6 +9,7 @@ from services.auth import TokenManager
 from services.queue import JobQueue
 from services.worker import WorkerService
 from services.job_monitor import JobMonitor
+from services.alerts import AlertService
 import logging
 import threading
 import schedule
@@ -22,7 +23,6 @@ user_bp = Blueprint('user', __name__, url_prefix='/api/user')
 model_bp = Blueprint('model', __name__, url_prefix='/api/model')
 storage_bp = Blueprint('storage', __name__, url_prefix='/api/storage')
 credits_bp = Blueprint('credits', __name__, url_prefix='/api/credits')
-
 
 # Service accessor functions
 def get_storage_service():
@@ -53,6 +53,13 @@ def get_worker_service():
     """Get worker service from current app"""
     return current_app.config.get('worker_service')
 
+def get_job_monitor():
+    """Get job monitor from current app"""
+    return current_app.config.get('job_monitor')
+
+def get_alert_service():
+    """Get alert service from current app"""
+    return current_app.config.get('alert_service')
 
 def init_services(app):
     """Initialize required services"""
@@ -63,18 +70,29 @@ def init_services(app):
     credit_service = CreditService(app.config)
     token_manager = TokenManager(app.config)
     job_queue = JobQueue(app.config)
-    worker_service = WorkerService(app.config)
-    job_monitor = JobMonitor(app.config, app.config['job_queue'])
     
-    # Store services in app config
+    # Store initial services in config
     app.config['storage_service'] = storage_service
     app.config['model_cache'] = model_cache
     app.config['storage_monitor'] = storage_monitor
     app.config['credit_service'] = credit_service
     app.config['token_manager'] = token_manager
     app.config['job_queue'] = job_queue
+    
+    # Initialize worker service
+    worker_service = WorkerService(app.config)
     app.config['worker_service'] = worker_service
+    
+    # Initialize job monitor
+    job_monitor = JobMonitor(app.config, job_queue)
     app.config['job_monitor'] = job_monitor
+    
+    # Initialize alert service and connect to worker
+    alert_service = AlertService(app.config)
+    app.config['alert_service'] = alert_service
+    
+    # Add alert handler to worker service
+    worker_service.add_alert_handler(alert_service.handle_alert)
     
     # Start monitoring thread
     def run_monitoring():
@@ -86,8 +104,8 @@ def init_services(app):
     monitoring_thread.start()
     
     # Start workers
-    worker_service.start_workers(num_workers=2)
-
+    worker_service.start_workers(num_workers=app.config.get('MIN_WORKERS', 2))
+    
     logger.info("Services initialized successfully")
 
 def init_app(app):
@@ -98,7 +116,7 @@ def init_app(app):
     from .model import model_bp
     from .storage import storage_bp
     from .credits import credits_bp
-    
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(model_bp)

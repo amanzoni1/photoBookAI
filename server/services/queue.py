@@ -129,3 +129,58 @@ class JobQueue:
         except Exception as e:
             logger.error(f"Error getting job status: {str(e)}")
             return None
+        
+    def get_queue_size(self) -> int:
+        """Get total number of pending jobs"""
+        try:
+            training_size = self.redis_client.llen(self.training_queue)
+            generation_size = self.redis_client.llen(self.generation_queue)
+            return training_size + generation_size
+        except Exception as e:
+            logger.error(f"Error getting queue size: {str(e)}")
+            return 0
+
+    def get_stuck_jobs(self) -> list:
+        """Get jobs that have been processing too long"""
+        try:
+            stuck_jobs = []
+            all_jobs = self.redis_client.hgetall(self.job_status_hash)
+            
+            for _, job_data in all_jobs.items():
+                job = json.loads(job_data)
+                if job['status'] == JobStatus.PROCESSING.value:
+                    started_at = datetime.fromisoformat(job.get('started_at', ''))
+                    if (datetime.utcnow() - started_at).total_seconds() > 3600:  # 1 hour
+                        stuck_jobs.append(job)
+            
+            return stuck_jobs
+        except Exception as e:
+            logger.error(f"Error getting stuck jobs: {str(e)}")
+            return []
+
+    def retry_job(self, job_id: str) -> bool:
+        """Reset job status and requeue"""
+        try:
+            job_data = self.redis_client.hget(self.job_status_hash, job_id)
+            if not job_data:
+                return False
+            
+            job = json.loads(job_data)
+            job['status'] = JobStatus.PENDING.value
+            job['retries'] = job.get('retries', 0) + 1
+            
+            # Update job data
+            self.redis_client.hset(
+                self.job_status_hash,
+                job_id,
+                json.dumps(job)
+            )
+            
+            # Re-queue job
+            queue = self.training_queue if job['job_type'] == JobType.MODEL_TRAINING.value else self.generation_queue
+            self.redis_client.rpush(queue, job_id)
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error retrying job: {str(e)}")
+            return False

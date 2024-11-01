@@ -53,7 +53,8 @@ def create_app(config_class=Config):
             'token_manager',
             'job_queue',
             'worker_service',
-            'job_monitor'
+            'job_monitor',
+            'alert_service'
         ]
 
         for service in required_services:
