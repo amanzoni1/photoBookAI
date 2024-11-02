@@ -1,21 +1,19 @@
 // client/src/pages/Login/Login.js
 
 import React, { useState } from 'react';
-import axios from '../../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import './Login.css';
 
-function Login({ setIsAuthenticated }) {
+function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-
   const [errorMessage, setErrorMessage] = useState('');
-
-  const { email, password } = formData;
 
   const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -23,17 +21,10 @@ function Login({ setIsAuthenticated }) {
     e.preventDefault();
     setErrorMessage('');
     try {
-      const res = await axios.post('/api/auth/login', formData);
-      console.log(res.data);
-      // Save the token in localStorage
-      localStorage.setItem('token', res.data.token);
-      // Update authentication state
-      setIsAuthenticated(true);
-      // Redirect to dashboard
+      await login(formData);
       navigate('/dashboard');
     } catch (err) {
-      console.error(err.response.data);
-      setErrorMessage(err.response.data.message || 'An error occurred');
+      setErrorMessage(err.message || 'Login failed');
     }
   };
 
@@ -43,11 +34,23 @@ function Login({ setIsAuthenticated }) {
       {errorMessage && <p className="error-message">{errorMessage}</p>}
       <form onSubmit={onSubmit} className="login-form">
         <label>Email:</label>
-        <input type="email" name="email" value={email} onChange={onChange} required />
-
+        <input 
+          type="email" 
+          name="email" 
+          value={formData.email} 
+          onChange={onChange} 
+          required 
+        />
+        
         <label>Password:</label>
-        <input type="password" name="password" value={password} onChange={onChange} required />
-
+        <input 
+          type="password" 
+          name="password" 
+          value={formData.password} 
+          onChange={onChange} 
+          required 
+        />
+        
         <button type="submit">Login</button>
       </form>
     </div>

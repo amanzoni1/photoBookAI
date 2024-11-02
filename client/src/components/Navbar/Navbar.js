@@ -1,43 +1,49 @@
 // client/src/components/Navbar/Navbar.js
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Navbar.css'; // Import styles
+import { useCredits } from '../../hooks/useCredits';
+import './Navbar.css';
 
-function Navbar({ isAuthenticated, setIsAuthenticated }) {
+function Navbar({ isAuthenticated, onLogout }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const { credits, loading } = useCredits();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // Remove token from localStorage
-    localStorage.removeItem('token');
-    // Update authentication state
-    setIsAuthenticated(false);
-    // Redirect to home or login page
-    navigate('/login');
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown && !event.target.closest('.user-menu')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDropdown]);
 
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        {/* Logo placeholder */}
-        <Link to="/">YourLogo</Link>
-      </div>
-      <ul className="navbar-links">
-        <li>
-          <Link to="/faq">FAQ</Link>
-        </li>
-        <li>
-          <Link to="/pricing">Pricing</Link>
-        </li>
-        <li>
-          <Link to="/description">Description</Link>
-        </li>
-        {isAuthenticated && (
-          <li>
-            <Link to="/dashboard">Dashboard</Link>
-          </li>
+        {isAuthenticated ? (
+          <Link to="/dashboard">YourLogo</Link>
+        ) : (
+          <Link to="/">YourLogo</Link>
         )}
-      </ul>
+      </div>
+      
+      {!isAuthenticated && (
+        <ul className="navbar-links">
+          <li>
+            <Link to="/faq">FAQ</Link>
+          </li>
+          <li>
+            <Link to="/pricing">Pricing</Link>
+          </li>
+          <li>
+            <Link to="/description">Description</Link>
+          </li>
+        </ul>
+      )}
+
       <div className="navbar-auth">
         {!isAuthenticated && (
           <>
@@ -49,10 +55,58 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
             </Link>
           </>
         )}
+        
         {isAuthenticated && (
-          <button onClick={handleLogout} className="auth-button logout-btn">
-            Logout
-          </button>
+          <div className="user-section">
+            {/* Credits Display */}
+            {!loading && (
+              <div className="credits-display">
+                <div className="credit-item">
+                  <span className="credit-icon">🎨</span>
+                  <span className="credit-value">{credits.model_credits}</span>
+                </div>
+                <div className="credit-item">
+                  <span className="credit-icon">🖼️</span>
+                  <span className="credit-value">{credits.image_credits}</span>
+                </div>
+                <div className="credit-item">
+                  <span className="credit-icon">📚</span>
+                  <span className="credit-value">{credits.photobook_credits}</span>
+                </div>
+              </div>
+            )}
+
+            {/* User Menu */}
+            <div className="user-menu">
+              <button 
+                className="user-button"
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                <span className="user-icon">👤</span>
+              </button>
+
+              {showDropdown && (
+                <div className="dropdown-menu">
+                  <Link to="/dashboard" className="dropdown-item">
+                    Dashboard
+                  </Link>
+                  <Link to="/profile" className="dropdown-item">
+                    Profile
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      onLogout();
+                      setShowDropdown(false);
+                      navigate('/');
+                    }}
+                    className="dropdown-item"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </nav>

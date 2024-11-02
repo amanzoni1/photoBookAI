@@ -9,7 +9,7 @@ function RightContent() {
     // Fetch generated images from the server
     const fetchImages = async () => {
       try {
-        const res = await axios.get('/api/generated-images');
+        const res = await axios.get('/api/storage/images');
         setImages(res.data.images);
       } catch (err) {
         console.error(err.response?.data);
