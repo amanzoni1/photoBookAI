@@ -108,13 +108,16 @@ class StorageLocation(db.Model, TimestampMixin):
     storage_type = db.Column(db.Enum(StorageType), nullable=False)
     bucket = db.Column(db.String(255), nullable=False)
     path = db.Column(db.String(1000), nullable=False)
-    metadata_json = db.Column(JSONB) 
-
+    file_size = db.Column(db.BigInteger)  # Add file size for tracking
+    content_type = db.Column(db.String(100))
+    metadata_json = db.Column(JSONB)
+    
     @property
     def full_path(self):
         return f"{self.bucket}/{self.path}"
 
 class UserImage(db.Model, TimestampMixin):
+    """Training images uploaded by users"""
     __tablename__ = 'user_images'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -122,44 +125,54 @@ class UserImage(db.Model, TimestampMixin):
     storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'), nullable=False)
     
     original_filename = db.Column(db.String(255), nullable=False)
-    file_size = db.Column(db.Integer, nullable=False)  # in bytes
-    mime_type = db.Column(db.String(100), nullable=False)
+    file_size = db.Column(db.Integer)
+    mime_type = db.Column(db.String(100))
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
     
-    # Relationship
+    # Relationship to storage
     storage_location = db.relationship('StorageLocation', lazy=True)
+    
+    # Relationship to models this image was used to train
+    trained_models = db.relationship(
+        'TrainedModel',
+        secondary='model_training_images',
+        back_populates='training_images'
+    )
 
 class TrainedModel(db.Model, TimestampMixin):
     __tablename__ = 'trained_models'
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'))
+    name = db.Column(db.String(255), nullable=False)  
+    version = db.Column(db.String(50), default='1.0') 
     
-    name = db.Column(db.String(255), nullable=False)
-    version = db.Column(db.String(50), nullable=False)
+    # Model file (.safetensors) storage
+    weights_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'))
     status = db.Column(db.Enum(JobStatus), default=JobStatus.PENDING)
     
+    # Training metadata
     training_started_at = db.Column(db.DateTime(timezone=True))
     training_completed_at = db.Column(db.DateTime(timezone=True))
     error_message = db.Column(db.Text)
-    
-    # Configuration and metadata
     config = db.Column(JSONB)
     metrics = db.Column(JSONB)
     
     # Relationships
-    storage_location = db.relationship('StorageLocation', lazy=True)
-    training_images = db.relationship('UserImage', 
-                                    secondary='model_training_images',
-                                    backref='trained_models')
+    weights_location = db.relationship('StorageLocation', lazy=True)
+    training_images = db.relationship(
+        'UserImage',
+        secondary='model_training_images',
+        back_populates='trained_models'
+    )
+    generated_images = db.relationship('GeneratedImage', backref='model', lazy=True)
 
     def is_ready_for_generation(self) -> tuple[bool, str]:
         """Check if model is ready for generation"""
         if self.status != JobStatus.COMPLETED:
             return False, f"Model is not ready (status: {self.status.value})"
-        if not self.storage_location:
+        if not self.weights_location:
             return False, "Model files not found"
         if not self.training_completed_at:
             return False, "Training not completed"
@@ -179,6 +192,21 @@ class TrainedModel(db.Model, TimestampMixin):
             'metrics': self.metrics,
             'error_message': self.error_message
         }
+
+class GeneratedImage(db.Model, TimestampMixin):
+    """Images generated using trained models"""
+    __tablename__ = 'generated_images'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    model_id = db.Column(db.Integer, db.ForeignKey('trained_models.id'), nullable=False)
+    storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'), nullable=False)
+    
+    generation_params = db.Column(JSONB)
+    prompt = db.Column(db.Text)
+    
+    # Relationships
+    storage_location = db.relationship('StorageLocation', lazy=True)
 
 class GenerationJob(db.Model, TimestampMixin):
     __tablename__ = 'generation_jobs'
@@ -201,15 +229,6 @@ class GenerationJob(db.Model, TimestampMixin):
     trained_model = db.relationship('TrainedModel', lazy=True)
     generated_images = db.relationship('GeneratedImage', backref='job', lazy=True)
 
-class GeneratedImage(db.Model, TimestampMixin):
-    __tablename__ = 'generated_images'
-
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('generation_jobs.id'), nullable=False)
-    storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'), nullable=False)
-    
-    # Relationships
-    storage_location = db.relationship('StorageLocation', lazy=True)
 
 # Association tables
 model_training_images = db.Table('model_training_images',
@@ -223,3 +242,6 @@ db.Index('idx_user_images_user_id', UserImage.user_id)
 db.Index('idx_trained_models_user_id', TrainedModel.user_id)
 db.Index('idx_generation_jobs_user_id', GenerationJob.user_id)
 db.Index('idx_generation_jobs_status', GenerationJob.status)
+db.Index('idx_storage_locations_path', StorageLocation.path)
+db.Index('idx_generated_images_model', GeneratedImage.model_id)
+db.Index('idx_generated_images_user', GeneratedImage.user_id)

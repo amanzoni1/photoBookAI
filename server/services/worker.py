@@ -239,3 +239,128 @@ class WorkerService:
             'worker_status': self.worker_status,
             'queue_size': self.job_queue.get_queue_size()
         }
+    
+
+
+
+
+
+
+
+
+
+
+#     def _process_training_job(self, job: Dict[str, Any]):
+#     """Process model training job"""
+#     job_id = job['job_id']
+#     logger.info(f"Processing training job {job_id}")
+    
+#     try:
+#         self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
+        
+#         # Get data from payload
+#         model_id = job['payload']['model_id']
+#         user_id = job['user_id']
+        
+#         # TODO: Actual model training here
+        
+#         # Save model weights using storage service
+#         storage_service = get_storage_service()
+#         weights_data = b''  # This would be your actual model weights
+        
+#         weights_location = storage_service.upload_model_weights(
+#             user_id=user_id,
+#             model_id=model_id,
+#             weights_file=io.BytesIO(weights_data),
+#             version='1.0'
+#         )
+        
+#         # Update model record
+#         model = TrainedModel.query.get(model_id)
+#         model.status = JobStatus.COMPLETED
+#         model.weights_location_id = weights_location.id
+#         model.training_completed_at = datetime.utcnow()
+#         db.session.commit()
+        
+#         # Return the result
+#         self.job_queue.update_job_status(
+#             job_id,
+#             JobStatus.COMPLETED,
+#             {
+#                 'model_id': model_id,
+#                 'weights_location_id': weights_location.id
+#             }
+#         )
+        
+#     except Exception as e:
+#         logger.error(f"Training error: {str(e)}")
+#         self.job_queue.update_job_status(
+#             job_id,
+#             JobStatus.FAILED,
+#             {'error': str(e)}
+#         )
+
+# def _process_generation_job(self, job: Dict[str, Any]):
+#     """Process image generation job"""
+#     job_id = job['job_id']
+#     logger.info(f"Processing generation job {job_id}")
+    
+#     try:
+#         self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
+        
+#         # Get data from payload
+#         model_id = job['payload']['model_id']
+#         user_id = job['user_id']
+#         prompt = job['payload']['prompt']
+#         num_images = job['payload']['num_images']
+        
+#         # TODO: Actual image generation here
+        
+#         generated_images = []
+#         storage_service = get_storage_service()
+        
+#         for i in range(num_images):
+#             image_data = b''  # This would be your actual generated image
+            
+#             # Save generated image
+#             location = storage_service.save_generated_image(
+#                 user_id=user_id,
+#                 model_id=model_id,
+#                 image_data=image_data,
+#                 filename=f"generated_{i}.png"
+#             )
+            
+#             # Create record
+#             image = GeneratedImage(
+#                 user_id=user_id,
+#                 model_id=model_id,
+#                 storage_location_id=location.id,
+#                 prompt=prompt,
+#                 generation_params=job['payload'].get('parameters', {})
+#             )
+#             db.session.add(image)
+#             generated_images.append(image)
+            
+#         db.session.commit()
+        
+#         # Return the result
+#         self.job_queue.update_job_status(
+#             job_id,
+#             JobStatus.COMPLETED,
+#             {
+#                 'generated_images': [
+#                     {
+#                         'id': img.id,
+#                         'url': storage_service.get_public_url(img.storage_location)
+#                     } for img in generated_images
+#                 ]
+#             }
+#         )
+        
+#     except Exception as e:
+#         logger.error(f"Generation error: {str(e)}")
+#         self.job_queue.update_job_status(
+#             job_id,
+#             JobStatus.FAILED,
+#             {'error': str(e)}
+#         )

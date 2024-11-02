@@ -9,7 +9,7 @@ import logging
 from . import model_bp
 from .auth import token_required
 from app import db
-from models import TrainedModel, UserImage, JobStatus
+from models import TrainedModel, UserImage, JobStatus, GeneratedImage
 from services.queue import JobType
 from . import (
     get_storage_service,
@@ -31,6 +31,7 @@ def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
 @cross_origin()
 @token_required
 def create_model(current_user):
+    """Create model from uploaded training images"""
     try:
         # Check credits first
         credit_service = get_credit_service()
@@ -47,22 +48,22 @@ def create_model(current_user):
 
         if not name:
             return jsonify({'message': 'Name is required'}), 400
-
         if not age_years and not age_months:
             return jsonify({'message': 'Please provide either age in years or months'}), 400
 
-        # Upload training images
+        # Upload training images using improved storage service
         storage_service = get_storage_service()
         uploaded_files = []
         
         for file in files:
             if file and allowed_file(file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
                 filename = secure_filename(file.filename)
-                destination = f"users/{current_user.id}/training_images/{datetime.utcnow().strftime('%Y/%m/%d')}/{filename}"
                 
-                location, image_info = storage_service.upload_image(
+                # Use improved storage service for upload
+                location, image_info = storage_service.upload_training_image(
+                    current_user.id,
                     file,
-                    destination,
+                    filename,
                     quality_preset='high'
                 )
                 
@@ -89,9 +90,13 @@ def create_model(current_user):
             status=JobStatus.PENDING,
             config={
                 'age_years': age_years,
-                'age_months': age_months
+                'age_months': age_months,
+                'training_images': len(uploaded_files)
             }
         )
+        
+        # Associate training images with model
+        model.training_images.extend(uploaded_files)
         
         db.session.add(model)
         db.session.commit()
@@ -105,10 +110,7 @@ def create_model(current_user):
                 'model_id': model.id,
                 'image_ids': [img.id for img in uploaded_files],
                 'name': name,
-                'config': {
-                    'age_years': age_years,
-                    'age_months': age_months
-                }
+                'config': model.config
             }
         )
 
@@ -117,7 +119,8 @@ def create_model(current_user):
         return jsonify({
             'message': 'Model training started successfully',
             'model_id': model.id,
-            'job_id': job_id
+            'job_id': job_id,
+            'training_images': len(uploaded_files)
         }), 200
         
     except Exception as e:
@@ -141,11 +144,10 @@ def generate_images(current_user, model_id: int):
         if model.user_id != current_user.id:
             return jsonify({'message': 'Unauthorized'}), 403
 
-        # Check model status and storage location
-        if model.status != JobStatus.COMPLETED:
-            return jsonify({'message': 'Model is not ready for generation'}), 400
-        if not model.storage_location:
-            return jsonify({'message': 'Model files not found'}), 400
+        # Check if model is ready
+        is_ready, message = model.is_ready_for_generation()
+        if not is_ready:
+            return jsonify({'message': message}), 400
 
         # Validate request data
         data = request.get_json()
@@ -168,11 +170,10 @@ def generate_images(current_user, model_id: int):
             {
                 'model_id': model.id,
                 'model_version': model.version,
-                'model_path': model.storage_location.path,
+                'model_weights_path': model.weights_location.path,
                 'num_images': num_images,
                 'prompt': prompt,
                 'parameters': data.get('parameters', {}),
-                'created_at': datetime.utcnow().isoformat()
             }
         )
 
@@ -189,6 +190,37 @@ def generate_images(current_user, model_id: int):
     except Exception as e:
         logger.error(f"Generation error: {str(e)}")
         return jsonify({'message': 'Internal server error'}), 500
+    
+@model_bp.route('/<int:model_id>/images', methods=['GET'])
+@cross_origin()
+@token_required
+def get_model_images(current_user, model_id: int):
+    """Get all generated images for a model"""
+    try:
+        model = TrainedModel.query.get_or_404(model_id)
+        if model.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        storage_service = get_storage_service()
+        
+        generated_images = GeneratedImage.query.filter_by(
+            model_id=model_id,
+            user_id=current_user.id
+        ).order_by(GeneratedImage.created_at.desc()).all()
+
+        return jsonify({
+            'images': [{
+                'id': img.id,
+                'url': storage_service.get_public_url(img.storage_location),
+                'prompt': img.prompt,
+                'created_at': img.created_at.isoformat(),
+                'parameters': img.generation_params
+            } for img in generated_images]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching generated images: {str(e)}")
+        return jsonify({'message': str(e)}), 500
 
 @model_bp.route('/job/<job_id>/status', methods=['GET'])
 @cross_origin()
@@ -282,3 +314,20 @@ def get_worker_status(current_user):
     except Exception as e:
         logger.error(f"Error getting worker status: {str(e)}")
         return jsonify({'message': str(e)}), 500
+    
+@model_bp.route('/<int:model_id>/cleanup', methods=['POST'])
+@token_required
+def cleanup_training_images(current_user, model_id):
+    """Delete training images after successful model training"""
+    model = TrainedModel.query.get_or_404(model_id)
+    if model.user_id != current_user.id:
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    if model.status != JobStatus.COMPLETED:
+        return jsonify({'message': 'Cannot cleanup incomplete model'}), 400
+        
+    storage_service = get_storage_service()
+    for image in model.training_images:
+        storage_service.delete_file(image.storage_location)
+        
+    return jsonify({'message': 'Training images cleaned up'}), 200
