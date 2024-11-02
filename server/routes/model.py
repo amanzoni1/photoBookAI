@@ -11,7 +11,13 @@ from .auth import token_required
 from app import db
 from models import TrainedModel, UserImage, JobStatus
 from services.queue import JobType
-from . import get_storage_service, get_model_cache, get_job_queue, get_credit_service, get_worker_service
+from . import (
+    get_storage_service,
+    get_model_cache,
+    get_job_queue,
+    get_credit_service,
+    get_worker_service
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +27,7 @@ def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-@model_bp.route('/create', methods=['POST'])
+@model_bp.route('/training', methods=['POST'])
 @cross_origin()
 @token_required
 def create_model(current_user):
@@ -118,6 +124,71 @@ def create_model(current_user):
         db.session.rollback()
         logger.error(f"Model creation error: {str(e)}")
         return jsonify({'message': f'Model creation failed: {str(e)}'}), 500
+    
+@model_bp.route('/<int:model_id>/generate', methods=['POST'])
+@cross_origin()
+@token_required
+def generate_images(current_user, model_id: int): 
+    """Generate images using a trained model"""
+    try:
+        # Check credits
+        credit_service = get_credit_service()
+        if not credit_service.use_credits(current_user, 'IMAGE_GENERATION'):
+            return jsonify({'message': 'Insufficient credits for image generation'}), 403
+
+        # Get model and verify ownership
+        model = TrainedModel.query.get_or_404(model_id)
+        if model.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        # Check model status and storage location
+        if model.status != JobStatus.COMPLETED:
+            return jsonify({'message': 'Model is not ready for generation'}), 400
+        if not model.storage_location:
+            return jsonify({'message': 'Model files not found'}), 400
+
+        # Validate request data
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'No data provided'}), 400
+
+        num_images = int(data.get('num_images', 1))
+        if num_images < 1 or num_images > 15:  
+            return jsonify({'message': 'Invalid number of images requested'}), 400
+
+        prompt = data.get('prompt')
+        if not prompt or not isinstance(prompt, str):
+            return jsonify({'message': 'Valid prompt is required'}), 400
+
+        # Enqueue generation job
+        job_queue = get_job_queue()
+        job_id = job_queue.enqueue_job(
+            JobType.IMAGE_GENERATION,
+            current_user.id,
+            {
+                'model_id': model.id,
+                'model_version': model.version,
+                'model_path': model.storage_location.path,
+                'num_images': num_images,
+                'prompt': prompt,
+                'parameters': data.get('parameters', {}),
+                'created_at': datetime.utcnow().isoformat()
+            }
+        )
+
+        return jsonify({
+            'message': 'Image generation started',
+            'job_id': job_id,
+            'model_id': model.id,
+            'num_images': num_images
+        }), 200
+
+    except ValueError as e:
+        logger.error(f"Invalid input: {str(e)}")
+        return jsonify({'message': f'Invalid input: {str(e)}'}), 400
+    except Exception as e:
+        logger.error(f"Generation error: {str(e)}")
+        return jsonify({'message': 'Internal server error'}), 500
 
 @model_bp.route('/job/<job_id>/status', methods=['GET'])
 @cross_origin()
@@ -169,14 +240,7 @@ def list_models(current_user):
     """List user's trained models"""
     models = TrainedModel.query.filter_by(user_id=current_user.id).all()
     return jsonify({
-        'models': [{
-            'id': model.id,
-            'name': model.name,
-            'version': model.version,
-            'status': model.status.value,
-            'created_at': model.created_at.isoformat(),
-            'config': model.config
-        } for model in models]
+        'models': [model.to_dict() for model in models]
     }), 200
 
 @model_bp.route('/stats', methods=['GET'])

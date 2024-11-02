@@ -155,6 +155,31 @@ class TrainedModel(db.Model, TimestampMixin):
                                     secondary='model_training_images',
                                     backref='trained_models')
 
+    def is_ready_for_generation(self) -> tuple[bool, str]:
+        """Check if model is ready for generation"""
+        if self.status != JobStatus.COMPLETED:
+            return False, f"Model is not ready (status: {self.status.value})"
+        if not self.storage_location:
+            return False, "Model files not found"
+        if not self.training_completed_at:
+            return False, "Training not completed"
+        return True, "Model is ready"
+
+    def to_dict(self) -> dict:
+        """Convert model to dictionary"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'version': self.version,
+            'status': self.status.value,
+            'created_at': self.created_at.isoformat(),
+            'training_started_at': self.training_started_at.isoformat() if self.training_started_at else None,
+            'training_completed_at': self.training_completed_at.isoformat() if self.training_completed_at else None,
+            'config': self.config,
+            'metrics': self.metrics,
+            'error_message': self.error_message
+        }
+
 class GenerationJob(db.Model, TimestampMixin):
     __tablename__ = 'generation_jobs'
 

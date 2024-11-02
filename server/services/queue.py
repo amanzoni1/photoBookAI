@@ -4,7 +4,7 @@ from enum import Enum
 import json
 import redis
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List  # Ensure List is imported
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class JobQueue:
         
         # Status hash
         self.job_status_hash = 'job_statuses'
-    
+
     def enqueue_job(self, 
                    job_type: JobType, 
                    user_id: int, 
@@ -91,6 +91,15 @@ class JobQueue:
         except Exception as e:
             logger.error(f"Error dequeuing job: {str(e)}")
             return None
+        
+    def get_all_jobs(self) -> List[Dict[str, Any]]:
+        """Retrieve all jobs from the job_status_hash."""
+        try:
+            all_jobs = self.redis_client.hgetall(self.job_status_hash)
+            return [json.loads(job_data) for job_data in all_jobs.values()]
+        except Exception as e:
+            logger.error(f"Error getting all jobs: {str(e)}")
+            return [] 
 
     def update_job_status(self, 
                          job_id: str, 
@@ -149,7 +158,14 @@ class JobQueue:
             for _, job_data in all_jobs.items():
                 job = json.loads(job_data)
                 if job['status'] == JobStatus.PROCESSING.value:
-                    started_at = datetime.fromisoformat(job.get('started_at', ''))
+                    started_at_str = job.get('started_at')
+                    if not started_at_str:
+                        continue
+                    try:
+                        started_at = datetime.fromisoformat(started_at_str)
+                    except ValueError:
+                        logger.error(f"Invalid date format for job {job['job_id']}")
+                        continue
                     if (datetime.utcnow() - started_at).total_seconds() > 3600:  # 1 hour
                         stuck_jobs.append(job)
             
@@ -184,3 +200,16 @@ class JobQueue:
         except Exception as e:
             logger.error(f"Error retrying job: {str(e)}")
             return False
+
+    def get_user_jobs(self, user_id: int) -> List[Dict[str, Any]]:
+        """Retrieve all jobs for a specific user."""
+        try:
+            all_jobs = self.redis_client.hgetall(self.job_status_hash)
+            user_jobs = [
+                json.loads(job_data) for job_data in all_jobs.values()
+                if job_data and json.loads(job_data).get('user_id') == user_id
+            ]
+            return user_jobs
+        except Exception as e:
+            logger.error(f"Error getting jobs for user {user_id}: {str(e)}")
+            return [] 
