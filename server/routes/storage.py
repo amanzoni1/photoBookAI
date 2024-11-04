@@ -6,7 +6,7 @@ import logging
 from . import storage_bp
 from .auth import token_required
 from app import db
-from models import UserImage, GeneratedImage, TrainedModel, JobStatus
+from models import UserImage, PhotoBook
 from . import get_storage_service, get_storage_monitor
 
 logger = logging.getLogger(__name__)
@@ -89,6 +89,40 @@ def upload_training_images(current_user):
         db.session.rollback()
         logger.error(f"Upload error: {str(e)}")
         return jsonify({'message': f'Upload failed: {str(e)}'}), 500
+    
+@storage_bp.route('/photobook/<int:photobook_id>/images', methods=['GET'])
+@cross_origin()
+@token_required
+def get_photobook_images(current_user, photobook_id: int):
+    """Get all images in a photobook"""
+    try:
+        # Verify ownership
+        photobook = PhotoBook.query.get_or_404(photobook_id)
+        if photobook.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        storage_service = get_storage_service()
+        
+        # Get all images with their URLs
+        images = []
+        for image in photobook.images:
+            images.append({
+                'id': image.id,
+                'url': storage_service.get_public_url(image.storage_location),
+                'prompt': image.prompt,
+                'created_at': image.created_at.isoformat()
+            })
+
+        return jsonify({
+            'photobook_id': photobook_id,
+            'name': photobook.name,
+            'status': photobook.status.value,
+            'images': images
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching photobook images: {str(e)}")
+        return jsonify({'message': str(e)}), 500
 
 @storage_bp.route('/status', methods=['GET'])
 @cross_origin()

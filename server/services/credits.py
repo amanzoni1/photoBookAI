@@ -6,31 +6,18 @@ from datetime import datetime
 
 from app import db
 from models import User, CreditTransaction, CreditType
+from config import IMAGES_PER_PHOTOBOOK
 
 logger = logging.getLogger(__name__)
 
 class CreditService:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        
-        # Credit package configurations
-        self.credit_packages = {
-            CreditType.MODEL_TRAINING.value: [  # Use .value for dict keys
-                {'credits': 1, 'price': 9.99},
-                {'credits': 5, 'price': 39.99},
-                {'credits': 10, 'price': 69.99}
-            ],
-            CreditType.SINGLE_IMAGE.value: [
-                {'credits': 10, 'price': 4.99},
-                {'credits': 50, 'price': 19.99},
-                {'credits': 100, 'price': 34.99}
-            ],
-            CreditType.PHOTOBOOK.value: [
-                {'credits': 1, 'price': 14.99},
-                {'credits': 3, 'price': 39.99},
-                {'credits': 5, 'price': 59.99}
-            ]
-        }
+        self.images_per_photobook = config.get('IMAGES_PER_PHOTOBOOK', 15)
+        self.prices = config.get('PRICES', {
+            'MODEL': 24.99,
+            'PHOTOBOOK': 3.99
+        })
     
     def add_credits(self, 
                    user: User, 
@@ -48,17 +35,16 @@ class CreditService:
                 amount=amount,
                 price=price,
                 payment_id=payment_id,
-                description=f"Purchase of {amount} {credit_type.value} credits",
+                description=self._get_purchase_description(credit_type, amount),
                 metadata_json=metadata
             )
             
             # Update user credits
-            if credit_type == CreditType.MODEL_TRAINING:
+            if credit_type == CreditType.MODEL:
                 user.model_credits += amount
-            elif credit_type == CreditType.SINGLE_IMAGE:
+                user.image_credits += 2 * IMAGES_PER_PHOTOBOOK  # Bonus images
+            elif credit_type == CreditType.IMAGE:
                 user.image_credits += amount
-            elif credit_type == CreditType.PHOTOBOOK:
-                user.photobook_credits += amount
             
             db.session.add(transaction)
             db.session.commit()
@@ -86,7 +72,7 @@ class CreditService:
                 user_id=user.id,
                 credit_type=credit_type,
                 amount=-amount,  # Negative amount for usage
-                description=f"Used {amount} {credit_type.value} credits",
+                description=self._get_usage_description(credit_type, amount),
                 metadata_json=metadata
             )
             
@@ -105,12 +91,32 @@ class CreditService:
             logger.error(f"Error using credits: {str(e)}")
             return False
     
+    def _get_purchase_description(self, credit_type: CreditType, amount: int) -> str:
+        """Get descriptive message for purchase"""
+        if credit_type == CreditType.MODEL:
+            return f"Purchase of {amount} model credit(s) with {2 * IMAGES_PER_PHOTOBOOK} bonus images"
+        elif credit_type == CreditType.IMAGE:
+            photobooks = amount // IMAGES_PER_PHOTOBOOK
+            remaining = amount % IMAGES_PER_PHOTOBOOK
+            if remaining == 0:
+                return f"Purchase of {photobooks} photobook credit(s)"
+            return f"Purchase of {amount} image credits"
+
+    def _get_usage_description(self, credit_type: CreditType, amount: int) -> str:
+        """Get descriptive message for usage"""
+        if credit_type == CreditType.MODEL:
+            return f"Used {amount} model credit(s)"
+        elif credit_type == CreditType.IMAGE:
+            if amount == IMAGES_PER_PHOTOBOOK:
+                return "Generated 1 photobook"
+            return f"Generated {amount} image(s)"
+    
     def get_user_credits(self, user: User) -> Dict[str, int]:
         """Get user's credit balances"""
         return {
             'model_credits': user.model_credits,
             'image_credits': user.image_credits,
-            'photobook_credits': user.photobook_credits
+            'available_photobooks': user.available_photobooks
         }
     
     def get_credit_packages(self, credit_type: Optional[CreditType] = None) -> Dict[str, List[Dict]]:
@@ -119,8 +125,4 @@ class CreditService:
             packages = self.credit_packages.get(credit_type.value, [])
             return {credit_type.value: packages}
             
-        # Return all packages with string keys
-        return {
-            credit_type: packages 
-            for credit_type, packages in self.credit_packages.items()
-        }
+        return self.credit_packages

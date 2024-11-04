@@ -35,6 +35,8 @@ class StorageService:
             return f"users/{user_id}/training_images/{date_path}/{filename}"
         elif file_type == 'model':
             return f"users/{user_id}/models/{filename}"
+        elif file_type == 'photobook': 
+            return f"users/{user_id}/photobooks/{filename}"
         elif file_type == 'generated':
             return f"users/{user_id}/generated/{filename}"
         else:
@@ -141,6 +143,48 @@ class StorageService:
             ExtraArgs={
                 'ContentType': location.content_type,
                 'ACL': 'private'
+            }
+        )
+        
+        db.session.add(location)
+        db.session.commit()
+        
+        return location
+    
+    def save_photobook_image(self,
+                           user_id: int,
+                           photobook_id: int,
+                           image_data: bytes,
+                           image_number: int) -> StorageLocation:
+        """Save a photobook image"""
+        filename = f"{photobook_id}/image_{image_number:02d}.png"
+        destination = self._get_file_path(user_id, 'photobook', filename)
+        
+        # Create file-like object from bytes
+        buffer = io.BytesIO(image_data)
+        file_size = len(image_data)
+        checksum = hashlib.sha256(image_data).hexdigest()
+        
+        location = StorageLocation(
+            storage_type=StorageType.DO_SPACES,
+            bucket=self.bucket,
+            path=destination,
+            file_size=file_size,
+            content_type='image/png',
+            checksum=checksum,
+            metadata_json={
+                'photobook_id': photobook_id,
+                'image_number': image_number
+            }
+        )
+        
+        self.client.upload_fileobj(
+            buffer,
+            self.bucket,
+            destination,
+            ExtraArgs={
+                'ContentType': 'image/png',
+                'ACL': 'public-read'
             }
         )
         

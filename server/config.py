@@ -8,6 +8,13 @@ from dotenv import load_dotenv
 basedir = Path(__file__).resolve().parent
 load_dotenv(basedir / '.env')
 
+IMAGES_PER_PHOTOBOOK = 15 
+PRICES = {
+    'MODEL': 24.99,
+    'PHOTOBOOK': 3.99
+}
+    
+
 class Config:
     # Basic Flask config
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key'
@@ -24,7 +31,6 @@ class Config:
     STORAGE_BUCKET = os.environ.get('STORAGE_BUCKET')
     
     # Model storage settings
-    MODEL_STORAGE_CLASS = os.environ.get('MODEL_STORAGE_CLASS', 'STANDARD')  # or 'REDUCED_REDUNDANCY'
     MODEL_CACHE_ENABLED = os.environ.get('MODEL_CACHE_ENABLED', 'True').lower() == 'true'
     MODEL_CACHE_PATH = os.environ.get('MODEL_CACHE_PATH', '/tmp/model_cache')
     

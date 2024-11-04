@@ -9,8 +9,9 @@ import logging
 from . import model_bp
 from .auth import token_required
 from app import db
-from models import TrainedModel, UserImage, JobStatus, GeneratedImage
+from models import TrainedModel, UserImage, JobStatus, GeneratedImage, PhotoBook
 from services.queue import JobType
+from config import IMAGES_PER_PHOTOBOOK
 from . import (
     get_storage_service,
     get_model_cache,
@@ -35,7 +36,7 @@ def create_model(current_user):
     try:
         # Check credits first
         credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, 'MODEL_TRAINING'):
+        if not credit_service.use_credits(current_user, 'MODEL'):
             return jsonify({'message': 'Insufficient credits for model training'}), 403
 
         if 'files' not in request.files:
@@ -127,6 +128,113 @@ def create_model(current_user):
         db.session.rollback()
         logger.error(f"Model creation error: {str(e)}")
         return jsonify({'message': f'Model creation failed: {str(e)}'}), 500
+    
+@model_bp.route('/<int:model_id>/photobook', methods=['POST'])
+@cross_origin()
+@token_required
+def create_photobook(current_user, model_id: int):
+    """Create a new photobook with batch image generation"""
+    try:
+        # Get model and verify ownership
+        model = TrainedModel.query.get_or_404(model_id)
+        if model.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        # Check if model is ready
+        is_ready, message = model.is_ready_for_generation()
+        if not is_ready:
+            return jsonify({'message': message}), 400
+
+        # Check credits for photobook
+        if not current_user.has_photobook_credits():
+            return jsonify({'message': 'Insufficient credits for photobook generation'}), 403
+
+        # Get request data
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'No data provided'}), 400
+
+        name = data.get('name')
+        prompt = data.get('prompt')
+        style_config = data.get('style_config', {})
+
+        if not name or not prompt:
+            return jsonify({'message': 'Name and prompt are required'}), 400
+
+        # Create photobook record
+        photobook = PhotoBook(
+            user_id=current_user.id,
+            model_id=model_id,
+            name=name,
+            prompt=prompt,
+            style_config=style_config,
+            status=JobStatus.PENDING
+        )
+        
+        db.session.add(photobook)
+        db.session.commit()
+
+        # Use credits
+        credit_service = get_credit_service()
+        if not credit_service.use_credits(current_user, "IMAGE", IMAGES_PER_PHOTOBOOK):
+            db.session.delete(photobook)
+            db.session.commit()
+            return jsonify({'message': 'Credit deduction failed'}), 400
+
+        # Enqueue batch generation job
+        job_queue = get_job_queue()
+        job_id = job_queue.enqueue_job(
+            JobType.PHOTOBOOK_GENERATION,
+            current_user.id,
+            {
+                'photobook_id': photobook.id,
+                'model_id': model_id,
+                'prompt': prompt,
+                'style_config': style_config,
+                'num_images': IMAGES_PER_PHOTOBOOK
+            }
+        )
+
+        logger.info(f"Queued photobook generation {job_id} for user {current_user.id}, model {model_id}")
+
+        return jsonify({
+            'message': 'Photobook generation started',
+            'photobook_id': photobook.id,
+            'job_id': job_id
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Photobook creation error: {str(e)}")
+        return jsonify({'message': f'Photobook creation failed: {str(e)}'}), 500
+
+
+@model_bp.route('/photobook/<int:photobook_id>', methods=['GET'])
+@cross_origin()
+@token_required
+def get_photobook(current_user, photobook_id: int):
+    """Get photobook details and images"""
+    try:
+        photobook = PhotoBook.query.get_or_404(photobook_id)
+        if photobook.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        storage_service = get_storage_service()
+        
+        # Get all images with their URLs
+        photobook_data = photobook.to_dict()
+        photobook_data['images'] = [{
+            'id': img.id,
+            'url': storage_service.get_public_url(img.storage_location),
+            'prompt': img.prompt,
+            'created_at': img.created_at.isoformat()
+        } for img in photobook.images]
+
+        return jsonify(photobook_data), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching photobook: {str(e)}")
+        return jsonify({'message': str(e)}), 500
     
 @model_bp.route('/<int:model_id>/generate', methods=['POST'])
 @cross_origin()
@@ -265,15 +373,41 @@ def cache_model(current_user, model_id):
         logger.error(f"Caching error: {str(e)}")
         return jsonify({'message': f'Caching failed: {str(e)}'}), 500
 
-@model_bp.route('/list', methods=['GET'])
+@model_bp.route('/models', methods=['GET'])
 @cross_origin()
 @token_required
 def list_models(current_user):
     """List user's trained models"""
-    models = TrainedModel.query.filter_by(user_id=current_user.id).all()
-    return jsonify({
-        'models': [model.to_dict() for model in models]
-    }), 200
+    try:
+        models = TrainedModel.query.filter_by(
+            user_id=current_user.id
+            ).order_by(TrainedModel.created_at.desc()).all()
+        
+        return jsonify({
+            'models': [model.to_dict() for model in models]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error listing models: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+
+@model_bp.route('/photobooks', methods=['GET'])
+@cross_origin()
+@token_required
+def list_photobooks(current_user):
+    """List all photobooks for current user"""
+    try:
+        photobooks = PhotoBook.query.filter_by(
+            user_id=current_user.id
+        ).order_by(PhotoBook.created_at.desc()).all()
+
+        return jsonify({
+            'photobooks': [pb.to_dict() for pb in photobooks]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error listing photobooks: {str(e)}")
+        return jsonify({'message': str(e)}), 500
 
 @model_bp.route('/stats', methods=['GET'])
 @cross_origin()

@@ -6,18 +6,14 @@ import redis
 import logging
 from typing import Dict, Any, Optional, List 
 from datetime import datetime
+from models import JobStatus
 
 logger = logging.getLogger(__name__)
 
 class JobType(Enum):
     MODEL_TRAINING = "model_training"
     IMAGE_GENERATION = "image_generation"
-
-class JobStatus(Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    PHOTOBOOK_GENERATION = "photobook_generation"
 
 class JobQueue:
     def __init__(self, config: Dict[str, Any]):
@@ -30,16 +26,13 @@ class JobQueue:
         
         # Queue names
         self.training_queue = 'training_jobs'
+        self.photobook_queue = 'photobook_jobs'
         self.generation_queue = 'generation_jobs'
         
         # Status hash
         self.job_status_hash = 'job_statuses'
 
-    def enqueue_job(self, 
-                   job_type: JobType, 
-                   user_id: int, 
-                   payload: Dict[str, Any]) -> str:
-        """Add job to queue"""
+    def enqueue_job(self, job_type: JobType, user_id: int, payload: Dict[str, Any]) -> str:
         try:
             job_id = f"{job_type.value}_{user_id}_{datetime.utcnow().timestamp()}"
             
@@ -59,8 +52,13 @@ class JobQueue:
                 json.dumps(job_data)
             )
             
-            # Add to appropriate queue
-            queue_name = self.training_queue if job_type == JobType.MODEL_TRAINING else self.generation_queue
+            # Select appropriate queue
+            queue_name = {
+                JobType.MODEL_TRAINING: self.training_queue,
+                JobType.IMAGE_GENERATION: self.generation_queue,
+                JobType.PHOTOBOOK_GENERATION: self.photobook_queue
+            }[job_type]
+            
             self.redis_client.rpush(queue_name, job_id)
             
             logger.info(f"Enqueued job {job_id}")
