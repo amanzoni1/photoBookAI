@@ -19,8 +19,8 @@ config:
         linear_alpha: 16
       save:
         dtype: float16 # precision to save
-        save_every: 250 # save every this many steps
-        max_step_saves_to_keep: 4 # how many intermittent saves to keep
+        save_every: 200 # save every this many steps
+        max_step_saves_to_keep: 1 # how many intermittent saves to keep
         push_to_hub: false #change this to True to push your trained model to Hugging Face.
         # You can either set up a HF_TOKEN env variable or you'll be prompted to log-in         
 #       hf_repo_id: your-username/your-model-slug
@@ -39,18 +39,18 @@ config:
           resolution: [ 512, 768, 1024 ]  # flux enjoys multiple resolutions
       train:
         batch_size: 1
-        steps: 2000  # total number of steps to train 500 - 4000 is a good range
+        steps: 200  # total number of steps to train 500 - 4000 is a good range
         gradient_accumulation_steps: 1
         train_unet: true
         train_text_encoder: false  # probably won't work with flux
         gradient_checkpointing: true  # need the on unless you have a ton of vram
         noise_scheduler: "flowmatch" # for training only
         optimizer: "adamw8bit"
-        lr: 1e-4
+        lr: 4e-4
         # uncomment this to skip the pre training sample
-#        skip_first_sample: true
+        skip_first_sample: true
         # uncomment to completely disable sampling
-#        disable_sampling: true
+        disable_sampling: true
         # uncomment to use new vell curved weighting. Experimental but may produce better results
 #        linear_timesteps: true
 
@@ -67,29 +67,29 @@ config:
         is_flux: true
         quantize: true  # run 8bit mixed precision
 #        low_vram: true  # uncomment this if the GPU is connected to your monitors. It will use less vram to quantize, but is slower.
-      sample:
-        sampler: "flowmatch" # must match train.noise_scheduler
-        sample_every: 250 # sample every this many steps
-        width: 1024
-        height: 1024
-        prompts:
-          # you can add [trigger] to the prompts here and it will be replaced with the trigger word
-#          - "[trigger] holding a sign that says 'I LOVE PROMPTS!'"\
-          - "woman with red hair, playing chess at the park, bomb going off in the background"
-          - "a woman holding a coffee cup, in a beanie, sitting at a cafe"
-          - "a horse is a DJ at a night club, fish eye lens, smoke machine, lazer lights, holding a martini"
-          - "a man showing off his cool new t shirt at the beach, a shark is jumping out of the water in the background"
-          - "a bear building a log cabin in the snow covered mountains"
-          - "woman playing the guitar, on stage, singing a song, laser lights, punk rocker"
-          - "hipster man with a beard, building a chair, in a wood shop"
-          - "photo of a man, white background, medium shot, modeling clothing, studio lighting, white backdrop"
-          - "a man holding a sign that says, 'this is a sign'"
-          - "a bulldog, in a post apocalyptic world, with a shotgun, in a leather jacket, in a desert, with a motorcycle"
-        neg: ""  # not used on flux
-        seed: 42
-        walk_seed: true
-        guidance_scale: 4
-        sample_steps: 20
+#       sample:
+#         sampler: "flowmatch" # must match train.noise_scheduler
+#         sample_every: 250 # sample every this many steps
+#         width: 1024
+#         height: 1024
+#         prompts:
+#           # you can add [trigger] to the prompts here and it will be replaced with the trigger word
+# #          - "[trigger] holding a sign that says 'I LOVE PROMPTS!'"\
+#           - "woman with red hair, playing chess at the park, bomb going off in the background"
+#           - "a woman holding a coffee cup, in a beanie, sitting at a cafe"
+#           - "a horse is a DJ at a night club, fish eye lens, smoke machine, lazer lights, holding a martini"
+#           - "a man showing off his cool new t shirt at the beach, a shark is jumping out of the water in the background"
+#           - "a bear building a log cabin in the snow covered mountains"
+#           - "woman playing the guitar, on stage, singing a song, laser lights, punk rocker"
+#           - "hipster man with a beard, building a chair, in a wood shop"
+#           - "photo of a man, white background, medium shot, modeling clothing, studio lighting, white backdrop"
+#           - "a man holding a sign that says, 'this is a sign'"
+#           - "a bulldog, in a post apocalyptic world, with a shotgun, in a leather jacket, in a desert, with a motorcycle"
+#         neg: ""  # not used on flux
+#         seed: 42
+#         walk_seed: true
+#         guidance_scale: 4
+#         sample_steps: 20
 # you can add any additional meta info here. [name] is replaced with config name at top
 meta:
   name: "[name]"

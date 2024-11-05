@@ -105,27 +105,52 @@ class AIService:
         self.api_key = config['LAMBDA_API_KEY']
         self.instance_type = config['LAMBDA_INSTANCE_TYPE']
         self.region = config['LAMBDA_REGION']
-        self.custom_image_id = config.get('LAMBDA_CUSTOM_IMAGE_ID')
+        self.base_url = "https://cloud.lambdalabs.com/api/v1"
         
-        # Lambda paths (now pre-existing in custom image)
+        # Lambda paths
         self.remote_base = '/home/ubuntu/workspace'
         self.remote_dataset = f"{self.remote_base}/datasets"
         self.remote_models = f"{self.remote_base}/models"
         
-        # Local paths
+        # Local paths with caching
         self.base_path = Path(config.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training'))
         self.datasets_path = self.base_path / 'datasets'
+        self.cache_path = self.base_path / 'cache'
         self.datasets_path.mkdir(parents=True, exist_ok=True)
+        self.cache_path.mkdir(parents=True, exist_ok=True)
         
-        # Load base YAML config
-        self.config_path = Path(__file__).parent / 'configs' / 'base_training.yaml'
-        if not self.config_path.exists():
-            raise FileNotFoundError(f"Base training config not found at {self.config_path}")
+        # Cache toolkit requirements
+        self._cache_toolkit_files()
+
+    def _cache_toolkit_files(self):
+        """Cache AI toolkit files locally to speed up setup"""
+        toolkit_cache = self.cache_path / 'ai-toolkit'
+        if not toolkit_cache.exists():
+            logger.info("Caching AI toolkit files...")
+            import subprocess
+            subprocess.run([
+                'git', 'clone', 'https://github.com/ostris/ai-toolkit',
+                str(toolkit_cache)
+            ], check=True)
+            
+            # Create requirements archive
+            requirements_txt = toolkit_cache / 'requirements.txt'
+            if requirements_txt.exists():
+                import zipfile
+                with zipfile.ZipFile(self.cache_path / 'requirements.zip', 'w') as zf:
+                    zf.write(requirements_txt, 'requirements.txt')
 
     def launch_instance(self) -> LambdaInstance:
-        """Launch a new Lambda instance using custom image"""
+        """Launch a new Lambda instance with optimized environment setup"""
         try:
-            # Launch instance with custom image
+            # Launch instance with startup script
+            startup_script = """#!/bin/bash
+            # Parallel execution of apt updates and directory creation
+            (sudo apt-get update && sudo apt-get install -y python3-pip git) &
+            mkdir -p /home/ubuntu/workspace/{datasets,models,cache} &
+            wait
+            """
+            
             response = requests.post(
                 f"{self.base_url}/instance-operations/launch",
                 headers={'Authorization': f'Bearer {self.api_key}'},
@@ -133,7 +158,7 @@ class AIService:
                     'region_name': self.region,
                     'instance_type_name': self.instance_type,
                     'quantity': 1,
-                    'instance_image_id': self.custom_image_id  
+                    'file_data': startup_script
                 }
             )
             response.raise_for_status()
@@ -144,167 +169,224 @@ class AIService:
             # Wait for instance to be ready
             instance.wait_for_completion()
             
+            # Upload cached toolkit and requirements in parallel
+            self._setup_environment_parallel(instance)
+            
             return instance
             
         except Exception as e:
-            logger.error(f"Failed to launch instance: {str(e)}")
+            logger.error(f"Failed to launch and setup instance: {str(e)}")
             raise
 
-    def _load_base_config(self) -> Dict:
-        """Load base training config"""
-        config_path = Path(__file__).parent / 'configs' / 'base_training.yaml'
-        with open(config_path) as f:
-            return yaml.safe_load(f)
-
-    def _setup_environment(self, instance: LambdaInstance):
-        """Setup training environment on instance"""
+    def _setup_environment_parallel(self, instance: LambdaInstance):
+        """Setup environment with parallel operations"""
         try:
-            # Create directories and setup environment
-            commands = [
-                f'mkdir -p {self.remote_base}',
-                f'mkdir -p {self.remote_dataset}',
-                f'mkdir -p {self.remote_models}',
-                
-                # Clone and setup AI toolkit
-                f'cd {self.remote_base} && git clone https://github.com/ostris/ai-toolkit',
-                f'cd {self.remote_base}/ai-toolkit && git submodule update --init --recursive',
-                f'cd {self.remote_base}/ai-toolkit && pip install -r requirements.txt'
-            ]
+            # Upload cached files
+            instance.upload_file(
+                str(self.cache_path / 'requirements.zip'),
+                f"{self.remote_base}/requirements.zip"
+            )
             
-            for cmd in commands:
-                result = instance.execute_command(cmd)
-                if result.get('exit_code', 0) != 0:
-                    raise Exception(f"Command failed: {cmd}\nError: {result.get('stderr', 'Unknown error')}")
-                
+            # Setup commands optimized for parallel execution
+            setup_cmd = """
+                cd /home/ubuntu/workspace && \
+                (unzip requirements.zip && pip install -r requirements.txt) & \
+                (git clone https://github.com/ostris/ai-toolkit && \
+                cd ai-toolkit && \
+                git submodule update --init --recursive) & \
+                wait && \
+                echo "export HF_HUB_ENABLE_HF_TRANSFER=1" >> ~/.bashrc && \
+                echo "export DISABLE_TELEMETRY=YES" >> ~/.bashrc && \
+                source ~/.bashrc
+            """
+            
+            result = instance.execute_command(setup_cmd)
+            if result.get('exit_code', 0) != 0:
+                raise Exception(f"Setup failed: {result.get('stderr', 'Unknown error')}")
+            
         except Exception as e:
             logger.error(f"Environment setup failed: {str(e)}")
             raise
 
     def prepare_dataset(self, model_id: int, image_ids: List[int]) -> Path:
-        """Prepare dataset for training"""
+        """Prepare dataset for training with optimized file handling"""
         dataset_path = self.datasets_path / str(model_id)
         if dataset_path.exists():
             shutil.rmtree(dataset_path)
         dataset_path.mkdir(parents=True)
         
-        # Get images from database
+        # Get images from database efficiently
         images = UserImage.query.filter(UserImage.id.in_(image_ids)).all()
         
-        # Copy each image and create caption
-        for idx, image in enumerate(images):
-            try:
-                # Get image data from storage
-                image_data = self.config['storage_service'].get_file_data(image.storage_location)
-                
-                # Save image
-                image_path = dataset_path / f"image_{idx:04d}.jpg"
-                with open(image_path, 'wb') as f:
-                    f.write(image_data)
-                
-                # Create caption file with better default
-                caption = image.metadata_json.get('caption', 'an image of [trigger]') if image.metadata_json else 'an image of [trigger]'
-                # Ensure caption includes [trigger] if not already present
-                if '[trigger]' not in caption:
-                    caption = f'an image of [trigger], {caption}'
-                    
-                caption_path = dataset_path / f"image_{idx:04d}.txt"
-                with open(caption_path, 'w') as f:
-                    f.write(caption)
-                    
-                logger.debug(f"Processed image {idx} for model {model_id}")
-                
-            except Exception as e:
-                logger.error(f"Error processing image {image.id}: {str(e)}")
-                continue
+        # Process images in chunks for better memory management
+        chunk_size = 10
+        for i in range(0, len(images), chunk_size):
+            chunk = images[i:i + chunk_size]
+            
+            # Process chunk in parallel using threads
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=chunk_size) as executor:
+                executor.map(
+                    lambda x: self._process_single_image(x[0], x[1], dataset_path),
+                    enumerate(chunk, start=i)
+                )
         
         return dataset_path
 
+    def _process_single_image(self, idx: int, image: UserImage, dataset_path: Path):
+        """Process a single image and its caption"""
+        try:
+            # Get image data from storage
+            image_data = self.config['storage_service'].get_file_data(image.storage_location)
+            
+            # Save image
+            image_path = dataset_path / f"image_{idx:04d}.jpg"
+            with open(image_path, 'wb') as f:
+                f.write(image_data)
+            
+            # Create caption with trigger
+            caption = image.metadata_json.get('caption', 'an image of [trigger]') if image.metadata_json else 'an image of [trigger]'
+            if '[trigger]' not in caption:
+                caption = f'an image of [trigger], {caption}'
+                
+            caption_path = dataset_path / f"image_{idx:04d}.txt"
+            with open(caption_path, 'w') as f:
+                f.write(caption)
+                
+            logger.debug(f"Processed image {idx}")
+            
+        except Exception as e:
+            logger.error(f"Error processing image {image.id}: {str(e)}")
+
     def train_model(self, model_id: int, user_id: int, training_config: Dict) -> bytes:
-        """Run model training on Lambda instance"""
+        """Run model training with optimized data handling"""
         instance = None
         try:
-            # Prepare dataset locally
-            logger.info(f"Preparing dataset for model {model_id}")
-            dataset_path = self.prepare_dataset(model_id, training_config['image_ids'])
-            
-            # Launch instance with custom image
-            logger.info("Launching Lambda instance")
-            instance = self.launch_instance()
+            # Prepare dataset and launch instance in parallel
+            logger.info(f"Starting model {model_id} training preparation")
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                dataset_future = executor.submit(
+                    self.prepare_dataset, model_id, training_config['image_ids']
+                )
+                instance_future = executor.submit(self.launch_instance)
+                
+                dataset_path = dataset_future.result()
+                instance = instance_future.result()
             
             # Upload dataset
             logger.info("Uploading dataset")
             remote_dataset_path = f"{self.remote_dataset}/{model_id}"
             instance.execute_command(f"mkdir -p {remote_dataset_path}")
             
-            for file_path in dataset_path.glob('*'):
-                instance.upload_file(
-                    str(file_path),
-                    f"{remote_dataset_path}/{file_path.name}"
-                )
+            # Upload files in parallel using thread pool
+            dataset_files = list(dataset_path.glob('*'))
+            with ThreadPoolExecutor(max_workers=min(10, len(dataset_files))) as executor:
+                upload_futures = [
+                    executor.submit(
+                        instance.upload_file,
+                        str(file_path),
+                        f"{remote_dataset_path}/{file_path.name}"
+                    )
+                    for file_path in dataset_files
+                ]
+                # Wait for all uploads to complete
+                for future in upload_futures:
+                    future.result()
             
             # Prepare and upload YAML config
             logger.info("Preparing training configuration")
-            with open(self.config_path) as f:
+            config_path = Path(__file__).parent / 'configs' / 'base_training.yaml'
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
             
             # Update paths in config
             config['config']['name'] = f"model_{model_id}"
-            config['config']['process'][0]['training_folder'] = f"{self.remote_models}/{model_id}"
-            config['config']['process'][0]['datasets'][0]['folder_path'] = remote_dataset_path
+            config['config']['process'][0].update({
+                'training_folder': f"{self.remote_models}/{model_id}",
+                'datasets': [{
+                    'folder_path': remote_dataset_path,
+                    'caption_ext': "txt",
+                    'caption_dropout_rate': 0.05,
+                    'shuffle_tokens': False,
+                    'cache_latents_to_disk': True,
+                    'resolution': [512, 768, 1024]
+                }]
+            })
             
             # Save and upload modified config
             remote_config = f"{self.remote_base}/config_{model_id}.yaml"
-            config_path = self.base_path / f"config_{model_id}.yaml"
+            temp_config_path = self.base_path / f"config_{model_id}.yaml"
             
-            with open(config_path, 'w') as f:
+            with open(temp_config_path, 'w') as f:
                 yaml.dump(config, f)
             
-            instance.upload_file(str(config_path), remote_config)
+            instance.upload_file(str(temp_config_path), remote_config)
             
-            # Run training 
+            # Run training with environment variables and error handling
             logger.info("Starting training")
             train_cmd = f"""
                 cd {self.remote_base}/ai-toolkit && \
-                HF_TOKEN='{self.config["HF_TOKEN"]}' \
-                python run.py {remote_config}
+                export HF_HUB_ENABLE_HF_TRANSFER=1 && \
+                export DISABLE_TELEMETRY=YES && \
+                export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
+                python run.py {remote_config} 2>&1 | tee training.log
             """
             
             result = instance.execute_command(train_cmd)
             if result.get('exit_code', 0) != 0:
-                raise Exception(f"Training failed: {result.get('stderr', 'Unknown error')}")
+                # Try to get detailed error from log
+                try:
+                    log_result = instance.execute_command("cat training.log")
+                    error_log = log_result.get('stdout', 'No log available')
+                    raise Exception(f"Training failed with log:\n{error_log}")
+                except:
+                    raise Exception(f"Training failed: {result.get('stderr', 'Unknown error')}")
             
-            # Download weights
+            # Download weights with retry logic
             logger.info("Downloading trained weights")
             remote_weights = f"{self.remote_models}/{model_id}/model.safetensors"
             local_weights = self.base_path / f"model_{model_id}.safetensors"
             
-            instance.download_file(remote_weights, str(local_weights))
+            max_retries = 3
+            for retry in range(max_retries):
+                try:
+                    instance.download_file(remote_weights, str(local_weights))
+                    break
+                except Exception as e:
+                    if retry == max_retries - 1:
+                        raise
+                    logger.warning(f"Download attempt {retry + 1} failed, retrying...")
+                    time.sleep(5)
             
             with open(local_weights, 'rb') as f:
                 weights_data = f.read()
             
             return weights_data
             
+        except Exception as e:
+            logger.error(f"Training error for model {model_id}: {str(e)}")
+            raise
+            
         finally:
-            # Cleanup
+            # Always terminate the instance when done
             if instance:
                 try:
-                    instance.execute_command(f'rm -rf {self.remote_base}/config_{model_id}.yaml')
-                    instance.execute_command(f'rm -rf {self.remote_dataset}/{model_id}')
-                    instance.execute_command(f'rm -rf {self.remote_models}/{model_id}')
+                    logger.info("Terminating instance")
                     requests.post(
                         f"{self.base_url}/instances/{instance.instance_id}/terminate",
                         headers={'Authorization': f'Bearer {self.api_key}'}
                     )
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(f"Failed to terminate instance: {str(e)}")
                     
-            # Remove local files
+            # Cleanup local files
             try:
-                shutil.rmtree(dataset_path)
+                if 'dataset_path' in locals():
+                    shutil.rmtree(dataset_path)
                 if 'local_weights' in locals():
                     local_weights.unlink()
-                if 'config_path' in locals():
-                    config_path.unlink()
-            except:
-                pass
+                if 'temp_config_path' in locals():
+                    temp_config_path.unlink()
+            except Exception as e:
+                logger.error(f"Cleanup error: {str(e)}")
