@@ -33,7 +33,30 @@ class Config:
     # Model storage settings
     MODEL_CACHE_ENABLED = os.environ.get('MODEL_CACHE_ENABLED', 'True').lower() == 'true'
     MODEL_CACHE_PATH = os.environ.get('MODEL_CACHE_PATH', '/tmp/model_cache')
+    MODEL_CACHE_SIZE_GB = 20
+
+    # Lambda GPU Settings
+    LAMBDA_API_KEY = os.environ.get('LAMBDA_API_KEY')
+    LAMBDA_INSTANCE_ID= os.environ.get('LAMBDA_INSTANCE_ID')
+    LAMBDA_REGION = 'us-west-3'
+    LAMBDA_INSTANCE_TYPE = 'gpu_1x_h100_pcie'
+    LAMBDA_CUSTOM_IMAGE_ID = 'your-custom-image-id'
+
+    # AI Training settings
+    HF_TOKEN = os.environ.get('HF_TOKEN')
+    AI_TRAINING_BASE_PATH = os.environ.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training')
+
+    # Lambda specific paths
+    LAMBDA_WORKING_DIR = '/home/ubuntu/workspace'  # Default Lambda working directory
+    LAMBDA_MODEL_CACHE = '/home/ubuntu/model_cache'
+    LAMBDA_DATA_PATH = '/home/ubuntu/data'
     
+    # GPU Cache Settings (adjusted for Lambda)
+    GPU_CACHE_ENABLED = True
+    GPU_CACHE_PATH = LAMBDA_MODEL_CACHE
+    GPU_CACHE_SIZE_GB = 50  # Adjust based on your instance storage
+    GPU_MAX_MODELS = 5
+
     # Redis configuration
     REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
     REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
@@ -67,10 +90,7 @@ class Config:
     SMTP_USER = os.environ.get('SMTP_USER')
     SMTP_PASS = os.environ.get('SMTP_PASS')
     ALERT_EMAIL = os.environ.get('ALERT_EMAIL')
-    
-    # Slack settings (if using Slack alerts)
-    SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL')
-    
+        
     # Image quality settings
     IMAGE_QUALITY_PRESET = os.environ.get('IMAGE_QUALITY_PRESET', 'high')
     MAX_IMAGE_SIZE = {

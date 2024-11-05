@@ -10,6 +10,7 @@ import io
 from app import db
 from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook
 from .queue import JobQueue
+from .ai_service import AIService  
 
 logger = logging.getLogger(__name__)
 
@@ -183,12 +184,26 @@ class WorkerService:
         finally:
             self.worker_status[thread_id]['current_job'] = None
 
-    ##########################################################################
     def _get_trained_model_weights(self, model_id: int, training_config: Dict) -> bytes:
-        """Get trained model weights from AI server"""
-        # TODO: Implement connection to AI training server
-        raise NotImplementedError
+        """Get trained model weights using AI service"""
+        try:
+            # Initialize AI service with config
+            ai_service = AIService(self.config)
+            
+            # Run training using base YAML config
+            weights_data = ai_service.train_model(
+                model_id=model_id,
+                user_id=training_config['user_id'],
+                training_config={'image_ids': training_config['image_ids']}
+            )
+            
+            return weights_data
+                
+        except Exception as e:
+            logger.error(f"Training error: {str(e)}")
+            raise
 
+    ##########################################################################
     def _generate_image(self, model_id: int, prompt: str, **kwargs) -> bytes:
         """Generate image using AI server"""
         # TODO: Implement connection to AI generation server
@@ -199,6 +214,7 @@ class WorkerService:
         """Process model training job"""
         job_id = job['job_id']
         logger.info(f"Processing training job {job_id}")
+        model = None
         
         try:
             self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
@@ -207,15 +223,23 @@ class WorkerService:
             model_id = job['payload']['model_id']
             user_id = job['user_id']
             
-            # TODO: Actual model training here
+            # Update model status
+            model = TrainedModel.query.get(model_id)
+            model.training_started_at = datetime.utcnow()
+            model.status = JobStatus.PROCESSING
+            db.session.commit()
             
-            # Save model weights using storage service
-            storage_service = self.config['storage_service']
+            # Run training using AI service
             weights_data = self._get_trained_model_weights(
                 model_id=model_id,
-                training_config=job['payload']['config']
+                training_config={
+                    'user_id': user_id,
+                    'image_ids': job['payload']['image_ids']
+                }
             )
             
+            # Save model weights
+            storage_service = self.config['storage_service']
             weights_location = storage_service.upload_model_weights(
                 user_id=user_id,
                 model_id=model_id,
@@ -224,13 +248,12 @@ class WorkerService:
             )
             
             # Update model record
-            model = TrainedModel.query.get(model_id)
             model.status = JobStatus.COMPLETED
             model.weights_location_id = weights_location.id
             model.training_completed_at = datetime.utcnow()
             db.session.commit()
             
-            # Return the result
+            # Return success
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.COMPLETED,
@@ -239,9 +262,19 @@ class WorkerService:
                     'weights_location_id': weights_location.id
                 }
             )
-            
+        
         except Exception as e:
             logger.error(f"Training error: {str(e)}")
+            
+            # Update model status on failure
+            if model:
+                try:
+                    model.status = JobStatus.FAILED
+                    model.error_message = str(e)
+                    db.session.commit()
+                except:
+                    pass
+                    
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.FAILED,
