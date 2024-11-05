@@ -240,12 +240,14 @@ class GeneratedImage(db.Model, TimestampMixin):
     model_id = db.Column(db.Integer, db.ForeignKey('trained_models.id'), nullable=False)
     photobook_id = db.Column(db.Integer, db.ForeignKey('photobooks.id'), nullable=True)
     storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'), nullable=False)
+    generation_job_id = db.Column(db.Integer, db.ForeignKey('generation_jobs.id'), nullable=True)
     
     generation_params = db.Column(JSONB)
     prompt = db.Column(db.Text)
     
     # Relationships
     storage_location = db.relationship('StorageLocation', lazy=True)
+    generation_job = db.relationship('GenerationJob', back_populates='generated_images')
 
 class GenerationJob(db.Model, TimestampMixin):
     __tablename__ = 'generation_jobs'
@@ -266,7 +268,7 @@ class GenerationJob(db.Model, TimestampMixin):
     
     # Relationships
     trained_model = db.relationship('TrainedModel', lazy=True)
-    generated_images = db.relationship('GeneratedImage', backref='job', lazy=True)
+    generated_images = db.relationship('GeneratedImage', back_populates='generation_job', lazy=True)
 
 
 # Association tables

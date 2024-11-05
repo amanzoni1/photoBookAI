@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
     """Check if file extension is allowed"""
     if allowed_extensions is None:
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 @storage_bp.route('/training-images/upload', methods=['POST'])
