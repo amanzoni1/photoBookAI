@@ -1,4 +1,5 @@
 // client/src/components/Navbar/Navbar.js
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCredits } from '../../hooks/useCredits';
@@ -6,8 +7,14 @@ import './Navbar.css';
 
 function Navbar({ isAuthenticated, onLogout }) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { credits, loading } = useCredits();
   const navigate = useNavigate();
+  const { credits, loading } = useCredits();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowDropdown(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -29,7 +36,7 @@ function Navbar({ isAuthenticated, onLogout }) {
           <Link to="/">YourLogo</Link>
         )}
       </div>
-      
+
       {!isAuthenticated && (
         <ul className="navbar-links">
           <li>
@@ -55,11 +62,11 @@ function Navbar({ isAuthenticated, onLogout }) {
             </Link>
           </>
         )}
-        
+
         {isAuthenticated && (
           <div className="user-section">
             {/* Credits Display */}
-            {!loading && (
+            {!loading && credits && (
               <div className="credits-display">
                 <div className="credit-item">
                   <span className="credit-icon">🎨</span>
@@ -78,7 +85,7 @@ function Navbar({ isAuthenticated, onLogout }) {
 
             {/* User Menu */}
             <div className="user-menu">
-              <button 
+              <button
                 className="user-button"
                 onClick={() => setShowDropdown(!showDropdown)}
               >
@@ -93,7 +100,7 @@ function Navbar({ isAuthenticated, onLogout }) {
                   <Link to="/profile" className="dropdown-item">
                     Profile
                   </Link>
-                  <button 
+                  <button
                     onClick={() => {
                       onLogout();
                       setShowDropdown(false);
