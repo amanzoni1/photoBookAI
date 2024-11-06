@@ -78,7 +78,7 @@ function Navbar({ isAuthenticated, onLogout }) {
                 </div>
                 <div className="credit-item">
                   <span className="credit-icon">📚</span>
-                  <span className="credit-value">{credits.photobook_credits}</span>
+                  <span className="credit-value">{credits.available_photobooks}</span>
                 </div>
               </div>
             )}

@@ -6,6 +6,8 @@ import ModelCreationForm from './ModelCreationForm';
 import ModelForm from './ModelForm';
 import createIcon from './images/create1.png';
 import modelPlaceholder from './images/bab.png';
+import { useModel } from '../../../hooks/useModel';
+import { useCredits } from '../../../hooks/useCredits';
 
 function LeftMenu() {
   const [hasAccess, setHasAccess] = useState(false);
@@ -13,42 +15,73 @@ function LeftMenu() {
   const [models, setModels] = useState([]);
   const [currentTrainingModel, setCurrentTrainingModel] = useState(null);
   const [selectedModel, setSelectedModel] = useState(null);
+  const { checkModelStatus } = useModel();
+  const { credits, purchaseCredits } = useCredits();
 
   // Handle clicking the "Create New Model" button
-  const handleCreateModelClick = () => {
-    if (hasAccess) {
+  const handleCreateModelClick = async () => {
+    if (credits.model_credits > 0) {
       setShowModelForm(true);
     } else {
-      const confirmed = window.confirm(
-        'You need to purchase access to create a model. Proceed to payment?'
-      );
-      if (confirmed) {
-        setHasAccess(true);
-        alert('Payment successful! You can now create a model.');
-        setShowModelForm(true);
+      try {
+        const confirmed = window.confirm(
+          'You need to purchase credits to create a model. Would you like to purchase 1 model credit for $24.99?'
+        );
+        
+        if (confirmed) {
+          // Show loading state if needed
+          const result = await purchaseCredits('MODEL', 1);
+          
+          if (result.message === 'Purchase successful') {
+            alert('Credits purchased successfully! You can now create a model.');
+            setShowModelForm(true);
+          } else {
+            throw new Error('Purchase failed');
+          }
+        }
+      } catch (error) {
+        console.error('Purchase error:', error);
+        alert(error.response?.data?.message || 'Failed to purchase credits. Please try again.');
       }
     }
   };
 
   // Handle starting the training process
-  const handleTrainingStart = (modelName, age) => {
+  const handleTrainingStart = async (modelName, trainingInfo) => {
     setShowModelForm(false);
-
+  
     // Create a placeholder for the model being trained
     const newModel = {
-      id: Date.now(),
+      id: trainingInfo.modelId,
       name: modelName,
-      age: age,
       isTraining: true,
+      jobId: trainingInfo.jobId
     };
     setCurrentTrainingModel(newModel);
-
-    // Simulate training duration (5 seconds)
-    setTimeout(() => {
-      // Update the model to indicate training is complete
-      newModel.isTraining = false;
-      setModels([newModel, ...models]);
-      setCurrentTrainingModel(null);
+  
+    // Start polling for training status
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await checkModelStatus(trainingInfo.modelId);
+        
+        if (status.status === 'COMPLETED') {
+          clearInterval(pollInterval);
+          setModels(prevModels => [{
+            ...newModel,
+            isTraining: false,
+            ...status
+          }, ...prevModels]);
+          setCurrentTrainingModel(null);
+        } else if (status.status === 'FAILED') {
+          clearInterval(pollInterval);
+          setCurrentTrainingModel(null);
+          alert(`Training failed: ${status.error_message || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error checking training status:', error);
+        clearInterval(pollInterval);
+        setCurrentTrainingModel(null);
+      }
     }, 5000);
   };
 

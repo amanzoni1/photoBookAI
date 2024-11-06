@@ -1,17 +1,21 @@
 // ModelCreationForm.js
 
 import React, { useState } from 'react';
-import axios from '../../../utils/axiosConfig';
+import { useModel } from '../../../hooks/useModel';
 import './ModelCreationForm.css';
 
 function ModelCreationForm({ onClose, onTrainingStart }) {
+  const { createModel } = useModel();
+  
   const [formData, setFormData] = useState({
     name: '',
     ageYears: '',
     ageMonths: '',
-    files: [],
+    files: []
   });
+  
   const [fileMessage, setFileMessage] = useState('No files uploaded');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
 
   const handleInputChange = (e) => {
@@ -22,7 +26,7 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
     const files = e.target.files;
     if (files.length < 5 || files.length > 30) {
       alert('Please upload between 5 and 30 pictures.');
-      e.target.value = ''; // Reset file input
+      e.target.value = '';
       setFileMessage('No files uploaded');
     } else {
       setFormData({ ...formData, files: files });
@@ -37,61 +41,75 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that name is provided
+    // Validations
     if (!formData.name) {
-      alert('Name is required');
+      setMessage('Name is required');
       return;
     }
 
-    // Validate that at least one of ageYears or ageMonths is provided
     if (!formData.ageYears && !formData.ageMonths) {
-      alert('Please provide either age in years or months');
+      setMessage('Please provide either age in years or months');
       return;
     }
 
-    // Combine ageYears and ageMonths into a string
-    let ageString = '';
-    if (formData.ageYears) {
-      ageString += `${formData.ageYears} year(s) `;
+    if (!formData.files.length) {
+      setMessage('Please upload images');
+      return;
     }
-    if (formData.ageMonths) {
-      ageString += `${formData.ageMonths} month(s)`;
-    }
-
-    // Notify parent component that training has started
-    onTrainingStart(formData.name, ageString.trim());
 
     // Prepare form data
     const data = new FormData();
     data.append('name', formData.name);
     data.append('ageYears', formData.ageYears);
     data.append('ageMonths', formData.ageMonths);
-    for (let i = 0; i < formData.files.length; i++) {
-      data.append('files', formData.files[i]);
-    }
+    
+    Array.from(formData.files).forEach(file => {
+      data.append('files', file);
+    });
 
     try {
-      const res = await axios.post('/api/create-model', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const result = await createModel(data, (progress) => {
+        setUploadProgress(progress);
+        setMessage(`Uploading: ${progress}%`);
       });
-      setMessage(res.data.message);
-      // Close the form after submission
-      onClose();
-    } catch (err) {
-      console.error(err.response?.data);
-      setMessage(err.response?.data?.message || 'An error occurred.');
+
+      // Notify parent component of successful start
+      onTrainingStart(formData.name, {
+        modelId: result.model_id,
+        jobId: result.job_id
+      });
+
+      setMessage('Training started successfully!');
+      setTimeout(onClose, 1500);
+
+    } catch (error) {
+      if (error.response?.status === 403) {
+        setMessage('Insufficient credits. Please purchase more credits.');
+      } else {
+        setMessage(error.response?.data?.message || 'Failed to start training');
+      }
     }
   };
 
   return (
     <div className="model-creation-form">
       <h2>Create New Model</h2>
-      {message && <p>{message}</p>}
+      
+      {message && (
+        <p className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+          {message}
+        </p>
+      )}
+
       <form onSubmit={handleSubmit}>
         <label>Name:</label>
-        <input type="text" name="name" onChange={handleInputChange} required />
+        <input 
+          type="text" 
+          name="name" 
+          value={formData.name}
+          onChange={handleInputChange} 
+          required 
+        />
 
         <label>Age:</label>
         <div className="age-inputs">
@@ -99,13 +117,18 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
             type="number"
             name="ageYears"
             placeholder="Years"
+            value={formData.ageYears}
             onChange={handleInputChange}
+            min="0"
           />
           <input
             type="number"
             name="ageMonths"
             placeholder="Months"
+            value={formData.ageMonths}
             onChange={handleInputChange}
+            min="0"
+            max="11"
           />
         </div>
 
@@ -116,7 +139,6 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
         <input
           id="file-upload"
           type="file"
-          name="files"
           multiple
           accept=".png,.jpg,.jpeg"
           onChange={handleFileChange}
@@ -124,7 +146,21 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
         />
         <div className="file-message">{fileMessage}</div>
 
-        <button type="submit">Start Training</button>
+        {uploadProgress > 0 && uploadProgress < 100 && (
+          <div className="progress-bar">
+            <div 
+              className="progress" 
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        )}
+
+        <button 
+          type="submit" 
+          disabled={!formData.files.length || uploadProgress > 0}
+        >
+          Start Training
+        </button>
       </form>
     </div>
   );
