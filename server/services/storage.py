@@ -1,7 +1,9 @@
+# server/services/storage.py
+
 import os
 import boto3
 from botocore.exceptions import ClientError
-from typing import BinaryIO, Optional, Dict, Any, Tuple
+from typing import BinaryIO, Dict, Any, Tuple
 from datetime import datetime
 import mimetypes
 from PIL import Image
@@ -9,7 +11,7 @@ import io
 import hashlib
 import logging
 
-from models import StorageLocation, StorageType, User
+from models import StorageLocation, StorageType
 from app import db
 
 logger = logging.getLogger(__name__)
@@ -17,13 +19,13 @@ logger = logging.getLogger(__name__)
 class StorageService:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.client = boto3.client('s3',
+        self.client = boto3.client(
+            's3',
             endpoint_url=config['STORAGE_ENDPOINT'],
             aws_access_key_id=config['STORAGE_ACCESS_KEY'],
             aws_secret_access_key=config['STORAGE_SECRET_KEY'],
             region_name=config.get('STORAGE_REGION', 'nyc3')
         )
-        
         self.bucket = config['STORAGE_BUCKET']
         self.cdn_endpoint = config.get('DO_SPACES_CDN_ENDPOINT', config['STORAGE_ENDPOINT']).rstrip('/')
 
@@ -43,7 +45,7 @@ class StorageService:
             raise ValueError(f"Invalid file type: {file_type}")
 
     def _calculate_checksum(self, file_obj: BinaryIO) -> str:
-        """Calculate file checksum"""
+        """Calculate SHA256 checksum of the file"""
         sha256_hash = hashlib.sha256()
         for byte_block in iter(lambda: file_obj.read(4096), b""):
             sha256_hash.update(byte_block)
@@ -51,64 +53,74 @@ class StorageService:
         return sha256_hash.hexdigest()
 
     def upload_training_image(self, 
-                            user_id: int,
-                            image_file: BinaryIO,
-                            filename: str,
-                            quality_preset: str = 'high') -> Tuple[StorageLocation, Dict[str, Any]]:
+                              user_id: int,
+                              image_file: BinaryIO,
+                              filename: str,
+                              quality_preset: str = 'high') -> Tuple[StorageLocation, Dict[str, Any]]:
         """Upload a training image"""
         destination = self._get_file_path(user_id, 'training', filename)
         
-        # Process and optimize image
-        img = Image.open(image_file)
-        buffer = io.BytesIO()
-        
-        if img.mode == 'RGBA':
-            img = img.convert('RGB')
+        try:
+            # Process and optimize image
+            img = Image.open(image_file)
+            buffer = io.BytesIO()
             
-        # Apply quality preset
-        if quality_preset == 'high':
-            img.save(buffer, format='PNG', optimize=True)
-        else:
-            img.save(buffer, format='JPEG', quality=85, optimize=True)
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
             
-        buffer.seek(0)
-        file_size = buffer.getbuffer().nbytes
-        checksum = self._calculate_checksum(buffer)
-        buffer.seek(0)
-        
-        # Create storage location
-        location = StorageLocation(
-            storage_type=StorageType.DO_SPACES,
-            bucket=self.bucket,
-            path=destination,
-            file_size=file_size,
-            content_type=f"image/{'png' if quality_preset == 'high' else 'jpeg'}",
-            checksum=checksum,
-            metadata_json={'quality_preset': quality_preset}
-        )
-        
-        # Upload file
-        self.client.upload_fileobj(
-            buffer,
-            self.bucket,
-            destination,
-            ExtraArgs={
-                'ContentType': location.content_type,
-                'ACL': 'public-read'
+            # Apply quality preset and set format accordingly
+            if quality_preset == 'high':
+                img_format = 'PNG'
+                img.save(buffer, format=img_format, optimize=True)
+            else:
+                img_format = 'JPEG'
+                img.save(buffer, format=img_format, quality=85, optimize=True)
+                
+            buffer.seek(0)
+            file_size = buffer.getbuffer().nbytes
+            checksum = self._calculate_checksum(buffer)
+            buffer.seek(0)
+            
+            # Create storage location
+            location = StorageLocation(
+                storage_type=StorageType.DO_SPACES,
+                bucket=self.bucket,
+                path=destination,
+                file_size=file_size,
+                content_type=f"image/{img_format.lower()}",
+                checksum=checksum,
+                metadata_json={'quality_preset': quality_preset}
+            )
+            
+            # Upload file to storage
+            self.client.upload_fileobj(
+                buffer,
+                self.bucket,
+                destination,
+                ExtraArgs={
+                    'ContentType': location.content_type,
+                    'ACL': 'public-read'
+                }
+            )
+            
+            # Add to the session (commit handled externally)
+            db.session.add(location)
+            
+            # Prepare image info
+            image_info = {
+                'width': img.width,
+                'height': img.height,
+                'format': img_format,  # Explicitly set format
+                'file_size': file_size
             }
-        )
-        
-        db.session.add(location)
-        db.session.commit()
-        
-        image_info = {
-            'width': img.width,
-            'height': img.height,
-            'format': img.format,
-            'file_size': file_size
-        }
-        
-        return location, image_info
+            
+            logger.debug(f"Uploaded training image: {filename}, Format: {img_format}, Size: {file_size} bytes")
+            
+            return location, image_info
+
+        except Exception as e:
+            logger.error(f"Failed to upload training image {filename}: {str(e)}")
+            raise
 
     def upload_model_weights(self,
                            user_id: int,
@@ -147,7 +159,6 @@ class StorageService:
         )
         
         db.session.add(location)
-        db.session.commit()
         
         return location
     
@@ -189,7 +200,6 @@ class StorageService:
         )
         
         db.session.add(location)
-        db.session.commit()
         
         return location
 
@@ -230,7 +240,6 @@ class StorageService:
         )
         
         db.session.add(location)
-        db.session.commit()
         
         return location
 
@@ -267,3 +276,16 @@ class StorageService:
             logger.error(f"Error deleting file: {str(e)}")
             db.session.rollback()
             return False
+        
+    def get_file_data(self, location: StorageLocation) -> bytes:
+        """Download file data from storage."""
+        try:
+            response = self.client.get_object(
+                Bucket=location.bucket,
+                Key=location.path
+            )
+            file_data = response['Body'].read()
+            return file_data
+        except Exception as e:
+            logger.error(f"Error downloading file data: {str(e)}")
+            raise

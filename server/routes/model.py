@@ -9,7 +9,7 @@ import logging
 from . import model_bp
 from .auth import token_required
 from app import db
-from models import TrainedModel, UserImage, JobStatus, GeneratedImage, PhotoBook
+from models import TrainedModel, UserImage, JobStatus, GeneratedImage, PhotoBook, CreditType
 from services.queue import JobType
 from config import IMAGES_PER_PHOTOBOOK
 from . import (
@@ -33,77 +33,91 @@ def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
 @token_required
 def create_model(current_user):
     """Create model from uploaded training images"""
+    credit_service = get_credit_service()
+    storage_service = get_storage_service()
+    job_queue = get_job_queue()
+
     try:
-        # Check credits first
-        credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, 'MODEL'):
-            return jsonify({'message': 'Insufficient credits for model training'}), 403
-
-        if 'files' not in request.files:
-            return jsonify({'message': 'No files provided'}), 400
-
+        # Get request data
+        data = request.form
         files = request.files.getlist('files')
-        name = request.form.get('name')
-        age_years = request.form.get('ageYears')
-        age_months = request.form.get('ageMonths')
+        name = data.get('name')
+        age_years = data.get('ageYears')
+        age_months = data.get('ageMonths')
 
         if not name:
             return jsonify({'message': 'Name is required'}), 400
         if not age_years and not age_months:
             return jsonify({'message': 'Please provide either age in years or months'}), 400
+        if not files:
+            return jsonify({'message': 'No files provided'}), 400
 
-        # Upload training images using improved storage service
-        storage_service = get_storage_service()
-        uploaded_files = []
-        
-        for file in files:
-            if file and allowed_file(file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
-                filename = secure_filename(file.filename)
-                
-                # Use improved storage service for upload
-                location, image_info = storage_service.upload_training_image(
-                    current_user.id,
-                    file,
-                    filename,
-                    quality_preset='high'
-                )
-                
-                image = UserImage(
-                    user_id=current_user.id,
-                    storage_location_id=location.id,
-                    original_filename=filename,
-                    file_size=image_info['file_size'],
-                    mime_type=f"image/{image_info['format'].lower()}",
-                    width=image_info['width'],
-                    height=image_info['height']
-                )
-                
-                db.session.add(image)
-                uploaded_files.append(image)
-            else:
-                return jsonify({'message': 'Invalid file type'}), 400
+        # Start a database transaction
+        with db.session.begin_nested():
+            # Check and deduct credits
+            if not credit_service.use_credits(current_user, CreditType.MODEL):
+                return jsonify({'message': 'Insufficient credits for model training'}), 403
 
-        # Create model record
-        model = TrainedModel(
-            user_id=current_user.id,
-            name=name,
-            version='1.0',
-            status=JobStatus.PENDING,
-            config={
-                'age_years': age_years,
-                'age_months': age_months,
-                'training_images': len(uploaded_files)
-            }
-        )
-        
-        # Associate training images with model
-        model.training_images.extend(uploaded_files)
-        
-        db.session.add(model)
+            uploaded_files = []
+            for file in files:
+                if file and allowed_file(file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
+                    filename = secure_filename(file.filename)
+                    
+                    # Upload training image
+                    location, image_info = storage_service.upload_training_image(
+                        current_user.id,
+                        file,
+                        filename,
+                        quality_preset='high'
+                    )
+                    
+                    # Flush to assign StorageLocation.id
+                    db.session.flush()
+                    
+                    # Ensure format is set
+                    img_format = image_info.get('format')
+                    if not img_format:
+                        logger.warning(f"Image format is None for file {filename}, defaulting to 'jpeg'")
+                        img_format = 'jpeg'
+                    
+                    mime_type = f"image/{img_format.lower()}" if img_format else 'image/jpeg'
+
+                    image = UserImage(
+                        user_id=current_user.id,
+                        storage_location_id=location.id,
+                        original_filename=filename,
+                        file_size=image_info['file_size'],
+                        mime_type=mime_type,
+                        width=image_info['width'],
+                        height=image_info['height']
+                    )
+                    
+                    db.session.add(image)
+                    uploaded_files.append(image)
+                else:
+                    raise ValueError('Invalid file type')
+
+            # Create model record
+            model = TrainedModel(
+                user_id=current_user.id,
+                name=name,
+                version='1.0',
+                status=JobStatus.PENDING,
+                config={
+                    'age_years': age_years,
+                    'age_months': age_months,
+                    'training_images': len(uploaded_files)
+                }
+            )
+            
+            # Associate training images with model
+            model.training_images.extend(uploaded_files)
+            db.session.add(model)
+
+        # Commit the transaction
         db.session.commit()
 
         # Enqueue training job
-        job_queue = get_job_queue()
         job_id = job_queue.enqueue_job(
             JobType.MODEL_TRAINING,
             current_user.id,
@@ -123,7 +137,7 @@ def create_model(current_user):
             'job_id': job_id,
             'training_images': len(uploaded_files)
         }), 200
-        
+
     except Exception as e:
         db.session.rollback()
         logger.error(f"Model creation error: {str(e)}")
@@ -146,7 +160,8 @@ def create_photobook(current_user, model_id: int):
             return jsonify({'message': message}), 400
 
         # Check credits for photobook
-        if not current_user.has_photobook_credits():
+        credit_service = get_credit_service()
+        if not credit_service.use_credits(current_user, CreditType.IMAGE, amount=IMAGES_PER_PHOTOBOOK):
             return jsonify({'message': 'Insufficient credits for photobook generation'}), 403
 
         # Get request data
@@ -173,13 +188,6 @@ def create_photobook(current_user, model_id: int):
         
         db.session.add(photobook)
         db.session.commit()
-
-        # Use credits
-        credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, "IMAGE", IMAGES_PER_PHOTOBOOK):
-            db.session.delete(photobook)
-            db.session.commit()
-            return jsonify({'message': 'Credit deduction failed'}), 400
 
         # Enqueue batch generation job
         job_queue = get_job_queue()
@@ -244,7 +252,7 @@ def generate_images(current_user, model_id: int):
     try:
         # Check credits
         credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, 'IMAGE_GENERATION'):
+        if not credit_service.use_credits(current_user, CreditType.IMAGE):
             return jsonify({'message': 'Insufficient credits for image generation'}), 403
 
         # Get model and verify ownership

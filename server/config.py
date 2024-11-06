@@ -38,7 +38,10 @@ class Config:
     # Lambda GPU Settings
     LAMBDA_API_KEY = os.environ.get('LAMBDA_API_KEY')
     LAMBDA_INSTANCE_ID= os.environ.get('LAMBDA_INSTANCE_ID')
-    LAMBDA_REGION = 'us-west-3'
+    LAMBDA_SSH_KEY = os.environ.get('LAMBDA_SSH_KEY')
+    LAMBDA_SSH_KEY_NAME = os.environ.get('LAMBDA_SSH_KEY_NAME')
+    LAMBDA_SSH_KEY_PATH= os.environ.get('LAMBDA_SSH_KEY_PATH')
+    LAMBDA_REGION = os.environ.get('LAMBDA_REGION')
     LAMBDA_INSTANCE_TYPE = 'gpu_1x_h100_pcie'
     LAMBDA_CUSTOM_IMAGE_ID = 'your-custom-image-id'
 

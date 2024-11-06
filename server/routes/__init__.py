@@ -80,7 +80,7 @@ def init_services(app):
     app.config['job_queue'] = job_queue
     
     # Initialize worker service
-    worker_service = WorkerService(app.config)
+    worker_service = WorkerService(app.config, app)
     app.config['worker_service'] = worker_service
     
     # Initialize job monitor

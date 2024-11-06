@@ -1,3 +1,5 @@
+# server/services/worker.py
+
 import threading
 import logging
 from typing import Dict, Any, List
@@ -7,6 +9,7 @@ import signal
 from queue import Queue
 import io
 
+from flask import Flask
 from app import db
 from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook
 from .queue import JobQueue
@@ -15,8 +18,9 @@ from .ai_service import AIService
 logger = logging.getLogger(__name__)
 
 class WorkerService:
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], app: Flask):
         self.config = config
+        self.app = app  
         self.job_queue = JobQueue(config)
         self.should_stop = False
         self.workers: List[threading.Thread] = []
@@ -169,7 +173,9 @@ class WorkerService:
         self.worker_status[thread_id]['current_job'] = job_id
         
         try:
-            processor(job)
+            # Run within application context
+            with self.app.app_context():
+                processor(job)
             self.worker_status[thread_id]['jobs_processed'] += 1
         except Exception as e:
             logger.error(f"Job processing error: {str(e)}")
@@ -224,9 +230,12 @@ class WorkerService:
             user_id = job['user_id']
             
             # Update model status
-            model = TrainedModel.query.get(model_id)
-            model.training_started_at = datetime.utcnow()
-            model.status = JobStatus.PROCESSING
+            with db.session.begin_nested():
+                model = TrainedModel.query.get(model_id)
+                model.training_started_at = datetime.utcnow()
+                model.status = JobStatus.PROCESSING
+                db.session.add(model)
+            
             db.session.commit()
             
             # Run training using AI service
@@ -238,7 +247,7 @@ class WorkerService:
                 }
             )
             
-            # Save model weights
+            # Upload model weights
             storage_service = self.config['storage_service']
             weights_location = storage_service.upload_model_weights(
                 user_id=user_id,
@@ -247,13 +256,16 @@ class WorkerService:
                 version='1.0'
             )
             
-            # Update model record
-            model.status = JobStatus.COMPLETED
-            model.weights_location_id = weights_location.id
-            model.training_completed_at = datetime.utcnow()
+            with db.session.begin_nested():
+                # Update model record
+                model.status = JobStatus.COMPLETED
+                model.weights_location_id = weights_location.id
+                model.training_completed_at = datetime.utcnow()
+                db.session.add(model)
+            
             db.session.commit()
             
-            # Return success
+            # Update job status
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.COMPLETED,
@@ -264,16 +276,18 @@ class WorkerService:
             )
         
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Training error: {str(e)}")
             
-            # Update model status on failure
             if model:
                 try:
-                    model.status = JobStatus.FAILED
-                    model.error_message = str(e)
+                    with db.session.begin_nested():
+                        model.status = JobStatus.FAILED
+                        model.error_message = str(e)
+                        db.session.add(model)
                     db.session.commit()
-                except:
-                    pass
+                except Exception as ex:
+                    logger.error(f"Failed to update model status to FAILED: {str(ex)}")
                     
             self.job_queue.update_job_status(
                 job_id,
@@ -330,9 +344,11 @@ class WorkerService:
                 db.session.add(image)
                 generated_images.append(image)
             
-            # Update photobook status
-            photobook = PhotoBook.query.get(photobook_id)
-            photobook.status = JobStatus.COMPLETED
+            with db.session.begin_nested():
+                # Update photobook status
+                photobook = PhotoBook.query.get(photobook_id)
+                photobook.status = JobStatus.COMPLETED
+                db.session.add(photobook)
             
             db.session.commit()
             
@@ -352,6 +368,7 @@ class WorkerService:
             )
             
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Photobook generation error: {str(e)}")
             self.job_queue.update_job_status(
                 job_id,
@@ -422,6 +439,7 @@ class WorkerService:
             )
         
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Generation error: {str(e)}")
             self.job_queue.update_job_status(
                 job_id,

@@ -113,9 +113,22 @@ class StorageLocation(db.Model, TimestampMixin):
     storage_type = db.Column(db.Enum(StorageType), nullable=False)
     bucket = db.Column(db.String(255), nullable=False)
     path = db.Column(db.String(1000), nullable=False)
-    file_size = db.Column(db.BigInteger)  # Add file size for tracking
+    file_size = db.Column(db.BigInteger)  
     content_type = db.Column(db.String(100))
+    checksum = db.Column(db.String(64), nullable=True)
     metadata_json = db.Column(JSONB)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "storage_type": self.storage_type.value,
+            "bucket": self.bucket,
+            "path": self.path,
+            "file_size": self.file_size,
+            "content_type": self.content_type,
+            "checksum": self.checksum,
+            "metadata_json": self.metadata_json
+        }
     
     @property
     def full_path(self):

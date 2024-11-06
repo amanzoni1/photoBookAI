@@ -1,15 +1,11 @@
-# server/services/ai_service.py
-
 import os
-import yaml
 import logging
 import requests
 import time
 from pathlib import Path
-import shutil
-from typing import Dict, Any, List, Optional
 import subprocess
-from models import UserImage
+from typing import Dict, Any, Optional
+from dotenv import load_dotenv  # Ensure you have python-dotenv installed
 
 # Configure logging
 logging.basicConfig(
@@ -32,7 +28,7 @@ class LambdaInstance:
         self.api_key = config['LAMBDA_API_KEY']
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
         self.instance_ip = None  # To be fetched after instance is active
-        self.ssh_key_path = config['LAMBDA_SSH_KEY_PATH']  # Path to your SSH key
+        self.ssh_key_path = config['LAMBDA_SSH_KEY_PATH']
 
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict:
         """Make request to Lambda API."""
@@ -71,7 +67,7 @@ class LambdaInstance:
             scp_command = [
                 'scp',
                 '-i', ssh_key,
-                '-o', 'StrictHostKeyChecking=no',  # Bypass host key verification
+                '-o', 'StrictHostKeyChecking=no',  # Optional: to bypass host key verification
                 local_path,
                 f'ubuntu@{instance_ip}:{remote_path}'
             ]
@@ -114,7 +110,7 @@ class LambdaInstance:
                 command
             ]
             logger.info(f"Executing command on {instance_ip}: {command}")
-            result = subprocess.run(ssh_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False)
+            result = subprocess.run(ssh_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             logger.debug(f"Command output: {result.stdout}")
             if result.stderr:
                 logger.warning(f"Command stderr: {result.stderr}")
@@ -131,7 +127,7 @@ class LambdaInstance:
             try:
                 status_response = self.get_instance_details()
                 current_status = status_response.get('data', {}).get('status')
-                logger.debug(f"Current instance status: {current_status}")
+                logger.debug(f"Current instance status: {current_status} ({repr(current_status)})")
                 if current_status and current_status.strip().lower() == 'active':
                     logger.info(f"Instance {self.instance_id} is active.")
                     self.instance_ip = status_response.get('data', {}).get('ip')
@@ -156,10 +152,9 @@ class AIService:
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
 
         # Lambda paths
-        self.remote_base = '/home/ubuntu'
-        self.remote_workspace = f"{self.remote_base}/ai-toolkit"
-        self.remote_datasets = f"{self.remote_workspace}/datasets"
-        self.remote_models = f"{self.remote_workspace}/output"
+        self.remote_base = '/home/ubuntu/workspace'
+        self.remote_dataset = f"{self.remote_base}/datasets"
+        self.remote_models = f"{self.remote_base}/models"
 
         # Local paths with caching
         self.base_path = Path(config.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training'))
@@ -168,16 +163,49 @@ class AIService:
         self.datasets_path.mkdir(parents=True, exist_ok=True)
         self.cache_path.mkdir(parents=True, exist_ok=True)
 
-    def launch_instance(self) -> LambdaInstance:
-        """Launch a new Lambda instance."""
-        try:
-            ssh_key_name = self.config['LAMBDA_SSH_KEY_NAME']  # Ensure this is set in your config
+        # Cache toolkit requirements
+        self._cache_toolkit_files()
 
+    def _cache_toolkit_files(self):
+        """Cache AI toolkit files locally to speed up setup."""
+        toolkit_cache = self.cache_path / 'ai-toolkit'
+        if not toolkit_cache.exists():
+            logger.info("Caching AI toolkit files...")
+            try:
+                subprocess.run([
+                    'git', 'clone', 'https://github.com/ostris/ai-toolkit',
+                    str(toolkit_cache)
+                ], check=True)
+                logger.info("AI toolkit cloned successfully.")
+
+                # Create requirements archive
+                requirements_txt = toolkit_cache / 'requirements.txt'
+                if requirements_txt.exists():
+                    import zipfile
+                    with zipfile.ZipFile(self.cache_path / 'requirements.zip', 'w') as zf:
+                        zf.write(requirements_txt, 'requirements.txt')
+                    logger.info("Requirements.zip created successfully.")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to clone AI toolkit: {str(e)}")
+                raise LambdaAPIException(f"Failed to clone AI toolkit: {str(e)}")
+
+    def launch_instance(self) -> LambdaInstance:
+        """Launch a new Lambda instance with optimized environment setup."""
+        try:
+            # Remove 'file_data' from the payload as it's not recognized by the API
+            # Specify the file system name if you have one; otherwise, omit it
+            # For this example, we'll assume no filesystem is attached
+
+            # SSH key name
+            ssh_key_name = 'lambda-ssh'  # Ensure this matches your registered SSH key name
+
+            # Launch payload without 'file_data' and 'file_system_names'
             payload = {
-                'region_name': self.region,
-                'instance_type_name': self.instance_type,
+                'region_name': self.region,  # e.g., 'us-west-2'
+                'instance_type_name': self.instance_type,  # e.g., 'gpu_1x_h100_pcie'
                 'quantity': 1,
                 'ssh_key_names': [ssh_key_name]
+                # 'file_system_names': ['shared-fs']  # Uncomment if you have a filesystem
             }
             logger.debug(f"Launching instance with payload: {payload}")
 
@@ -189,6 +217,7 @@ class AIService:
             logger.debug(f"Lambda API response: {response.status_code} - {response.text}")
             response.raise_for_status()
 
+            # Extract instance ID from the nested 'data' object
             response_data = response.json()
             if 'data' not in response_data or 'instance_ids' not in response_data['data']:
                 raise LambdaAPIException("Invalid API response format")
@@ -212,19 +241,33 @@ class AIService:
             raise
 
     def _setup_environment(self, instance: LambdaInstance):
-        """Setup environment with the specified steps."""
+        """Setup environment with sequential operations."""
         try:
-            # Commands to execute on the instance
-            setup_commands = f"""
-            cd {self.remote_base} && \
-            git clone https://github.com/ostris/ai-toolkit.git && \
-            cd ai-toolkit && \
-            git submodule update --init --recursive && \
-            python3 -m venv venv && \
-            source venv/bin/activate && \
-            pip install torch && \
-            pip install -r requirements.txt
-            """
+            # Step 1: Create workspace directories via SSH
+            create_dirs_command = "mkdir -p /home/ubuntu/workspace/datasets /home/ubuntu/workspace/models /home/ubuntu/workspace/cache"
+            logger.info("Creating workspace directories on the instance...")
+            instance.execute_command_ssh(create_dirs_command)
+            logger.info("Workspace directories created successfully.")
+
+            # Step 2: Upload cached requirements.zip via SCP
+            local_requirements_zip = str(self.cache_path / 'requirements.zip')
+            remote_requirements_zip = f"{self.remote_base}/requirements.zip"
+            logger.info("Uploading requirements.zip to the instance...")
+            instance.upload_file_scp(local_requirements_zip, remote_requirements_zip)
+            logger.info("Requirements.zip uploaded successfully.")
+
+            # Step 3: Execute setup commands via SSH
+            setup_commands = """
+cd /home/ubuntu/workspace && \
+unzip requirements.zip && \
+pip install -r requirements.txt && \
+git clone https://github.com/ostris/ai-toolkit && \
+cd ai-toolkit && \
+git submodule update --init --recursive && \
+echo "export HF_HUB_ENABLE_HF_TRANSFER=1" >> ~/.bashrc && \
+echo "export DISABLE_TELEMETRY=YES" >> ~/.bashrc && \
+source ~/.bashrc
+"""
             logger.info("Executing setup commands on the instance...")
             command_result = instance.execute_command_ssh(setup_commands)
             logger.debug(f"Setup command output: {command_result}")
@@ -236,144 +279,81 @@ class AIService:
             logger.error(f"Environment setup failed: {str(e)}")
             raise
 
-    def prepare_dataset(self, model_id: int, image_ids: List[int]) -> Path:
-        """Prepare dataset for training."""
-        dataset_path = self.datasets_path / str(model_id)
-        if dataset_path.exists():
-            shutil.rmtree(dataset_path)
-        dataset_path.mkdir(parents=True)
-
-        # Get images from database
+    def test_interaction(self):
+        """Test interaction with Lambda Labs API and SSH."""
         try:
-            from app import db  # Import inside method to avoid circular imports
-            images = db.session.query(UserImage).filter(UserImage.id.in_(image_ids)).all()
-        except Exception as e:
-            logger.error(f"Database query failed: {str(e)}")
-            raise
-
-        # Process images
-        for idx, image in enumerate(images):
-            try:
-                # Get image data from storage
-                image_data = self.config['storage_service'].get_file_data(image.storage_location)
-
-                # Save image
-                image_path = dataset_path / f"image_{idx:04d}.jpg"
-                with open(image_path, 'wb') as f:
-                    f.write(image_data)
-
-                # Create caption with trigger
-                caption = 'an image of [trigger]'
-                caption_path = dataset_path / f"image_{idx:04d}.txt"
-                with open(caption_path, 'w') as f:
-                    f.write(caption)
-
-                logger.debug(f"Processed image {idx}")
-
-            except Exception as e:
-                logger.error(f"Error processing image {image.id}: {str(e)}")
-                raise
-
-        return dataset_path
-
-    def train_model(self, model_id: int, user_id: int, training_config: Dict) -> bytes:
-        """Run model training."""
-        instance = None
-        dataset_path = None
-        local_weights = None
-        temp_config_path = None
-
-        try:
-            # Prepare dataset
-            logger.info(f"Starting model {model_id} training preparation")
-            dataset_path = self.prepare_dataset(model_id, training_config['image_ids'])
-
-            # Launch instance
+            # Step 1: Launch Instance
+            logger.info("Launching Lambda instance...")
             instance = self.launch_instance()
+            logger.info(f"Instance {instance.instance_id} launched successfully with IP {instance.instance_ip}.")
 
-            # Upload dataset to instance
-            logger.info("Uploading dataset")
-            remote_dataset_path = f"{self.remote_workspace}/datasets/{model_id}"
-            instance.execute_command_ssh(f"mkdir -p {remote_dataset_path}")
+            # Step 2: Upload a Test File via SCP
+            test_local_file = self.cache_path / 'requirements.zip'  # Example file
+            test_remote_path = f"{self.remote_base}/test_requirements.zip"
+            logger.info("Uploading test_requirements.zip to the instance...")
+            instance.upload_file_scp(str(test_local_file), test_remote_path)
+            logger.info("Test file uploaded successfully.")
 
-            # Upload dataset files
-            dataset_files = list(dataset_path.glob('*'))
-            for file_path in dataset_files:
-                instance.upload_file_scp(str(file_path), f"{remote_dataset_path}/{file_path.name}")
+            # Step 3: Execute a Test Command via SSH
+            test_command = f"ls -l {self.remote_base}/"
+            logger.info("Executing test command to list remote workspace contents...")
+            command_output = instance.execute_command_ssh(test_command)
+            logger.info(f"Test command output:\n{command_output}")
 
-            # Prepare and upload YAML config
-            logger.info("Preparing training configuration")
-            config_path = Path(__file__).parent / 'configs' / 'base_training.yaml'
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
+            # Step 4: Download the Test File Back via SCP
+            download_local_path = self.base_path / 'downloaded_test_requirements.zip'
+            logger.info("Downloading test_requirements.zip back to local machine...")
+            instance.download_file_scp(test_remote_path, str(download_local_path))
+            logger.info(f"Test file downloaded successfully to {download_local_path}")
 
-            # Update config
-            config['config']['name'] = f"model_{model_id}"
-            config['config']['process'][0]['training_folder'] = f"output/{model_id}"
-            config['config']['process'][0]['datasets'][0]['folder_path'] = f"datasets/{model_id}"
+            # Optional: Verify the downloaded file exists
+            if download_local_path.exists():
+                logger.info("Downloaded test file exists. Interaction successful.")
+            else:
+                logger.error("Downloaded test file does not exist. Interaction failed.")
 
-            # Save and upload modified config
-            temp_config_path = self.base_path / f"base_training_{model_id}.yaml"
-            with open(temp_config_path, 'w') as f:
-                yaml.dump(config, f)
+            # Step 5: Terminate the Instance
+            logger.info("Terminating the Lambda instance...")
+            termination_payload = {'instance_ids': [instance.instance_id]}
+            termination_response = requests.post(
+                f"{self.base_url}/instance-operations/terminate",
+                headers={'Authorization': f'Bearer {self.api_key}'},
+                json=termination_payload
+            )
+            logger.debug(f"Termination response: {termination_response.status_code} - {termination_response.text}")
+            termination_response.raise_for_status()
+            logger.info(f"Instance {instance.instance_id} terminated successfully.")
 
-            remote_config = f"{self.remote_workspace}/base_training.yaml"
-            instance.upload_file_scp(str(temp_config_path), remote_config)
-
-            # Run training
-            logger.info("Starting training")
-            train_cmd = f"""
-            cd {self.remote_workspace} && \
-            source venv/bin/activate && \
-            export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
-            python run.py base_training.yaml
-            """
-            result = instance.execute_command_ssh(train_cmd)
-            logger.debug(f"Training command output: {result}")
-
-            # Check for training success
-            if "Error" in result or "Exception" in result:
-                # Fetch training log for details
-                log_result = instance.execute_command_ssh(f"cat {self.remote_workspace}/training.log")
-                raise Exception(f"Training failed with log:\n{log_result}")
-
-            # Download weights
-            logger.info("Downloading trained weights")
-            remote_weights = f"{self.remote_workspace}/output/{model_id}/model.safetensors"
-            local_weights = self.base_path / f"model_{model_id}.safetensors"
-
-            instance.download_file_scp(remote_weights, str(local_weights))
-
-            with open(local_weights, 'rb') as f:
-                weights_data = f.read()
-
-            return weights_data
-
+        except LambdaAPIException as e:
+            logger.error(f"Lambda API Exception: {str(e)}")
         except Exception as e:
-            logger.error(f"Training error for model {model_id}: {str(e)}")
-            raise
+            logger.error(f"An unexpected error occurred: {str(e)}")
 
-        finally:
-            # Always terminate the instance when done
-            if instance:
-                try:
-                    logger.info("Terminating instance")
-                    response = requests.post(
-                        f"{self.base_url}/instance-operations/terminate",
-                        headers={'Authorization': f'Bearer {self.api_key}'},
-                        json={'instance_ids': [instance.instance_id]}
-                    )
-                    response.raise_for_status()
-                except Exception as e:
-                    logger.error(f"Failed to terminate instance: {str(e)}")
+def main():
+    # Load environment variables from .env file
+    load_dotenv()
 
-            # Cleanup local files
-            try:
-                if dataset_path and dataset_path.exists():
-                    shutil.rmtree(dataset_path)
-                if local_weights and Path(local_weights).exists():
-                    local_weights.unlink()
-                if temp_config_path and temp_config_path.exists():
-                    temp_config_path.unlink()
-            except Exception as e:
-                logger.error(f"Cleanup error: {str(e)}")
+    # Load configuration from environment variables or a config file
+    config = {
+        'LAMBDA_API_KEY': os.getenv('LAMBDA_API_KEY'),
+        'LAMBDA_INSTANCE_TYPE': os.getenv('LAMBDA_INSTANCE_TYPE', 'gpu_1x_h100_pcie'),  # Replace with actual instance type
+        'LAMBDA_REGION': os.getenv('LAMBDA_REGION', 'us-west-2'),  # Replace with your valid region
+        'AI_TRAINING_BASE_PATH': os.getenv('AI_TRAINING_BASE_PATH', '/tmp/ai_training'),
+        'HF_TOKEN': os.getenv('HF_TOKEN'),  # If required for your setup
+        'LAMBDA_SSH_KEY_PATH': os.getenv('LAMBDA_SSH_KEY_PATH')  # Path to your SSH key
+    }
+
+    # Validate configuration
+    missing_configs = [key for key, value in config.items() if not value]
+    if missing_configs:
+        logger.error(f"Missing configuration for: {', '.join(missing_configs)}")
+        return
+
+    # Initialize AIService
+    ai_service = AIService(config)
+
+    # Run the test interaction
+    ai_service.test_interaction()
+
+if __name__ == "__main__":
+    main()

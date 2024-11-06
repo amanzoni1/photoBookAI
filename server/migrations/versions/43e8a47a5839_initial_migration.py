@@ -1,8 +1,8 @@
-"""Initial database setup
+"""Initial migration
 
-Revision ID: d04bab802ba9
+Revision ID: 43e8a47a5839
 Revises: 
-Create Date: 2024-10-31 17:05:36.715564
+Create Date: 2024-11-05 23:29:28.346859
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'd04bab802ba9'
+revision = '43e8a47a5839'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,28 +23,49 @@ def upgrade():
     sa.Column('storage_type', sa.Enum('DO_SPACES', 'LOCAL', name='storagetype'), nullable=False),
     sa.Column('bucket', sa.String(length=255), nullable=False),
     sa.Column('path', sa.String(length=1000), nullable=False),
+    sa.Column('file_size', sa.BigInteger(), nullable=True),
+    sa.Column('content_type', sa.String(length=100), nullable=True),
     sa.Column('metadata_json', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('storage_locations', schema=None) as batch_op:
+        batch_op.create_index('idx_storage_locations_path', ['path'], unique=False)
+
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('username', sa.String(length=64), nullable=False),
     sa.Column('password_hash', sa.String(length=256), nullable=False),
+    sa.Column('model_credits', sa.Integer(), nullable=True),
+    sa.Column('image_credits', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
+    op.create_table('credit_transactions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('credit_type', sa.Enum('MODEL', 'IMAGE', name='credittype'), nullable=False),
+    sa.Column('amount', sa.Integer(), nullable=False),
+    sa.Column('price', sa.Float(), nullable=True),
+    sa.Column('payment_id', sa.String(length=255), nullable=True),
+    sa.Column('description', sa.String(length=255), nullable=True),
+    sa.Column('metadata_json', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('trained_models',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('storage_location_id', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('version', sa.String(length=50), nullable=False),
+    sa.Column('version', sa.String(length=50), nullable=True),
+    sa.Column('weights_location_id', sa.Integer(), nullable=True),
     sa.Column('status', sa.Enum('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', name='jobstatus'), nullable=True),
     sa.Column('training_started_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('training_completed_at', sa.DateTime(timezone=True), nullable=True),
@@ -53,8 +74,8 @@ def upgrade():
     sa.Column('metrics', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['storage_location_id'], ['storage_locations.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['weights_location_id'], ['storage_locations.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('trained_models', schema=None) as batch_op:
@@ -65,8 +86,8 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('storage_location_id', sa.Integer(), nullable=False),
     sa.Column('original_filename', sa.String(length=255), nullable=False),
-    sa.Column('file_size', sa.Integer(), nullable=False),
-    sa.Column('mime_type', sa.String(length=100), nullable=False),
+    sa.Column('file_size', sa.Integer(), nullable=True),
+    sa.Column('mime_type', sa.String(length=100), nullable=True),
     sa.Column('width', sa.Integer(), nullable=True),
     sa.Column('height', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
@@ -106,22 +127,61 @@ def upgrade():
     sa.ForeignKeyConstraint(['model_id'], ['trained_models.id'], ),
     sa.PrimaryKeyConstraint('model_id', 'image_id')
     )
-    op.create_table('generated_images',
+    op.create_table('photobooks',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('job_id', sa.Integer(), nullable=False),
-    sa.Column('storage_location_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('model_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', name='jobstatus'), nullable=True),
+    sa.Column('prompt', sa.Text(), nullable=True),
+    sa.Column('style_config', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['job_id'], ['generation_jobs.id'], ),
-    sa.ForeignKeyConstraint(['storage_location_id'], ['storage_locations.id'], ),
+    sa.ForeignKeyConstraint(['model_id'], ['trained_models.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('photobooks', schema=None) as batch_op:
+        batch_op.create_index('idx_photobooks_model', ['model_id'], unique=False)
+
+    op.create_table('generated_images',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('model_id', sa.Integer(), nullable=False),
+    sa.Column('photobook_id', sa.Integer(), nullable=True),
+    sa.Column('storage_location_id', sa.Integer(), nullable=False),
+    sa.Column('generation_job_id', sa.Integer(), nullable=True),
+    sa.Column('generation_params', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('prompt', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['generation_job_id'], ['generation_jobs.id'], ),
+    sa.ForeignKeyConstraint(['model_id'], ['trained_models.id'], ),
+    sa.ForeignKeyConstraint(['photobook_id'], ['photobooks.id'], ),
+    sa.ForeignKeyConstraint(['storage_location_id'], ['storage_locations.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('generated_images', schema=None) as batch_op:
+        batch_op.create_index('idx_generated_images_model', ['model_id'], unique=False)
+        batch_op.create_index('idx_generated_images_photobook', ['photobook_id'], unique=False)
+        batch_op.create_index('idx_generated_images_user', ['user_id'], unique=False)
+
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    with op.batch_alter_table('generated_images', schema=None) as batch_op:
+        batch_op.drop_index('idx_generated_images_user')
+        batch_op.drop_index('idx_generated_images_photobook')
+        batch_op.drop_index('idx_generated_images_model')
+
     op.drop_table('generated_images')
+    with op.batch_alter_table('photobooks', schema=None) as batch_op:
+        batch_op.drop_index('idx_photobooks_model')
+
+    op.drop_table('photobooks')
     op.drop_table('model_training_images')
     with op.batch_alter_table('generation_jobs', schema=None) as batch_op:
         batch_op.drop_index('idx_generation_jobs_user_id')
@@ -136,6 +196,10 @@ def downgrade():
         batch_op.drop_index('idx_trained_models_user_id')
 
     op.drop_table('trained_models')
+    op.drop_table('credit_transactions')
     op.drop_table('users')
+    with op.batch_alter_table('storage_locations', schema=None) as batch_op:
+        batch_op.drop_index('idx_storage_locations_path')
+
     op.drop_table('storage_locations')
     # ### end Alembic commands ###

@@ -28,33 +28,37 @@ def purchase_credits(current_user):
     """Purchase credits"""
     try:
         data = request.get_json()
-        purchase_type = data.get('type')  # 'model' or 'photobook'
+        purchase_type = data.get('type')  
         quantity = int(data.get('quantity', 1))
         payment_id = data['payment_id']
 
-        if purchase_type not in ['model', 'photobook']:
+        if purchase_type not in ['MODEL', 'IMAGE']:
             return jsonify({'message': 'Invalid purchase type'}), 400
+
+        # Convert to proper enum value
+        credit_type = CreditType.MODEL if purchase_type == 'MODEL' else CreditType.IMAGE
 
         credit_service = get_credit_service()
         if not credit_service:
             return jsonify({'message': 'Service unavailable'}), 503
 
-        # Calculate price based on purchase type and quantity
-        if purchase_type == 'model':
-            credit_type = CreditType.MODEL
+        # Calculate price and amount
+        if purchase_type == 'MODEL':
             price = PRICES['MODEL'] * quantity
-            amount = quantity  
+            amount = quantity
         else:  # photobook
-            credit_type = CreditType.IMAGE
             price = PRICES['PHOTOBOOK'] * quantity
-            amount = IMAGES_PER_PHOTOBOOK * quantity  
+            amount = IMAGES_PER_PHOTOBOOK * quantity
+
+        # Add debug logging
+        logger.debug(f"Adding credits with type: {credit_type}, enum value: {credit_type.value}")
 
         transaction = credit_service.add_credits(
-            current_user,
-            credit_type,
-            amount,
-            payment_id,
-            price,
+            user=current_user,
+            credit_type=credit_type,  
+            amount=amount,
+            payment_id=payment_id,
+            price=price,
             metadata={
                 'purchase_type': purchase_type,
                 'quantity': quantity
@@ -68,10 +72,7 @@ def purchase_credits(current_user):
             'amount_paid': price
         }), 200
 
-    except KeyError as e:
-        return jsonify({'message': f'Missing required field: {str(e)}'}), 400
-    except ValueError as e:
-        return jsonify({'message': f'Invalid value: {str(e)}'}), 400
     except Exception as e:
         logger.error(f"Purchase error: {str(e)}")
-        return jsonify({'message': str(e)}), 500
+        db.session.rollback()
+        return jsonify({'message': 'Purchase failed. Please try again.'}), 500
