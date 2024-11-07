@@ -51,22 +51,9 @@ class Config:
     LAMBDA_SSH_KEY_PATH= os.environ.get('LAMBDA_SSH_KEY_PATH')
     LAMBDA_REGION = os.environ.get('LAMBDA_REGION')
     LAMBDA_INSTANCE_TYPE = 'gpu_1x_h100_pcie'
-    LAMBDA_CUSTOM_IMAGE_ID = 'your-custom-image-id'
 
     # AI Training settings
     HF_TOKEN = os.environ.get('HF_TOKEN')
-    AI_TRAINING_BASE_PATH = os.environ.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training')
-
-    # Lambda specific paths
-    LAMBDA_WORKING_DIR = '/home/ubuntu/workspace'  # Default Lambda working directory
-    LAMBDA_MODEL_CACHE = '/home/ubuntu/model_cache'
-    LAMBDA_DATA_PATH = '/home/ubuntu/data'
-    
-    # GPU Cache Settings (adjusted for Lambda)
-    GPU_CACHE_ENABLED = True
-    GPU_CACHE_PATH = LAMBDA_MODEL_CACHE
-    GPU_CACHE_SIZE_GB = 50  # Adjust based on your instance storage
-    GPU_MAX_MODELS = 5
 
     # Redis configuration
     REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')

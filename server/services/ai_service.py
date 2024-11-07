@@ -162,11 +162,9 @@ class AIService:
         self.remote_workspace = f"{self.remote_base}/ai-toolkit"
 
         # Local paths with caching
-        self.base_path = Path(config.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training'))
+        self.base_path = Path('/tmp/ai_training')
         self.datasets_path = self.base_path / 'datasets'
-        self.cache_path = self.base_path / 'cache'
         self.datasets_path.mkdir(parents=True, exist_ok=True)
-        self.cache_path.mkdir(parents=True, exist_ok=True)
 
     def launch_instance(self) -> LambdaInstance:
         """Launch a new Lambda instance."""
