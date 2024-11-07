@@ -10,6 +10,7 @@ from services.queue import JobQueue
 from services.worker import WorkerService
 from services.job_monitor import JobMonitor
 from services.alerts import AlertService
+from services.temp_files import TempFileManager
 import logging
 import threading
 import schedule
@@ -61,9 +62,14 @@ def get_alert_service():
     """Get alert service from current app"""
     return current_app.config.get('alert_service')
 
+def get_temp_manager():
+    """Get temp file manager from current app"""
+    return current_app.config.get('temp_manager')
+
 def init_services(app):
     """Initialize required services"""
     # Create services with app context
+    temp_manager = TempFileManager(app.config)
     storage_service = StorageService(app.config)
     model_cache = ModelCache(app.config['MODEL_CACHE_PATH'], storage_service)
     storage_monitor = StorageMonitor(storage_service)
@@ -72,6 +78,7 @@ def init_services(app):
     job_queue = JobQueue(app.config)
     
     # Store initial services in config
+    app.config['temp_manager'] = temp_manager
     app.config['storage_service'] = storage_service
     app.config['model_cache'] = model_cache
     app.config['storage_monitor'] = storage_monitor

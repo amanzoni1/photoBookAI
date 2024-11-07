@@ -5,6 +5,8 @@ import yaml
 import logging
 import requests
 import time
+import asyncio
+import concurrent.futures
 from pathlib import Path
 import shutil
 from typing import Dict, Any, List, Optional
@@ -131,7 +133,7 @@ class LambdaInstance:
             try:
                 status_response = self.get_instance_details()
                 current_status = status_response.get('data', {}).get('status')
-                logger.debug(f"Current instance status: {current_status}")
+                # logger.debug(f"Current instance status: {current_status}")
                 if current_status and current_status.strip().lower() == 'active':
                     logger.info(f"Instance {self.instance_id} is active.")
                     self.instance_ip = status_response.get('data', {}).get('ip')
@@ -140,8 +142,8 @@ class LambdaInstance:
                     return
                 elif current_status in ['error', 'failed']:
                     raise LambdaAPIException(f"Instance encountered an error during boot: {current_status}")
-                logger.debug("Instance not active yet. Waiting...")
-                time.sleep(60)  # Wait for 60 seconds before next check
+                # logger.debug("Instance not active yet. Waiting...")
+                time.sleep(5)  
             except LambdaAPIException as e:
                 logger.error(f"Error checking instance status: {str(e)}")
                 raise
@@ -158,8 +160,6 @@ class AIService:
         # Lambda paths
         self.remote_base = '/home/ubuntu'
         self.remote_workspace = f"{self.remote_base}/ai-toolkit"
-        self.remote_datasets = f"{self.remote_workspace}/datasets"
-        self.remote_models = f"{self.remote_workspace}/output"
 
         # Local paths with caching
         self.base_path = Path(config.get('AI_TRAINING_BASE_PATH', '/tmp/ai_training'))
@@ -217,7 +217,7 @@ class AIService:
             # Commands to execute on the instance
             setup_commands = f"""
             cd {self.remote_base} && \
-            git clone https://github.com/ostris/ai-toolkit.git && \
+            git clone https://github.com/amanzoni1/ai-toolkit.git && \
             cd ai-toolkit && \
             git submodule update --init --recursive && \
             python3 -m venv venv && \
@@ -236,31 +236,23 @@ class AIService:
             logger.error(f"Environment setup failed: {str(e)}")
             raise
 
-    def prepare_dataset(self, model_id: int, image_ids: List[int]) -> Path:
-        """Prepare dataset for training."""
+    def prepare_dataset(self, model_id: int, file_info: List[Dict]) -> Path:
+        """Prepare dataset for training from temporary files."""
         dataset_path = self.datasets_path / str(model_id)
         if dataset_path.exists():
             shutil.rmtree(dataset_path)
         dataset_path.mkdir(parents=True)
 
-        # Get images from database
-        try:
-            from app import db  # Import inside method to avoid circular imports
-            images = db.session.query(UserImage).filter(UserImage.id.in_(image_ids)).all()
-        except Exception as e:
-            logger.error(f"Database query failed: {str(e)}")
-            raise
-
         # Process images
-        for idx, image in enumerate(images):
+        for idx, info in enumerate(file_info):
             try:
-                # Get image data from storage
-                image_data = self.config['storage_service'].get_file_data(image.storage_location)
+                source_path = Path(info['path'])
+                if not source_path.exists():
+                    raise FileNotFoundError(f"Source file not found: {source_path}")
 
-                # Save image
+                # Copy image to dataset directory
                 image_path = dataset_path / f"image_{idx:04d}.jpg"
-                with open(image_path, 'wb') as f:
-                    f.write(image_data)
+                shutil.copy2(source_path, image_path)
 
                 # Create caption with trigger
                 caption = 'an image of [trigger]'
@@ -271,7 +263,7 @@ class AIService:
                 logger.debug(f"Processed image {idx}")
 
             except Exception as e:
-                logger.error(f"Error processing image {image.id}: {str(e)}")
+                logger.error(f"Error processing image {info['original_filename']}: {str(e)}")
                 raise
 
         return dataset_path
@@ -284,16 +276,24 @@ class AIService:
         temp_config_path = None
 
         try:
-            # Prepare dataset
             logger.info(f"Starting model {model_id} training preparation")
-            dataset_path = self.prepare_dataset(model_id, training_config['image_ids'])
 
-            # Launch instance
-            instance = self.launch_instance()
+            # Launch instance and prepare dataset simultaneously
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                instance_future = executor.submit(self.launch_instance)
+                dataset_future = executor.submit(
+                    self.prepare_dataset,
+                    model_id,
+                    training_config['file_info']
+                )
 
-            # Upload dataset to instance
+                # Wait for both to complete
+                instance = instance_future.result()
+                dataset_path = dataset_future.result()
+
+            # Create dataset directory and upload dataset
             logger.info("Uploading dataset")
-            remote_dataset_path = f"{self.remote_workspace}/datasets/{model_id}"
+            remote_dataset_path = f"{self.remote_workspace}/dataset"
             instance.execute_command_ssh(f"mkdir -p {remote_dataset_path}")
 
             # Upload dataset files
@@ -301,24 +301,14 @@ class AIService:
             for file_path in dataset_files:
                 instance.upload_file_scp(str(file_path), f"{remote_dataset_path}/{file_path.name}")
 
-            # Prepare and upload YAML config
-            logger.info("Preparing training configuration")
-            config_path = Path(__file__).parent / 'configs' / 'base_training.yaml'
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-
-            # Update config
-            config['config']['name'] = f"model_{model_id}"
-            config['config']['process'][0]['training_folder'] = f"output/{model_id}"
-            config['config']['process'][0]['datasets'][0]['folder_path'] = f"datasets/{model_id}"
-
-            # Save and upload modified config
-            temp_config_path = self.base_path / f"base_training_{model_id}.yaml"
-            with open(temp_config_path, 'w') as f:
-                yaml.dump(config, f)
-
-            remote_config = f"{self.remote_workspace}/base_training.yaml"
-            instance.upload_file_scp(str(temp_config_path), remote_config)
+            # Modify existing YAML config to update model name
+            logger.info("Updating training configuration")
+            model_name = f"model_{model_id}"
+            update_config_cmd = f"""
+            cd {self.remote_workspace} && \
+            sed -i 's/name: ".*"/name: "{model_name}"/' base_training.yaml
+            """
+            instance.execute_command_ssh(update_config_cmd)
 
             # Run training
             logger.info("Starting training")
@@ -337,10 +327,10 @@ class AIService:
                 log_result = instance.execute_command_ssh(f"cat {self.remote_workspace}/training.log")
                 raise Exception(f"Training failed with log:\n{log_result}")
 
-            # Download weights
+            # Download trained weights
             logger.info("Downloading trained weights")
-            remote_weights = f"{self.remote_workspace}/output/{model_id}/model.safetensors"
-            local_weights = self.base_path / f"model_{model_id}.safetensors"
+            remote_weights = f"{self.remote_workspace}/output/{model_name}.safetensors"
+            local_weights = self.base_path / f"{model_name}.safetensors"
 
             instance.download_file_scp(remote_weights, str(local_weights))
 

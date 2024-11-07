@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import tempfile
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -16,6 +17,13 @@ PRICES = {
     
 
 class Config:
+    # Base directory for the application
+    BASE_DIR = Path(__file__).parent.parent
+
+    # Temporary files configuration
+    TEMP_FILES_DIR = os.getenv('TEMP_FILES_DIR', Path(tempfile.gettempdir()) / 'ai_training')
+    TEMP_FILES_MAX_AGE = 24 * 3600  # 24 hours in seconds
+
     # Basic Flask config
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key'
     

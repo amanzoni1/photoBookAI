@@ -6,12 +6,14 @@ from typing import Dict, Any, List
 import time
 from datetime import datetime
 import signal
+import shutil
+from pathlib import Path
 from queue import Queue
 import io
 
 from flask import Flask
 from app import db
-from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook
+from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook, UserImage
 from .queue import JobQueue
 from .ai_service import AIService  
 
@@ -200,13 +202,13 @@ class WorkerService:
             weights_data = ai_service.train_model(
                 model_id=model_id,
                 user_id=training_config['user_id'],
-                training_config={'image_ids': training_config['image_ids']}
+                training_config=training_config
             )
             
             return weights_data
                 
         except Exception as e:
-            logger.error(f"Training error: {str(e)}")
+            logger.error(f"Training error 1: {str(e)}")
             raise
 
     ##########################################################################
@@ -221,6 +223,7 @@ class WorkerService:
         job_id = job['job_id']
         logger.info(f"Processing training job {job_id}")
         model = None
+        temp_dir = Path(job['payload']['temp_dir'])
         
         try:
             self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
@@ -243,12 +246,42 @@ class WorkerService:
                 model_id=model_id,
                 training_config={
                     'user_id': user_id,
-                    'image_ids': job['payload']['image_ids']
+                    'file_info': job['payload']['file_info']
                 }
             )
             
-            # Upload model weights
+            # If training successful, now store the images permanently
             storage_service = self.config['storage_service']
+            uploaded_files = []
+            
+            for file_info in job['payload']['file_info']:
+                file_path = Path(file_info['path'])
+                if not file_path.exists():
+                    raise FileNotFoundError(f"Training file not found: {file_path}")
+                    
+                with open(file_path, 'rb') as f:
+                    # Upload training image
+                    location, image_info = storage_service.upload_training_image(
+                        user_id=user_id,
+                        image_file=f,
+                        filename=file_info['original_filename'],
+                        quality_preset='high'
+                    )
+                    
+                    # Create image record
+                    image = UserImage(
+                        user_id=user_id,
+                        storage_location_id=location.id,
+                        original_filename=file_info['original_filename'],
+                        file_size=file_path.stat().st_size,
+                        mime_type=f"image/{file_info['format'].lower()}",
+                        width=file_info['width'],
+                        height=file_info['height']
+                    )
+                    
+                    uploaded_files.append(image)
+            
+            # Upload model weights
             weights_location = storage_service.upload_model_weights(
                 user_id=user_id,
                 model_id=model_id,
@@ -257,10 +290,15 @@ class WorkerService:
             )
             
             with db.session.begin_nested():
+                # Add all images
+                for image in uploaded_files:
+                    db.session.add(image)
+                
                 # Update model record
                 model.status = JobStatus.COMPLETED
                 model.weights_location_id = weights_location.id
                 model.training_completed_at = datetime.utcnow()
+                model.training_images.extend(uploaded_files)
                 db.session.add(model)
             
             db.session.commit()
@@ -271,7 +309,8 @@ class WorkerService:
                 JobStatus.COMPLETED,
                 {
                     'model_id': model_id,
-                    'weights_location_id': weights_location.id
+                    'weights_location_id': weights_location.id,
+                    'image_ids': [img.id for img in uploaded_files]
                 }
             )
         
@@ -294,6 +333,14 @@ class WorkerService:
                 JobStatus.FAILED,
                 {'error': str(e)}
             )
+        
+        finally:
+            # Cleanup temp directory
+            try:
+                if temp_dir.exists():
+                    shutil.rmtree(temp_dir)
+            except Exception as cleanup_error:
+                logger.error(f"Failed to cleanup temp directory {temp_dir}: {cleanup_error}")
 
     def _process_photobook_job(self, job: Dict[str, Any]):
         """Process photobook generation job"""

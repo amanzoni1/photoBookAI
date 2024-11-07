@@ -5,11 +5,13 @@ from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import logging
+import shutil
+from PIL import Image 
 
 from . import model_bp
 from .auth import token_required
 from app import db
-from models import TrainedModel, UserImage, JobStatus, GeneratedImage, PhotoBook, CreditType
+from models import TrainedModel, JobStatus, GeneratedImage, PhotoBook, CreditType
 from services.queue import JobType
 from config import IMAGES_PER_PHOTOBOOK
 from . import (
@@ -17,7 +19,8 @@ from . import (
     get_model_cache,
     get_job_queue,
     get_credit_service,
-    get_worker_service
+    get_worker_service,
+    get_temp_manager  
 )
 
 logger = logging.getLogger(__name__)
@@ -34,9 +37,10 @@ def allowed_file(filename: str, allowed_extensions: set = None) -> bool:
 def create_model(current_user):
     """Create model from uploaded training images"""
     credit_service = get_credit_service()
-    storage_service = get_storage_service()
     job_queue = get_job_queue()
-
+    temp_manager = get_temp_manager()
+    temp_dir = None
+    
     try:
         # Get request data
         data = request.form
@@ -52,48 +56,29 @@ def create_model(current_user):
         if not files:
             return jsonify({'message': 'No files provided'}), 400
 
-        # Start a database transaction
+        # Create temporary directory for this job
+        temp_dir = temp_manager.create_temp_dir() 
+        
         with db.session.begin_nested():
             # Check and deduct credits
             if not credit_service.use_credits(current_user, CreditType.MODEL):
                 return jsonify({'message': 'Insufficient credits for model training'}), 403
 
-            uploaded_files = []
+            file_info = []
             for file in files:
                 if file and allowed_file(file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
                     filename = secure_filename(file.filename)
+                    temp_path = temp_dir / filename
+                    file.save(temp_path)
                     
-                    # Upload training image
-                    location, image_info = storage_service.upload_training_image(
-                        current_user.id,
-                        file,
-                        filename,
-                        quality_preset='high'
-                    )
-                    
-                    # Flush to assign StorageLocation.id
-                    db.session.flush()
-                    
-                    # Ensure format is set
-                    img_format = image_info.get('format')
-                    if not img_format:
-                        logger.warning(f"Image format is None for file {filename}, defaulting to 'jpeg'")
-                        img_format = 'jpeg'
-                    
-                    mime_type = f"image/{img_format.lower()}" if img_format else 'image/jpeg'
-
-                    image = UserImage(
-                        user_id=current_user.id,
-                        storage_location_id=location.id,
-                        original_filename=filename,
-                        file_size=image_info['file_size'],
-                        mime_type=mime_type,
-                        width=image_info['width'],
-                        height=image_info['height']
-                    )
-                    
-                    db.session.add(image)
-                    uploaded_files.append(image)
+                    with Image.open(temp_path) as img:
+                        file_info.append({
+                            'path': str(temp_path),
+                            'original_filename': filename,
+                            'width': img.width,
+                            'height': img.height,
+                            'format': img.format
+                        })
                 else:
                     raise ValueError('Invalid file type')
 
@@ -106,26 +91,23 @@ def create_model(current_user):
                 config={
                     'age_years': age_years,
                     'age_months': age_months,
-                    'training_images': len(uploaded_files)
+                    'training_images': len(file_info)
                 }
             )
-            
-            # Associate training images with model
-            model.training_images.extend(uploaded_files)
             db.session.add(model)
 
-        # Commit the transaction
         db.session.commit()
 
-        # Enqueue training job
+        # Enqueue job
         job_id = job_queue.enqueue_job(
             JobType.MODEL_TRAINING,
             current_user.id,
             {
                 'model_id': model.id,
-                'image_ids': [img.id for img in uploaded_files],
+                'file_info': file_info,
                 'name': name,
-                'config': model.config
+                'config': model.config,
+                'temp_dir': str(temp_dir)  # Pass the temp directory path
             }
         )
 
@@ -135,10 +117,17 @@ def create_model(current_user):
             'message': 'Model training started successfully',
             'model_id': model.id,
             'job_id': job_id,
-            'training_images': len(uploaded_files)
+            'training_images': len(file_info)
         }), 200
 
     except Exception as e:
+        # Cleanup temp directory in case of error
+        if temp_dir and temp_dir.exists():
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as cleanup_error:
+                logger.error(f"Failed to cleanup temp directory {temp_dir}: {cleanup_error}")
+                
         db.session.rollback()
         logger.error(f"Model creation error: {str(e)}")
         return jsonify({'message': f'Model creation failed: {str(e)}'}), 500
