@@ -192,20 +192,20 @@ class WorkerService:
         finally:
             self.worker_status[thread_id]['current_job'] = None
 
-    def _get_trained_model_weights(self, model_id: int, training_config: Dict) -> bytes:
-        """Get trained model weights using AI service"""
+    def _get_trained_model_weights(self, model_id: int, training_config: Dict) -> str:
+        """Get the path to trained model weights using AI service"""
         try:
             # Initialize AI service with config
             ai_service = AIService(self.config)
             
-            # Run training using base YAML config
-            weights_data = ai_service.train_model(
+            # Run training and get the local weights file path
+            weights_file_path = ai_service.train_model(
                 model_id=model_id,
                 user_id=training_config['user_id'],
                 training_config=training_config
             )
             
-            return weights_data
+            return weights_file_path
                 
         except Exception as e:
             logger.error(f"Training error 1: {str(e)}")
@@ -241,8 +241,8 @@ class WorkerService:
             
             db.session.commit()
             
-            # Run training using AI service
-            weights_data = self._get_trained_model_weights(
+            # Run training using AI service and get the weights file path
+            weights_file_path = self._get_trained_model_weights(
                 model_id=model_id,
                 training_config={
                     'user_id': user_id,
@@ -250,55 +250,33 @@ class WorkerService:
                 }
             )
             
-            # If training successful, now store the images permanently
-            storage_service = self.config['storage_service']
-            uploaded_files = []
-            
-            for file_info in job['payload']['file_info']:
-                file_path = Path(file_info['path'])
-                if not file_path.exists():
-                    raise FileNotFoundError(f"Training file not found: {file_path}")
-                    
-                with open(file_path, 'rb') as f:
-                    # Upload training image
-                    location, image_info = storage_service.upload_training_image(
-                        user_id=user_id,
-                        image_file=f,
-                        filename=file_info['original_filename'],
-                        quality_preset='high'
-                    )
-                    
-                    # Create image record
-                    image = UserImage(
-                        user_id=user_id,
-                        storage_location_id=location.id,
-                        original_filename=file_info['original_filename'],
-                        file_size=file_path.stat().st_size,
-                        mime_type=f"image/{file_info['format'].lower()}",
-                        width=file_info['width'],
-                        height=file_info['height']
-                    )
-                    
-                    uploaded_files.append(image)
-            
             # Upload model weights
-            weights_location = storage_service.upload_model_weights(
-                user_id=user_id,
-                model_id=model_id,
-                weights_file=io.BytesIO(weights_data),
-                version='1.0'
-            )
+            storage_service = self.config['storage_service']
+            with open(weights_file_path, 'rb') as f:
+                weights_location = storage_service.upload_model_weights(
+                    user_id=user_id,
+                    model_id=model_id,
+                    weights_file=f,
+                    version='1.0'
+                )
+                
+                # Add the weights location to the session and commit to get the ID
+                db.session.add(weights_location)
+                db.session.commit()
+
+                if weights_location.id is None:
+                    logger.error("Failed to get weights storage location ID after committing.")
+                    raise Exception("Weights storage location ID is None after commit.")
+            
+            # Cleanup local weights file
+            if Path(weights_file_path).exists():
+                Path(weights_file_path).unlink()
             
             with db.session.begin_nested():
-                # Add all images
-                for image in uploaded_files:
-                    db.session.add(image)
-                
                 # Update model record
                 model.status = JobStatus.COMPLETED
                 model.weights_location_id = weights_location.id
                 model.training_completed_at = datetime.utcnow()
-                model.training_images.extend(uploaded_files)
                 db.session.add(model)
             
             db.session.commit()
@@ -309,8 +287,7 @@ class WorkerService:
                 JobStatus.COMPLETED,
                 {
                     'model_id': model_id,
-                    'weights_location_id': weights_location.id,
-                    'image_ids': [img.id for img in uploaded_files]
+                    'weights_location_id': weights_location.id
                 }
             )
         

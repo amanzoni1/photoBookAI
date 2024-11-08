@@ -49,8 +49,8 @@ class Config:
     LAMBDA_SSH_KEY = os.environ.get('LAMBDA_SSH_KEY')
     LAMBDA_SSH_KEY_NAME = os.environ.get('LAMBDA_SSH_KEY_NAME')
     LAMBDA_SSH_KEY_PATH= os.environ.get('LAMBDA_SSH_KEY_PATH')
-    LAMBDA_REGION = os.environ.get('LAMBDA_REGION')
-    LAMBDA_INSTANCE_TYPE = 'gpu_1x_h100_pcie'
+    LAMBDA_REGIONS = ['us-west-3', 'us-west-2', 'us-west-1', 'us-south-1', 'us-south-2', 'us-south-3', 'us-east-1', 'us-east-2', 'us-east-3', 'us-midwest-1',] 
+    LAMBDA_INSTANCE_TYPES = ['gpu_1x_h100_pcie', 'gpu_1x_h100_sxm5']
 
     # AI Training settings
     HF_TOKEN = os.environ.get('HF_TOKEN')
