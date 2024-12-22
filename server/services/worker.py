@@ -10,10 +10,12 @@ import shutil
 from pathlib import Path
 from queue import Queue
 import io
+from typing import Dict, Any, List, Optional, Tuple
 
 from flask import Flask
 from app import db
 from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook, UserImage
+from config import PHOTOSHOOT_THEMES
 from .queue import JobQueue
 from .ai_service import AIService  
 
@@ -168,6 +170,32 @@ class WorkerService:
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {str(e)}")
 
+    def _send_alert(self, alert_data: Dict[str, Any]):
+        """Send alert to handlers"""
+        self.alert_queue.put(alert_data)
+
+    def _process_alerts(self):
+        """Process queued alerts"""
+        while not self.alert_queue.empty():
+            alert = self.alert_queue.get()
+            for handler in self.alert_handlers:
+                try:
+                    handler(alert)
+                except Exception as e:
+                    logger.error(f"Alert handler error: {str(e)}")
+
+    def add_alert_handler(self, handler):
+        """Add alert handler function"""
+        self.alert_handlers.append(handler)
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get worker service status"""
+        return {
+            'active_workers': len([w for w in self.workers if w.is_alive()]),
+            'worker_status': self.worker_status,
+            'queue_size': self.job_queue.get_queue_size()
+        }
+
     def _process_job(self, job: Dict[str, Any], processor):
         """Process job with error handling"""
         job_id = job['job_id']
@@ -192,31 +220,112 @@ class WorkerService:
         finally:
             self.worker_status[thread_id]['current_job'] = None
 
-    def _get_trained_model_weights(self, model_id: int, training_config: Dict) -> str:
-        """Get the path to trained model weights using AI service"""
+
+    def _get_theme_prompts(self, theme_name: str) -> List[str]:
+        """Get predefined prompts for a theme"""
+        from config import PHOTOSHOOT_THEMES
+        
+        if theme_name not in PHOTOSHOOT_THEMES:
+            raise ValueError(f"Invalid theme name: {theme_name}")
+            
+        # Get base prompts for theme
+        theme_prompts = PHOTOSHOOT_THEMES[theme_name]
+        
+        # Add trigger word to prompts
+        return [f"{prompt}, p3r5onTr1g style" for prompt in theme_prompts]
+
+    def _get_trained_model_weights(self, model_id: int, training_config: Dict) -> Tuple[str, Dict[str, List[str]]]:
+        """Get the path to trained model weights and theme images using AI service"""
         try:
             # Initialize AI service with config
             ai_service = AIService(self.config)
             
-            # Run training and get the local weights file path
-            weights_file_path = ai_service.train_model(
+            # Run training and get the local weights file path and theme images
+            return ai_service.train_model(
                 model_id=model_id,
                 user_id=training_config['user_id'],
                 training_config=training_config
             )
-            
-            return weights_file_path
                 
         except Exception as e:
-            logger.error(f"Training error 1: {str(e)}")
+            logger.error(f"Training error: {str(e)}")
             raise
 
-    ##########################################################################
-    def _generate_image(self, model_id: int, prompt: str, **kwargs) -> bytes:
-        """Generate image using AI server"""
-        # TODO: Implement connection to AI generation server
-        raise NotImplementedError
-    ##########################################################################
+    def _save_initial_photobook(self, user_id: int, model_id: int, theme_name: str, image_paths: List[str]) -> None:
+        """Helper function to save initial photobook and its images"""
+        storage_service = self.config['storage_service']
+        theme_prompts = PHOTOSHOOT_THEMES[theme_name]
+        
+        try:
+            # Create photobook entry
+            photobook = PhotoBook(
+                user_id=user_id,
+                model_id=model_id,
+                name=f"Initial Photoshoot - {theme_name}",
+                theme_name=theme_name,
+                status=JobStatus.COMPLETED,
+                is_unlocked=False
+            )
+            db.session.add(photobook)
+            db.session.commit()
+            
+            # Save each image with its prompt
+            for idx, (image_path, prompt) in enumerate(zip(image_paths, theme_prompts)):
+                with open(image_path, 'rb') as f:
+                    location = storage_service.save_photobook_image(
+                        user_id=user_id,
+                        photobook_id=photobook.id,
+                        image_data=f.read(),
+                        image_number=idx + 1,
+                        prompt=f"{prompt}, p3r5onTr1g style"
+                    )
+                    
+                    image = GeneratedImage(
+                        user_id=user_id,
+                        model_id=model_id,
+                        photobook_id=photobook.id,
+                        storage_location_id=location.id,
+                        prompt=f"{prompt}, p3r5onTr1g style"
+                    )
+                    db.session.add(image)
+            
+            db.session.commit()
+            logger.info(f"Successfully saved initial photobook for theme {theme_name}")
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Failed to save initial photobook for theme {theme_name}: {str(e)}")
+            raise
+
+    def _get_generated_images(self, model_id: int, generation_config: Dict) -> List[str]:
+        """Get generated images using AI service"""
+        try:
+            # Initialize AI service with config
+            ai_service = AIService(self.config)
+            
+            # Handle both single prompt and multiple prompts cases
+            if 'prompts' in generation_config:
+                # Multiple prompts case (photobook)
+                prompts = generation_config['prompts']
+            elif 'prompt' in generation_config:
+                # Single prompt case (single image generation)
+                prompts = [generation_config['prompt']]
+            else:
+                raise ValueError("No prompts provided in generation config")
+            
+            # Generate images and get the local paths
+            image_paths = ai_service.generate_images(
+                model_id=model_id,
+                user_id=generation_config['user_id'],
+                model_path=generation_config['model_weights_path'],
+                prompts=prompts
+            )
+            
+            return image_paths
+                
+        except Exception as e:
+            logger.error(f"Generation error: {str(e)}")
+            raise
 
     def _process_training_job(self, job: Dict[str, Any]):
         """Process model training job"""
@@ -241,8 +350,9 @@ class WorkerService:
             
             db.session.commit()
             
-            # Run training using AI service and get the weights file path
-            weights_file_path = self._get_trained_model_weights(
+            # Run training using AI service and get both weights and theme images
+            logger.info(f"Starting model training for model_id {model_id}")
+            weights_file_path, theme_images = self._get_trained_model_weights(
                 model_id=model_id,
                 training_config={
                     'user_id': user_id,
@@ -251,6 +361,7 @@ class WorkerService:
             )
             
             # Upload model weights
+            logger.info(f"Uploading model weights for model {model_id}")
             storage_service = self.config['storage_service']
             with open(weights_file_path, 'rb') as f:
                 weights_location = storage_service.upload_model_weights(
@@ -260,7 +371,6 @@ class WorkerService:
                     version='1.0'
                 )
                 
-                # Add the weights location to the session and commit to get the ID
                 db.session.add(weights_location)
                 db.session.commit()
 
@@ -272,8 +382,24 @@ class WorkerService:
             if Path(weights_file_path).exists():
                 Path(weights_file_path).unlink()
             
+            # Save initial photobooks
+            n_themes = len(theme_images)
+            logger.info(f"Processing {n_themes} initial photobooks for model {model_id}")
+            
+            for theme_name, image_paths in theme_images.items():
+                try:
+                    if not image_paths:
+                        logger.warning(f"Empty image paths for theme {theme_name}")
+                        continue
+                        
+                    logger.info(f"Saving photobook for theme {theme_name} with {len(image_paths)} images")
+                    self._save_initial_photobook(user_id, model_id, theme_name, image_paths)
+                except Exception as theme_error:
+                    logger.error(f"Failed to save theme {theme_name}: {str(theme_error)}", exc_info=True)
+                    continue
+            
+            # Update model status
             with db.session.begin_nested():
-                # Update model record
                 model.status = JobStatus.COMPLETED
                 model.weights_location_id = weights_location.id
                 model.training_completed_at = datetime.utcnow()
@@ -312,17 +438,39 @@ class WorkerService:
             )
         
         finally:
-            # Cleanup temp directory
-            try:
-                if temp_dir.exists():
-                    shutil.rmtree(temp_dir)
-            except Exception as cleanup_error:
-                logger.error(f"Failed to cleanup temp directory {temp_dir}: {cleanup_error}")
+            # Cleanup all temporary directories
+            cleanup_paths = [
+                temp_dir,
+                self.base_path / "theme_images" if hasattr(self, 'base_path') else None
+            ]
+            
+            for path in cleanup_paths:
+                if path and path.exists():
+                    try:
+                        shutil.rmtree(path)
+                    except Exception as cleanup_error:
+                        logger.error(f"Failed to cleanup {path}: {cleanup_error}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
 
     def _process_photobook_job(self, job: Dict[str, Any]):
-        """Process photobook generation job"""
+        """Process themed photoshoot generation"""
         job_id = job['job_id']
         logger.info(f"Processing photobook job {job_id}")
+        photobook = None
         
         try:
             self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
@@ -331,49 +479,61 @@ class WorkerService:
             photobook_id = job['payload']['photobook_id']
             model_id = job['payload']['model_id']
             user_id = job['user_id']
-            prompt = job['payload']['prompt']
-            num_images = job['payload']['num_images']  # Should be IMAGES_PER_PHOTOBOOK
-            style_config = job['payload'].get('style_config', {})
+            prompts = job['payload']['prompts']  # Use prompts directly from payload
+            model_weights_path = job['payload']['model_weights_path']
             
             # Get storage service
             storage_service = self.config['storage_service']
             
-            # Generate all images in batch
-            generated_images = []
-            for i in range(num_images):
-                # TODO: Actual image generation here
-                image_data = self._generate_image(
-                    model_id=model_id,
-                    prompt=prompt,
-                    style_config=style_config
-                )
-                
-                # Save image with photobook organization
-                location = storage_service.save_photobook_image(
-                    user_id=user_id,
-                    photobook_id=photobook_id,
-                    image_data=image_data,
-                    image_number=i + 1
-                )
-                
-                # Create image record
-                image = GeneratedImage(
-                    user_id=user_id,
-                    model_id=model_id,
-                    photobook_id=photobook_id,
-                    storage_location_id=location.id,
-                    prompt=prompt,
-                    generation_params=style_config
-                )
-                db.session.add(image)
-                generated_images.append(image)
-            
+            # Update photobook status
             with db.session.begin_nested():
-                # Update photobook status
                 photobook = PhotoBook.query.get(photobook_id)
-                photobook.status = JobStatus.COMPLETED
+                photobook.status = JobStatus.PROCESSING
                 db.session.add(photobook)
+            db.session.commit()
             
+            # Add trigger word to prompts
+            themed_prompts = [f"{prompt}, p3r5onTr1g style" for prompt in prompts]
+            
+            # Generate images
+            image_paths = self._get_generated_images(
+                model_id=model_id,
+                generation_config={
+                    'user_id': user_id,
+                    'model_weights_path': model_weights_path,
+                    'prompts': themed_prompts
+                }
+            )
+
+            # Save images
+            generated_images = []
+            for idx, (image_path, prompt) in enumerate(zip(image_paths, themed_prompts)):
+                with open(image_path, 'rb') as f:
+                    image_data = f.read()
+                    
+                    location = storage_service.save_photobook_image(
+                        user_id=user_id,
+                        photobook_id=photobook_id,
+                        image_data=image_data,
+                        image_number=idx + 1,
+                        prompt=prompt
+                    )
+                    
+                    image = GeneratedImage(
+                        user_id=user_id,
+                        model_id=model_id,
+                        photobook_id=photobook_id,
+                        storage_location_id=location.id,
+                        prompt=prompt
+                    )
+                    db.session.add(image)
+                    generated_images.append(image)
+            
+            # Update status and unlock the photobook
+            with db.session.begin_nested():
+                photobook.status = JobStatus.COMPLETED
+                photobook.is_unlocked = True  # Unlock the photobook after successful generation
+                db.session.add(photobook)
             db.session.commit()
             
             # Return result
@@ -394,6 +554,16 @@ class WorkerService:
         except Exception as e:
             db.session.rollback()
             logger.error(f"Photobook generation error: {str(e)}")
+            if photobook:
+                try:
+                    with db.session.begin_nested():
+                        photobook.status = JobStatus.FAILED
+                        photobook.error_message = str(e)
+                        db.session.add(photobook)
+                    db.session.commit()
+                except Exception as ex:
+                    logger.error(f"Failed to update photobook status to FAILED: {str(ex)}")
+            
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.FAILED,
@@ -401,54 +571,62 @@ class WorkerService:
             )
 
     def _process_generation_job(self, job: Dict[str, Any]):
-        """Process image generation job"""
+        """Process single image generation job"""
         job_id = job['job_id']
         logger.info(f"Processing generation job {job_id}")
         
         try:
             self.job_queue.update_job_status(job_id, JobStatus.PROCESSING)
             
-            # Get data from payload
+            # Get data from payload - match route parameters
             model_id = job['payload']['model_id']
             user_id = job['user_id']
-            prompt = job['payload']['prompt']
-            num_images = job['payload']['num_images']
+            
+            # Prepare generation config
+            generation_config = {
+                'user_id': user_id,
+                'model_weights_path': job['payload']['model_weights_path'],
+                'prompt': job['payload']['prompt'],
+                'parameters': job['payload'].get('parameters', {}),
+            }
             
             # Get storage service
             storage_service = self.config['storage_service']
             
-            # TODO: Actual image generation here
+            # Generate image
+            image_paths = self._get_generated_images(
+                model_id=model_id,
+                generation_config=generation_config
+            )
             
+            # Save generated images
             generated_images = []
-            for i in range(num_images):
-                image_data = self._generate_image(
-                    model_id=model_id,
-                    prompt=prompt,
-                    parameters=job['payload'].get('parameters', {})
-                )
+            for idx, image_path in enumerate(image_paths):
+                with open(image_path, 'rb') as f:
+                    image_data = f.read()
                 
-                # Save generated image
                 location = storage_service.save_generated_image(
                     user_id=user_id,
                     model_id=model_id,
                     image_data=image_data,
-                    filename=f"generated_{i}.png"
+                    filename=f"generated_{idx}.png",
+                    prompt=generation_config['prompt'],
+                    generation_params=generation_config['parameters']
                 )
                 
-                # Create record
                 image = GeneratedImage(
                     user_id=user_id,
                     model_id=model_id,
                     storage_location_id=location.id,
-                    prompt=prompt,
-                    generation_params=job['payload'].get('parameters', {})
+                    prompt=generation_config['prompt'],
+                    generation_params=generation_config['parameters']
                 )
                 db.session.add(image)
                 generated_images.append(image)
-                
+            
             db.session.commit()
             
-            # Return the result
+            # Update job status
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.COMPLETED,
@@ -471,28 +649,3 @@ class WorkerService:
                 {'error': str(e)}
             )
 
-    def _send_alert(self, alert_data: Dict[str, Any]):
-        """Send alert to handlers"""
-        self.alert_queue.put(alert_data)
-
-    def _process_alerts(self):
-        """Process queued alerts"""
-        while not self.alert_queue.empty():
-            alert = self.alert_queue.get()
-            for handler in self.alert_handlers:
-                try:
-                    handler(alert)
-                except Exception as e:
-                    logger.error(f"Alert handler error: {str(e)}")
-
-    def add_alert_handler(self, handler):
-        """Add alert handler function"""
-        self.alert_handlers.append(handler)
-
-    def get_status(self) -> Dict[str, Any]:
-        """Get worker service status"""
-        return {
-            'active_workers': len([w for w in self.workers if w.is_alive()]),
-            'worker_status': self.worker_status,
-            'queue_size': self.job_queue.get_queue_size()
-        }

@@ -9,10 +9,56 @@ from dotenv import load_dotenv
 basedir = Path(__file__).resolve().parent
 load_dotenv(basedir / '.env')
 
-IMAGES_PER_PHOTOBOOK = 15 
+
 PRICES = {
     'MODEL': 24.99,
     'PHOTOBOOK': 3.99
+}
+IMAGES_PER_PHOTOBOOK = 20 
+IMAGES_PER_THEME = 5
+
+# Update PHOTOSHOOT_THEMES
+PHOTOSHOOT_THEMES = {
+    "kids_christmas": [
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, in Santa hat smiling in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing reindeer antlers, smiling in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, in festive sweater in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, smiling holding gift by decorated Christmas tree",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, holding ornament by decorated Christmas tree"
+    ],
+    "kids_dream_jobs": [
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as firefighter smiling in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing pilot uniform smiling in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as doctor with stethoscope in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as astronaut smiling with stars backdrop",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as chef holding whisk in kitchen setting"
+    ],
+    "kids_superhero": [
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, in superhero costume posing heroically in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing cape and mask smiling in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as superhero with arms crossed, city backdrop",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, in superhero outfit in flying pose in studio",
+        "Professional portrait of s3lf_p3rs0n, 4years old kid, as superhero with shield in outdoor park setting"
+    ]
+}
+
+# Add age groups configuration (useful for future)
+AGE_GROUPS = {
+    "newborn": {
+        "min_months": 0,
+        "max_months": 12,
+        "description": "Newborn (0-12 months)"
+    },
+    "toddler": {
+        "min_months": 13,
+        "max_months": 36,
+        "description": "Toddler (1-3 years)"
+    },
+    "kid": {
+        "min_months": 48,
+        "max_months": 96,
+        "description": "Kid (4-8 years)"
+    }
 }
     
 

@@ -220,10 +220,8 @@ class PhotoBook(db.Model, TimestampMixin):
     model_id = db.Column(db.Integer, db.ForeignKey('trained_models.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     status = db.Column(JobStatusEnum, default=JobStatus.PENDING.value)
-    
-    # Generation configuration
-    prompt = db.Column(db.Text) 
-    style_config = db.Column(JSONB) 
+    theme_name = db.Column(db.String(100), nullable=False)
+    is_unlocked = db.Column(db.Boolean, default=False)
     
     # Relationships
     model = db.relationship('TrainedModel', lazy=True)
@@ -231,18 +229,32 @@ class PhotoBook(db.Model, TimestampMixin):
 
     def to_dict(self) -> Dict:
         """Convert photobook to dictionary"""
-        return {
+        data = {
             'id': self.id,
             'name': self.name,
-            'prompt': self.prompt,
+            'theme_name': self.theme_name,
             'status': self.status.value,
             'created_at': self.created_at.isoformat(),
-            'style_config': self.style_config,
-            'images': [{
-                'id': img.id,
-                'storage_path': img.storage_location.full_path
-            } for img in self.images]
+            'is_unlocked': self.is_unlocked
         }
+        
+        # Only include images if photobook is unlocked
+        if self.is_unlocked:
+            data['images'] = [{
+                'id': img.id,
+                'storage_path': img.storage_location.full_path,
+                'prompt': img.prompt
+            } for img in self.images]
+        else:
+            data['images'] = []  # Empty list for locked photobooks
+            
+        return data
+
+    @property
+    def theme_prompts(self) -> List[str]:
+        """Get prompts for this theme from config"""
+        from config import PHOTOSHOOT_THEMES
+        return PHOTOSHOOT_THEMES.get(self.theme_name, [])
     
 class GeneratedImage(db.Model, TimestampMixin):
     """Images generated using trained models"""

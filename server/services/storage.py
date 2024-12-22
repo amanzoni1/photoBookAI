@@ -163,11 +163,12 @@ class StorageService:
         return location
     
     def save_photobook_image(self,
-                           user_id: int,
-                           photobook_id: int,
-                           image_data: bytes,
-                           image_number: int) -> StorageLocation:
-        """Save a photobook image"""
+                            user_id: int,
+                            photobook_id: int,
+                            image_data: bytes,
+                            image_number: int,
+                            prompt: str = None) -> StorageLocation:
+        """Save a photobook image with prompt metadata"""
         filename = f"{photobook_id}/image_{image_number:02d}.png"
         destination = self._get_file_path(user_id, 'photobook', filename)
         
@@ -176,6 +177,13 @@ class StorageService:
         file_size = len(image_data)
         checksum = hashlib.sha256(image_data).hexdigest()
         
+        # Add prompt to metadata
+        metadata = {
+            'photobook_id': photobook_id,
+            'image_number': image_number,
+            'prompt': prompt  # Store prompt in metadata
+        }
+        
         location = StorageLocation(
             storage_type=StorageType.DO_SPACES,
             bucket=self.bucket,
@@ -183,10 +191,7 @@ class StorageService:
             file_size=file_size,
             content_type='image/png',
             checksum=checksum,
-            metadata_json={
-                'photobook_id': photobook_id,
-                'image_number': image_number
-            }
+            metadata_json=metadata
         )
         
         self.client.upload_fileobj(
@@ -195,7 +200,8 @@ class StorageService:
             destination,
             ExtraArgs={
                 'ContentType': 'image/png',
-                'ACL': 'public-read'
+                'ACL': 'public-read',
+                'Metadata': {'prompt': prompt} if prompt else {}  # Add to S3 metadata
             }
         )
         
@@ -204,11 +210,13 @@ class StorageService:
         return location
 
     def save_generated_image(self,
-                           user_id: int,
-                           model_id: int,
-                           image_data: bytes,
-                           filename: str) -> StorageLocation:
-        """Save a generated image"""
+                        user_id: int,
+                        model_id: int,
+                        image_data: bytes,
+                        filename: str,
+                        prompt: str = None,
+                        generation_params: Dict = None) -> StorageLocation:
+        """Save a generated image with generation metadata"""
         destination = self._get_file_path(user_id, 'generated', f"{model_id}/{filename}")
         
         # Create file-like object from bytes
@@ -216,17 +224,23 @@ class StorageService:
         file_size = len(image_data)
         checksum = hashlib.sha256(image_data).hexdigest()
         
-        # Determine content type
-        content_type = mimetypes.guess_type(filename)[0] or 'image/png'
+        # Enhanced metadata
+        metadata = {
+            'generated': True,
+            'model_id': model_id,
+            'prompt': prompt,
+            'generation_params': generation_params,
+            'generated_at': datetime.utcnow().isoformat()
+        }
         
         location = StorageLocation(
             storage_type=StorageType.DO_SPACES,
             bucket=self.bucket,
             path=destination,
             file_size=file_size,
-            content_type=content_type,
+            content_type='image/png',
             checksum=checksum,
-            metadata_json={'generated': True}
+            metadata_json=metadata
         )
         
         self.client.upload_fileobj(
@@ -234,8 +248,9 @@ class StorageService:
             self.bucket,
             destination,
             ExtraArgs={
-                'ContentType': content_type,
-                'ACL': 'public-read'
+                'ContentType': 'image/png',
+                'ACL': 'public-read',
+                'Metadata': {'prompt': prompt} if prompt else {}
             }
         )
         
