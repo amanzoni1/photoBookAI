@@ -271,25 +271,36 @@ class WorkerService:
             
             # Save each image with its prompt
             for idx, (image_path, prompt) in enumerate(zip(image_paths, theme_prompts)):
-                with open(image_path, 'rb') as f:
-                    location = storage_service.save_photobook_image(
-                        user_id=user_id,
-                        photobook_id=photobook.id,
-                        image_data=f.read(),
-                        image_number=idx + 1,
-                        prompt=f"{prompt}, p3r5onTr1g style"
-                    )
+                try:
+                    # First save the image and get storage location
+                    with open(image_path, 'rb') as f:
+                        image_data = f.read()
+                        location = storage_service.save_photobook_image(
+                            user_id=user_id,
+                            photobook_id=photobook.id,
+                            image_data=image_data,
+                            image_number=idx + 1,
+                            prompt=f"{prompt}, p3r5onTr1g style"
+                        )
+                        # Add storage location to session and commit to get ID
+                        db.session.add(location)
+                        db.session.commit()
+                        
+                        # Now create GeneratedImage with the storage location ID
+                        image = GeneratedImage(
+                            user_id=user_id,
+                            model_id=model_id,
+                            photobook_id=photobook.id,
+                            storage_location_id=location.id,  
+                            prompt=f"{prompt}, p3r5onTr1g style"
+                        )
+                        db.session.add(image)
+                        db.session.commit()
+                        
+                except Exception as e:
+                    logger.error(f"Failed to save image {idx} for theme {theme_name}: {str(e)}")
+                    continue
                     
-                    image = GeneratedImage(
-                        user_id=user_id,
-                        model_id=model_id,
-                        photobook_id=photobook.id,
-                        storage_location_id=location.id,
-                        prompt=f"{prompt}, p3r5onTr1g style"
-                    )
-                    db.session.add(image)
-            
-            db.session.commit()
             logger.info(f"Successfully saved initial photobook for theme {theme_name}")
             
         except Exception as e:
@@ -386,6 +397,7 @@ class WorkerService:
             n_themes = len(theme_images)
             logger.info(f"Processing {n_themes} initial photobooks for model {model_id}")
             
+            theme_images_dir = None
             for theme_name, image_paths in theme_images.items():
                 try:
                     if not image_paths:
@@ -393,6 +405,7 @@ class WorkerService:
                         continue
                         
                     logger.info(f"Saving photobook for theme {theme_name} with {len(image_paths)} images")
+                    theme_images_dir = Path(image_paths[0]).parent.parent  # Get base theme_images dir
                     self._save_initial_photobook(user_id, model_id, theme_name, image_paths)
                 except Exception as theme_error:
                     logger.error(f"Failed to save theme {theme_name}: {str(theme_error)}", exc_info=True)
@@ -441,7 +454,7 @@ class WorkerService:
             # Cleanup all temporary directories
             cleanup_paths = [
                 temp_dir,
-                self.base_path / "theme_images" if hasattr(self, 'base_path') else None
+                theme_images_dir
             ]
             
             for path in cleanup_paths:

@@ -20,25 +20,25 @@ IMAGES_PER_THEME = 5
 # Update PHOTOSHOOT_THEMES
 PHOTOSHOOT_THEMES = {
     "kids_christmas": [
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, in Santa hat smiling in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing reindeer antlers, smiling in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, in festive sweater in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, smiling holding gift by decorated Christmas tree",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, holding ornament by decorated Christmas tree"
+        "Professional portrait of p3r5onTr1g, 4years old kid, in Santa hat smiling in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, wearing reindeer antlers, smiling in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, in festive sweater in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, smiling holding gift by decorated Christmas tree",
+        "Professional portrait of p3r5onTr1g, 4years old kid, holding ornament by decorated Christmas tree"
     ],
     "kids_dream_jobs": [
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as firefighter smiling in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing pilot uniform smiling in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as doctor with stethoscope in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as astronaut smiling with stars backdrop",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as chef holding whisk in kitchen setting"
+        "Professional portrait of p3r5onTr1g, 4years old kid, dressed as firefighter smiling in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, wearing pilot uniform smiling in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, dressed as doctor with stethoscope in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, dressed as astronaut smiling with stars backdrop",
+        "Professional portrait of p3r5onTr1g, 4years old kid, dressed as chef holding whisk in kitchen setting"
     ],
     "kids_superhero": [
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, in superhero costume posing heroically in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, wearing cape and mask smiling in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, dressed as superhero with arms crossed, city backdrop",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, in superhero outfit in flying pose in studio",
-        "Professional portrait of s3lf_p3rs0n, 4years old kid, as superhero with shield in outdoor park setting"
+        "Professional portrait of p3r5onTr1g, 4years old kid, in superhero costume posing heroically in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, wearing cape and mask smiling in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, dressed as superhero with arms crossed, city backdrop",
+        "Professional portrait of p3r5onTr1g, 4years old kid, in superhero outfit in flying pose in studio",
+        "Professional portrait of p3r5onTr1g, 4years old kid, as superhero with shield in outdoor park setting"
     ]
 }
 

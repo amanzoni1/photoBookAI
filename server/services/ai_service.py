@@ -283,53 +283,14 @@ class AIService:
     def _setup_generation_environment(self, instance: LambdaInstance):
         """Setup generation environment"""
         try:
-            # Use the correct venv path from the ai-toolkit directory
             setup_commands = f"""
             cd {self.remote_workspace} && \
             source venv/bin/activate && \
             pip install --no-cache-dir transformers accelerate peft diffusers safetensors
             """
+            
             logger.info("Setting up generation environment...")
             command_result = instance.execute_command_ssh(setup_commands)
-            
-            # Create generation script
-            generation_script = """
-            import torch
-            from diffusers import DiffusionPipeline
-            import os
-            import json
-
-            def generate_batch(prompts, output_dir, model_path):
-                pipeline = DiffusionPipeline.from_pretrained(
-                    "black-forest-labs/FLUX.1-dev",
-                    torch_dtype=torch.float16
-                )
-                pipeline.load_lora_weights(".", weight_name=model_path)
-                pipeline = pipeline.to("cuda")
-                
-                for idx, prompt in enumerate(prompts):
-                    image = pipeline(
-                        prompt=prompt,
-                        num_inference_steps=20,
-                        guidance_scale=4.0,
-                        height=512,
-                        width=512
-                    ).images[0]
-                    
-                    output_path = os.path.join(output_dir, f"gen_{idx:03d}.png")
-                    image.save(output_path)
-                    print(f"Generated: {output_path}")
-
-            if __name__ == "__main__":
-                prompts = json.loads(os.environ['PROMPTS'])
-                output_dir = os.environ['OUTPUT_DIR']
-                model_path = os.environ['MODEL_PATH']
-                os.makedirs(output_dir, exist_ok=True)
-                generate_batch(prompts, output_dir, model_path)
-            """
-            script_path = f"{self.remote_workspace}/generate_batch.py"
-            instance.execute_command_ssh(f'echo "{generation_script}" > {script_path}')
-            
             logger.info("Generation environment setup completed")
         except Exception as e:
             logger.error(f"Generation environment setup failed: {str(e)}")
@@ -425,36 +386,46 @@ class AIService:
             raise
 
     def generate_theme_images(self, instance: LambdaInstance, model_path: str, theme_name: str, 
-                         prompts: List[str]) -> List[str]:
+                     prompts: List[str]) -> List[str]:
         """Generate images for a theme and return local paths"""
         try:
+            # Setup output directory
             output_dir = f"{self.remote_base}/generated_images/{theme_name}"
-            themed_prompts = [f"{prompt}, p3r5onTr1g style" for prompt in prompts]
+            instance.execute_command_ssh(f"mkdir -p {output_dir}")
             
+            # Run generation using repository script
             generation_cmd = f"""
-            cd {self.remote_base} && \
+            cd {self.remote_workspace} && \
             source venv/bin/activate && \
             export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
-            export PROMPTS='{json.dumps(themed_prompts)}' && \
+            export PROMPTS='{json.dumps(prompts)}' && \
             export OUTPUT_DIR="{output_dir}" && \
             export MODEL_PATH="{model_path}" && \
-            python generate_batch.py
+            python generation/generate_batch.py
             """
             
-            instance.execute_command_ssh(generation_cmd)
+            logger.info(f"Starting generation for theme: {theme_name}")
+            result = instance.execute_command_ssh(generation_cmd)
             
-            # Download images
+            if "Error" in result:
+                logger.error(f"Generation output: {result}")
+                raise Exception(f"Generation failed for theme {theme_name}")
+            
+            # Download generated images
             local_paths = []
             local_dir = self.base_path / f"theme_images/{theme_name}"
             local_dir.mkdir(parents=True, exist_ok=True)
             
-            for i in range(len(themed_prompts)):
+            logger.info(f"Downloading generated images for theme {theme_name}")
+            for i in range(len(prompts)):
                 remote_path = f"{output_dir}/gen_{i:03d}.png"
                 local_path = local_dir / f"gen_{i:03d}.png"
                 instance.download_file_scp(remote_path, str(local_path))
                 local_paths.append(str(local_path))
             
+            logger.info(f"Successfully generated {len(local_paths)} images for {theme_name}")
             return local_paths
+            
         except Exception as e:
             logger.error(f"Theme generation failed for {theme_name}: {str(e)}")
             raise
@@ -499,13 +470,15 @@ class AIService:
             """
             instance.execute_command_ssh(update_config_cmd)
             
-            # Upload dataset files
+            # Create dataset directory and upload dataset
             logger.info("Uploading dataset")
-            for file_path in dataset_path.glob('*'):
-                instance.upload_file_scp(
-                    str(file_path),
-                    f"{self.remote_workspace}/dataset/{file_path.name}"
-                )
+            remote_dataset_path = f"{self.remote_workspace}/dataset"
+            instance.execute_command_ssh(f"mkdir -p {remote_dataset_path}")
+
+            # Upload dataset files
+            dataset_files = list(dataset_path.glob('*'))
+            for file_path in dataset_files:
+                instance.upload_file_scp(str(file_path), f"{remote_dataset_path}/{file_path.name}")
             
             # Run training
             logger.info("Starting training")
@@ -571,17 +544,11 @@ class AIService:
                 except Exception as e:
                     logger.error(f"Failed to terminate instance: {str(e)}")
             
-            # Cleanup paths
-            cleanup_paths = [
-                dataset_path,
-                self.base_path / "theme_images",
-            ]
-            for path in cleanup_paths:
-                if path and path.exists():
-                    try:
-                        shutil.rmtree(path)
-                    except Exception as e:
-                        logger.error(f"Cleanup error: {str(e)}")
+            if dataset_path and dataset_path.exists():
+                try:
+                    shutil.rmtree(dataset_path)
+                except Exception as e:
+                    logger.error(f"Cleanup error: {str(e)}")
 
     # def generate_images(self, model_id: int, user_id: int, model_path: str, prompts: List[str]) -> List[str]:
     #     """Generate images using provided model."""
