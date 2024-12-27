@@ -83,11 +83,6 @@ class Config:
     STORAGE_ACCESS_KEY = os.environ.get('STORAGE_ACCESS_KEY')
     STORAGE_SECRET_KEY = os.environ.get('STORAGE_SECRET_KEY')
     STORAGE_BUCKET = os.environ.get('STORAGE_BUCKET')
-    
-    # Model storage settings
-    MODEL_CACHE_ENABLED = os.environ.get('MODEL_CACHE_ENABLED', 'True').lower() == 'true'
-    MODEL_CACHE_PATH = os.environ.get('MODEL_CACHE_PATH', '/tmp/model_cache')
-    MODEL_CACHE_SIZE_GB = 20
 
     # Lambda GPU Settings
     LAMBDA_API_KEY = os.environ.get('LAMBDA_API_KEY')

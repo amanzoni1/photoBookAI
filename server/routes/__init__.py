@@ -3,7 +3,6 @@
 from flask import Blueprint, current_app
 from services.storage import StorageService
 from services.monitoring import StorageMonitor
-from services.cache import ModelCache
 from services.credits import CreditService
 from services.auth import TokenManager
 from services.queue import JobQueue
@@ -29,10 +28,6 @@ credits_bp = Blueprint('credits', __name__, url_prefix='/api/credits')
 def get_storage_service():
     """Get storage service from current app"""
     return current_app.config.get('storage_service')
-
-def get_model_cache():
-    """Get model cache from current app"""
-    return current_app.config.get('model_cache')
 
 def get_storage_monitor():
     """Get storage monitor from current app"""
@@ -71,7 +66,6 @@ def init_services(app):
     # Create services with app context
     temp_manager = TempFileManager(app.config)
     storage_service = StorageService(app.config)
-    model_cache = ModelCache(app.config['MODEL_CACHE_PATH'], storage_service)
     storage_monitor = StorageMonitor(storage_service)
     credit_service = CreditService(app.config)
     token_manager = TokenManager(app.config)
@@ -80,7 +74,6 @@ def init_services(app):
     # Store initial services in config
     app.config['temp_manager'] = temp_manager
     app.config['storage_service'] = storage_service
-    app.config['model_cache'] = model_cache
     app.config['storage_monitor'] = storage_monitor
     app.config['credit_service'] = credit_service
     app.config['token_manager'] = token_manager

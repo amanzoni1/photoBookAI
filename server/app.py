@@ -48,7 +48,6 @@ def create_app(config_class=Config):
         required_services = [
             'temp_manager',
             'storage_service',
-            'model_cache',
             'storage_monitor',
             'credit_service',
             'token_manager',
