@@ -8,4 +8,3 @@ from .model_training import *
 from .photobook import *
 from .single_img import *
 from .job_routes import *
-from .management import *
