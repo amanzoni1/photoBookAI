@@ -211,3 +211,27 @@ class JobQueue:
         except Exception as e:
             logger.error(f"Error getting jobs for user {user_id}: {str(e)}")
             return [] 
+
+    def remove_job(self, job_id: str) -> bool:
+        """Remove a job from the status hash"""
+        try:
+            # Delete job from status hash
+            return self.redis_client.hdel(self.job_status_hash, job_id) > 0
+        except Exception as e:
+            logger.error(f"Error removing job {job_id}: {str(e)}")
+            return False
+
+    def reset_all_jobs(self) -> bool:
+        """Reset all job statuses by clearing the status hash"""
+        try:
+            # Clear job status hash
+            self.redis_client.delete(self.job_status_hash)
+            # Clear all queues
+            self.redis_client.delete(self.training_queue)
+            self.redis_client.delete(self.generation_queue)
+            self.redis_client.delete(self.photobook_queue)
+            logger.info("All job statuses and queues reset successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error resetting jobs: {str(e)}")
+            return False

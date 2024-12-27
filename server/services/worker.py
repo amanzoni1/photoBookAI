@@ -56,7 +56,28 @@ class WorkerService:
         """Graceful shutdown"""
         logger.info("Initiating graceful shutdown...")
         self.should_stop = True
-        self.stop_workers()
+        
+        # Set timeout for worker shutdown
+        shutdown_timeout = 5  
+        
+        try:
+            # Stop supervisor first
+            if self.supervisor.is_alive():
+                self.supervisor.join(timeout=shutdown_timeout)
+            
+            # Stop all workers with timeout
+            for worker in self.workers:
+                if worker.is_alive():
+                    worker.join(timeout=shutdown_timeout)
+            
+            logger.info("Shutdown complete")
+            
+            import sys
+            sys.exit(0)
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
+            import os
+            os._exit(1)
 
     def start_workers(self, num_workers: int = None):
         """Start worker threads"""
@@ -79,14 +100,16 @@ class WorkerService:
         """Stop worker threads"""
         if num_workers is None:
             self.should_stop = True
+            # Add timeout to avoid hanging
             for worker in self.workers:
-                worker.join()
+                worker.join(timeout=5)
             self.workers = []
             self.worker_status = {}
         else:
             workers_to_stop = self.workers[-num_workers:]
             self.workers = self.workers[:-num_workers]
             for worker in workers_to_stop:
+                worker.join(timeout=5)
                 if worker.ident in self.worker_status:
                     del self.worker_status[worker.ident]
 
