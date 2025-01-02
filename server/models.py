@@ -12,7 +12,7 @@ from sqlalchemy.types import Enum as SAEnum
 
 class CreditType(PyEnum):
     MODEL = "MODEL"     
-    IMAGE = "IMAGE" 
+    PHOTOSHOOT = "PHOTOSHOOT"
 
 class StorageType(PyEnum):
     DO_SPACES = "do_spaces"
@@ -48,7 +48,7 @@ class User(db.Model, UserMixin, TimestampMixin):
     
     # Credit balances
     model_credits = db.Column(db.Integer, default=0)
-    image_credits = db.Column(db.Integer, default=0)
+    photoshoot_credits = db.Column(db.Integer, default=0)
     
     # Relationships
     uploaded_images = db.relationship('UserImage', backref='user', lazy=True)
@@ -67,13 +67,9 @@ class User(db.Model, UserMixin, TimestampMixin):
         """Check if user has enough credits"""
         if credit_type == CreditType.MODEL:
             return self.model_credits >= amount
-        elif credit_type == CreditType.IMAGE:
-            return self.image_credits >= amount
+        elif credit_type == CreditType.PHOTOSHOOT:
+            return self.photoshoot_credits >= amount
         return False
-    
-    def has_photobook_credits(self) -> bool:
-        """Check if user has enough credits for a photobook"""
-        return self.image_credits >= IMAGES_PER_PHOTOBOOK
     
     def use_credits(self, credit_type: CreditType, amount: int = 1) -> bool:
         """Use credits if available"""
@@ -82,17 +78,11 @@ class User(db.Model, UserMixin, TimestampMixin):
             
         if credit_type == CreditType.MODEL:
             self.model_credits -= amount
-            self.image_credits += 2 * IMAGES_PER_PHOTOBOOK
-        elif credit_type == CreditType.IMAGE:
-            self.image_credits -= amount
+        elif credit_type == CreditType.PHOTOSHOOT:
+            self.photoshoot_credits -= amount
             
         db.session.commit()
         return True
-    
-    @property
-    def available_photobooks(self) -> int:
-        """Calculate how many complete photobooks can be made"""
-        return self.image_credits // IMAGES_PER_PHOTOBOOK
     
 class CreditTransaction(db.Model, TimestampMixin):
     __tablename__ = 'credit_transactions'

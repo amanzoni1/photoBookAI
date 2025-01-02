@@ -6,18 +6,13 @@ from datetime import datetime
 
 from app import db
 from models import User, CreditTransaction, CreditType
-from config import IMAGES_PER_PHOTOBOOK
 
 logger = logging.getLogger(__name__)
 
 class CreditService:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.images_per_photobook = config.get('IMAGES_PER_PHOTOBOOK', 15)
-        self.prices = config.get('PRICES', {
-            'MODEL': 24.99,
-            'PHOTOBOOK': 3.99
-        })
+        self.prices = config.get('PRICES') 
     
     def add_credits(self, 
                 user: User, 
@@ -45,9 +40,8 @@ class CreditService:
             
             if credit_type == CreditType.MODEL:
                 user.model_credits += amount
-                user.image_credits += 2 * self.images_per_photobook  # Bonus images
-            elif credit_type == CreditType.IMAGE:
-                user.image_credits += amount
+            elif credit_type == CreditType.PHOTOSHOOT:
+                user.photoshoot_credits += amount
             
             db.session.add(transaction)
             db.session.commit()
@@ -64,7 +58,7 @@ class CreditService:
     def use_credits(self, user: User, credit_type: CreditType, amount: int = 1, metadata: Optional[Dict] = None) -> bool:
         """Use credits for a service"""
         try:
-            logger.debug(f"User {user.id} before deduction: {user.model_credits} model credits, {user.image_credits} image credits")
+            logger.debug(f"User {user.id} before deduction: {user.model_credits} model credits, {user.photoshoot_credits} photoshoot credits")
             
             if not user.has_credits(credit_type, amount):
                 logger.debug(f"User {user.id} has insufficient credits for {credit_type.value}")
@@ -81,12 +75,12 @@ class CreditService:
             
             if credit_type == CreditType.MODEL:
                 user.model_credits -= amount
-            elif credit_type == CreditType.IMAGE:
-                user.image_credits -= amount
+            elif credit_type == CreditType.PHOTOSHOOT:
+                user.photoshoot_credits -= amount
             
             db.session.add(transaction)
             
-            logger.debug(f"User {user.id} after deduction: {user.model_credits} model credits, {user.image_credits} image credits")
+            logger.debug(f"User {user.id} after deduction: {user.model_credits} model credits, {user.photoshoot_credits} photoshoot credits")
             logger.info(f"Used {amount} {credit_type.value} credits for user {user.id}")
             return True
                 
@@ -97,28 +91,23 @@ class CreditService:
     def _get_purchase_description(self, credit_type: CreditType, amount: int) -> str:
         """Get descriptive message for purchase"""
         if credit_type == CreditType.MODEL:
-            return f"Purchase of {amount} model credit(s) with {2 * IMAGES_PER_PHOTOBOOK} bonus images"
-        elif credit_type == CreditType.IMAGE:
-            photobooks = amount // IMAGES_PER_PHOTOBOOK
-            remaining = amount % IMAGES_PER_PHOTOBOOK
-            if remaining == 0:
-                return f"Purchase of {photobooks} photobook credit(s)"
-            return f"Purchase of {amount} image credits"
+            return f"Purchase of {amount} model credit(s)"
+        elif credit_type == CreditType.PHOTOSHOOT:
+            return f"Purchase of {amount} photosoot credit(s)"
+            
 
     def _get_usage_description(self, credit_type: CreditType, amount: int) -> str:
         """Get descriptive message for usage"""
         if credit_type == CreditType.MODEL:
             return f"Used {amount} model credit(s)"
-        elif credit_type == CreditType.IMAGE:
-            if amount == IMAGES_PER_PHOTOBOOK:
-                return "Generated 1 photobook"
-            return f"Generated {amount} image(s)"
+        elif credit_type == CreditType.PHOTOSHOOT:
+            return f"Used {amount} photoshoot credit(s)"
+            
     
     def get_user_credits(self, user: User) -> Dict[str, int]:
         """Get user's credit balances"""
         return {
             'model_credits': user.model_credits,
-            'image_credits': user.image_credits,
-            'available_photobooks': user.available_photobooks
+            'photoshoot_credits': user.photoshoot_credits
         }
     
