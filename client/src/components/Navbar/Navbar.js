@@ -73,12 +73,8 @@ function Navbar({ isAuthenticated, onLogout }) {
                   <span className="credit-value">{credits.model_credits}</span>
                 </div>
                 <div className="credit-item">
-                  <span className="credit-icon">🖼️</span>
-                  <span className="credit-value">{credits.image_credits}</span>
-                </div>
-                <div className="credit-item">
                   <span className="credit-icon">📚</span>
-                  <span className="credit-value">{credits.available_photobooks}</span>
+                  <span className="credit-value">{credits.photoshoot_credits}</span>
                 </div>
               </div>
             )}

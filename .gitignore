@@ -6,6 +6,7 @@ server/venv/
 
 # PyCache
 server/__pycache__/
+__pycache__
 
 # Environment files
 *.env

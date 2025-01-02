@@ -8,8 +8,7 @@ export const useCredits = () => {
   const { isAuthenticated } = useAuth();
   const [credits, setCredits] = useState({
     model_credits: 0,
-    image_credits: 0,
-    available_photobooks: 0
+    photoshoot_credits: 0
   });
   const [loading, setLoading] = useState(true);
 
