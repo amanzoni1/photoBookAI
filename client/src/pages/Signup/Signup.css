@@ -1,51 +1,116 @@
 /* client/src/pages/Signup/Signup.css */
 
 .signup-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #000000;
-    color: #f0ead6;
-    border-radius: 8px;
-  }
-  
-  .signup-form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .signup-form label {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .signup-form input {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .signup-form button {
-    margin-top: 1.5rem;
-    padding: 0.75rem;
-    background-color: #000000;
-    color: #f0ead6;
-    font-size: 1rem;
-    font-weight: bold;
-    border: 2px solid transparent;
-    border-radius: 30px;
-    background-image: linear-gradient(to right, pink, lightblue), linear-gradient(to right, #000000, #000000);
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    cursor: pointer;
-  }
-  
-  .signup-form button:hover {
-    color: #ffffff;
-    filter: brightness(1.1);
-  }
-  
-  .error-message {
-    color: red;
-    margin-bottom: 1rem;
-  }
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 450px;
+  width: 90%;
+  padding: 1.8rem;
+  background-color: #000000;
+  color: #f0ead6;
+  border-radius: 8px;
+  box-shadow: 0 0 110px -5px lightblue,
+    0 0 30px -5px pink;
+}
+
+.signup-container h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 2.2rem;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.signup-form label {
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
+}
+
+.signup-form input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.signup-form button {
+  margin-top: 2rem;
+  padding: 0.9rem;
+  background-color: #000000;
+  color: #000000;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: 2px solid transparent;
+  border-radius: 30px;
+  background-image: linear-gradient(to right, pink, lightblue),
+    linear-gradient(to right, #000000, #000000);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  cursor: pointer;
+}
+
+.signup-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.signup-form button:hover:not(:disabled) {
+  filter: brightness(1.2);
+}
+
+.error-message {
+  color: #ff4444;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.password-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  font-size: 0.7rem;
+  display: none;
+}
+
+.password-requirements.show {
+  display: block;
+}
+
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requirement-text {
+  color: #b5b1b1;
+}
+
+.validation-icon {
+  margin-right: 0.5rem;
+  font-weight: bold;
+}
+
+.valid,
+.invalid {
+  font-weight: bold;
+}
+
+.valid {
+  color: #38d63d;
+}
+
+.invalid {
+  color: #b5b1b1;
+}

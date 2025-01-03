@@ -40,13 +40,13 @@ function Navbar({ isAuthenticated, onLogout }) {
       {!isAuthenticated && (
         <ul className="navbar-links">
           <li>
+            <Link to="/description">Description</Link>
+          </li>
+          <li>
             <Link to="/faq">FAQ</Link>
           </li>
           <li>
             <Link to="/pricing">Pricing</Link>
-          </li>
-          <li>
-            <Link to="/description">Description</Link>
           </li>
         </ul>
       )}

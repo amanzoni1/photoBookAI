@@ -2,11 +2,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import Navbar from './components/Navbar/Navbar';
+import Navbar from './pages/Navbar/Navbar';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Signup from './pages/Signup/Signup';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();

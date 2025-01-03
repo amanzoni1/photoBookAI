@@ -9,7 +9,8 @@
 
 /* Set body background color and default text color */
 body {
-  background-color: #000000; /* Black background */
-  color: #f0ead6; /* Pearl color for text */
-  font-family: Arial, sans-serif;
+  background-color: #f4f3f1;
+  color: #000000; 
+  /* font-family: Arial, sans-serif; */
+  font-family: 'Courier New', Courier, monospace;
 }

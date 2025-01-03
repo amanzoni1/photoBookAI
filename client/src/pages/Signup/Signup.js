@@ -3,58 +3,162 @@
 import React, { useState } from 'react';
 import axios from '../../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { FcGoogle } from 'react-icons/fc';
+import { AiFillApple } from 'react-icons/ai';
+import { BsFacebook } from 'react-icons/bs';
 import './Signup.css';
 
 function Signup() {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
     password: '',
+    confirmPassword: ''
+  });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [validations, setValidations] = useState({
+    length: false,
+    combination: false,
+    special: false
   });
 
-  const [errorMessage, setErrorMessage] = useState('');
+  const validatePassword = (password) => {
+    const hasCharacterCombination = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password);
 
-  const { email, username, password } = formData;
+    setValidations({
+      length: password.length >= 8,
+      combination: hasCharacterCombination,
+      special: /[\W_]/.test(password)
+    });
+  };
 
-  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      if (name === 'password' || name === 'confirmPassword') {
+        validatePassword(
+          name === 'password' ? value : newData.password,
+          name === 'confirmPassword' ? value : newData.confirmPassword
+        );
+      }
+      return newData;
+    });
+  };
+
+  const isFormValid = () => {
+    return Object.values(validations).every(v => v) &&
+      formData.email &&
+      formData.password === formData.confirmPassword;
+  };
 
   const onSubmit = async e => {
     e.preventDefault();
-    setErrorMessage('');
+    if (!isFormValid()) return;
+
     try {
-      const res = await axios.post('/api/auth/register', formData);
-      console.log(res.data);
-      // Redirect to login page or dashboard after successful signup
+      const response = await axios.post('/api/auth/register', {
+        email: formData.email,
+        password: formData.password
+      });
       navigate('/login');
     } catch (err) {
-      if (err.response && err.response.data) {
-        console.error(err.response.data);
-        setErrorMessage(err.response.data.message || 'An error occurred');
-      } else {
-        console.error(err);
-        setErrorMessage('An error occurred. Please try again later.');
-      }
+      setErrorMessage(err?.response?.data?.message || 'Registration failed');
     }
   };
+
+  const handleGoogleLogin = () => {
+    window.location.href = '/api/auth/google';
+  };
+
+  const handleAppleLogin = () => {
+    window.location.href = '/api/auth/apple';
+  };
+
+  const handleFacebookLogin = () => {
+    window.location.href = '/api/auth/facebook';
+  };
+
+
 
   return (
     <div className="signup-container">
       <h1>Sign Up</h1>
       {errorMessage && <p className="error-message">{errorMessage}</p>}
+
       <form onSubmit={onSubmit} className="signup-form">
-        <label>Email:</label>
-        <input type="email" name="email" value={email} onChange={onChange} required />
+        <div className="form-group">
+          <label>Email address</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={onChange}
+            required
+          />
+        </div>
 
-        <label>Username:</label>
-        <input type="text" name="username" value={username} onChange={onChange} required />
+        <div className="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={onChange}
+            required
+          />
+          <ul className={`password-requirements ${formData.password ? 'show' : ''}`}>
+            <li>
+              <span className={validations.length ? 'valid' : 'invalid'}>
+                {validations.length ? '✓' : '✘'}
+              </span>
+              <span className="requirement-text">Must be at least 8 characters</span>
+            </li>
+            <li>
+              <span className={validations.combination ? 'valid' : 'invalid'}>
+                {validations.combination ? '✓' : '✘'}
+              </span>
+              <span className="requirement-text">Must contain uppercase, lowercase letters, and numbers</span>
+            </li>
+            <li>
+              <span className={validations.special ? 'valid' : 'invalid'}>
+                {validations.special ? '✓' : '✘'}
+              </span>
+              <span className="requirement-text">Must contain special character</span>
+            </li>
+          </ul>
 
-        <label>Password:</label>
-        <input type="password" name="password" value={password} onChange={onChange} required />
+        </div>
 
-        <button type="submit">Register</button>
+        <div className="form-group">
+          <label>Confirm Password</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={onChange}
+            required
+          />
+        </div>
+
+        <button type="submit" disabled={!isFormValid()}>Register</button>
       </form>
+
+      <div className="divider">
+        <span>or continue with</span>
+      </div>
+
+      <div className="social-login">
+        <button onClick={handleGoogleLogin} className="social-btn google">
+          <FcGoogle /> Google
+        </button>
+        <button onClick={handleAppleLogin} className="social-btn apple">
+          <AiFillApple /> Apple
+        </button>
+        <button onClick={handleFacebookLogin} className="social-btn facebook">
+          <BsFacebook /> Facebook
+        </button>
+      </div>
     </div>
   );
 }

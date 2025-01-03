@@ -4,8 +4,6 @@
     height: calc(100vh - 70px); /* Adjust for navbar height */
     display: flex;
     align-items: center;
-    background-color: #000000; /* Black background */
-    color: #f0ead6; /* Pearl color for text */
   }
   
   .landing-content {
@@ -16,7 +14,7 @@
   .gradient-text {
     font-size: 4rem; /* Responsive font size */
     font-weight: bold;
-    line-height: 1.2;
+    line-height: 1;
     background: linear-gradient(to right, pink, lightblue);
     background-clip: text;
     -webkit-background-clip: text;
@@ -28,7 +26,8 @@
   .subtitle {
     font-size: 1.5rem;
     margin-top: 1rem;
-    color: #f0ead6; /* Pearl color */
+    /* color: #f0ead6; */
+    color: #000000;
   }
   
   .cta-button {
