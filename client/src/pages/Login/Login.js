@@ -1,22 +1,23 @@
 // client/src/pages/Login/Login.js
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
 import { AiFillApple } from 'react-icons/ai';
 import { BsFacebook } from 'react-icons/bs';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -57,14 +58,32 @@ function Login() {
           required
         />
         <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={onChange}
-          required
-        />
+        <div className="password-field">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={formData.password}
+            onChange={onChange}
+            required
+          />
+          <button
+            type="button"
+            className="show-password-btn"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>
+        </div>
+        
+        <div className="forgot-password">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </div>
+
         <button type="submit">Login</button>
+
+        <div className="signup-link">
+          Don't have an account? <Link to="/signup">Sign up</Link>
+        </div>
       </form>
 
       <div className="divider">

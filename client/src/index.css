@@ -1,5 +1,7 @@
 /* client/src/index.css */
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
 /* Reset default margins and paddings */
 * {
   margin: 0;
@@ -12,5 +14,6 @@ body {
   background-color: #f4f3f1;
   color: #000000; 
   /* font-family: Arial, sans-serif; */
-  font-family: 'Courier New', Courier, monospace;
+  /* font-family: 'Courier New', Courier, monospace; */
+  font-family: 'Roboto', sans-serif;
 }

@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import axios from '../../utils/axiosConfig';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { AiFillApple } from 'react-icons/ai';
 import { BsFacebook } from 'react-icons/bs';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Signup.css';
 
 function Signup() {
@@ -21,6 +22,7 @@ function Signup() {
     combination: false,
     special: false
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const validatePassword = (password) => {
     const hasCharacterCombination = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password);
@@ -100,13 +102,22 @@ function Signup() {
 
         <div className="form-group">
           <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={onChange}
-            required
-          />
+          <div className="password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={onChange}
+              required
+            />
+            <button
+              type="button"
+              className="show-password-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+          </div>
           <ul className={`password-requirements ${formData.password ? 'show' : ''}`}>
             <li>
               <span className={validations.length ? 'valid' : 'invalid'}>
@@ -132,16 +143,29 @@ function Signup() {
 
         <div className="form-group">
           <label>Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={onChange}
-            required
-          />
+          <div className="password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={onChange}
+              required
+            />
+            <button
+              type="button"
+              className="show-password-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+          </div>
         </div>
 
         <button type="submit" disabled={!isFormValid()}>Register</button>
+
+        <div className="signup-link">
+          Already have an account? <Link to="/login">Log In</Link>
+        </div>
       </form>
 
       <div className="divider">

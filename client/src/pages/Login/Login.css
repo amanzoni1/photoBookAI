@@ -69,6 +69,35 @@
   text-align: center;
 }
 
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 35px;
+}
+
+.show-password-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  color: #888 !important;
+  cursor: pointer;
+  padding: 5px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+.show-password-btn:hover {
+  filter: none !important;
+}
+
 .divider {
   text-align: center;
   margin: 25px 0;
@@ -130,4 +159,36 @@
 
 .social-btn svg {
   font-size: 1.3rem;
+}
+
+.forgot-password {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.forgot-password a {
+  color: #888;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  color: #f0ead6;
+}
+
+.signup-link {
+  text-align: center;
+  margin-top: 8px;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.signup-link a {
+  color: #f0ead6;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
 }
