@@ -51,6 +51,7 @@ def create_app(config_class=Config):
             'storage_monitor',
             'credit_service',
             'token_manager',
+            'oauth_service',
             'job_queue',
             'worker_service',
             'job_monitor',

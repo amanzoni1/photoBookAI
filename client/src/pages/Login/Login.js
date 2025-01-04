@@ -1,6 +1,6 @@
 // client/src/pages/Login/Login.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
@@ -11,43 +11,43 @@ import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const { login, socialLogin, handleAuthCallback } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (handleAuthCallback()) {
+      navigate('/dashboard');
+    }
+  }, [handleAuthCallback, navigate]);
 
   const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onSubmit = async e => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true);
     try {
       await login(formData);
       navigate('/dashboard');
     } catch (err) {
       setErrorMessage(err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = '/api/auth/google';
-  };
-
-  const handleAppleLogin = () => {
-    window.location.href = '/api/auth/apple';
-  };
-
-  const handleFacebookLogin = () => {
-    window.location.href = '/api/auth/facebook';
+  const handleSocialLogin = (provider) => () => {
+    socialLogin(provider);
   };
 
   return (
     <div className="login-container">
       <h1>Login</h1>
       {errorMessage && <p className="error-message">{errorMessage}</p>}
+
       <form onSubmit={onSubmit} className="login-form">
         <label>Email address</label>
         <input
@@ -56,7 +56,9 @@ function Login() {
           value={formData.email}
           onChange={onChange}
           required
+          disabled={isLoading}
         />
+
         <label>Password</label>
         <div className="password-field">
           <input
@@ -65,21 +67,25 @@ function Login() {
             value={formData.password}
             onChange={onChange}
             required
+            disabled={isLoading}
           />
           <button
             type="button"
             className="show-password-btn"
             onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
           >
             {showPassword ? <FiEyeOff /> : <FiEye />}
           </button>
         </div>
-        
+
         <div className="forgot-password">
           <Link to="/forgot-password">Forgot password?</Link>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
 
         <div className="signup-link">
           Don't have an account? <Link to="/signup">Sign up</Link>
@@ -91,13 +97,13 @@ function Login() {
       </div>
 
       <div className="social-login">
-        <button onClick={handleGoogleLogin} className="social-btn google">
+        <button onClick={handleSocialLogin('google')} className="social-btn google" disabled={isLoading}>
           <FcGoogle /> Google
         </button>
-        <button onClick={handleAppleLogin} className="social-btn apple">
+        {/* <button onClick={handleSocialLogin('apple')} className="social-btn apple" disabled={isLoading}>
           <AiFillApple /> Apple
-        </button>
-        <button onClick={handleFacebookLogin} className="social-btn facebook">
+        </button> */}
+        <button onClick={handleSocialLogin('facebook')} className="social-btn facebook" disabled={isLoading}>
           <BsFacebook /> Facebook
         </button>
       </div>

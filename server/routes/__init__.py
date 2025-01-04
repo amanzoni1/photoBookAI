@@ -10,6 +10,7 @@ from services.worker import WorkerService
 from services.job_monitor import JobMonitor
 from services.alerts import AlertService
 from services.temp_files import TempFileManager
+from services.oauth import OAuthService
 import logging
 import threading
 import schedule
@@ -41,6 +42,10 @@ def get_token_manager():
     """Get token manager from current app"""
     return current_app.config.get('token_manager')
 
+def get_oauth_service():
+    """Get OAuth service from current app"""
+    return current_app.config.get('oauth_service')
+
 def get_job_queue():
     """Get job queue from current app"""
     return current_app.config.get('job_queue')
@@ -69,6 +74,7 @@ def init_services(app):
     storage_monitor = StorageMonitor(storage_service)
     credit_service = CreditService(app.config)
     token_manager = TokenManager(app.config)
+    oauth_service = OAuthService(app.config)
     job_queue = JobQueue(app.config)
     
     # Store initial services in config
@@ -77,6 +83,7 @@ def init_services(app):
     app.config['storage_monitor'] = storage_monitor
     app.config['credit_service'] = credit_service
     app.config['token_manager'] = token_manager
+    app.config['oauth_service'] = oauth_service
     app.config['job_queue'] = job_queue
     
     # Initialize worker service

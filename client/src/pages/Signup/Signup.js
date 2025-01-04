@@ -24,13 +24,14 @@ function Signup() {
   });
   const [showPassword, setShowPassword] = useState(false);
 
+  // Validate password function
   const validatePassword = (password) => {
     const hasCharacterCombination = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password);
 
     setValidations({
       length: password.length >= 8,
       combination: hasCharacterCombination,
-      special: /[\W_]/.test(password)
+      special: /[\W_]/.test(password) // checks for non-alphanumeric
     });
   };
 
@@ -40,8 +41,7 @@ function Signup() {
       const newData = { ...prev, [name]: value };
       if (name === 'password' || name === 'confirmPassword') {
         validatePassword(
-          name === 'password' ? value : newData.password,
-          name === 'confirmPassword' ? value : newData.confirmPassword
+          name === 'password' ? value : newData.password
         );
       }
       return newData;
@@ -49,18 +49,23 @@ function Signup() {
   };
 
   const isFormValid = () => {
-    return Object.values(validations).every(v => v) &&
+    return (
+      Object.values(validations).every(v => v) &&
       formData.email &&
-      formData.password === formData.confirmPassword;
+      formData.password === formData.confirmPassword
+    );
   };
 
   const onSubmit = async e => {
     e.preventDefault();
     if (!isFormValid()) return;
 
+    const username = formData.email.split('@')[0]; 
+
     try {
-      const response = await axios.post('/api/auth/register', {
+      await axios.post('/api/auth/register', {
         email: formData.email,
+        username,
         password: formData.password
       });
       navigate('/login');
@@ -69,19 +74,16 @@ function Signup() {
     }
   };
 
+  // Social sign-up / sign-in
   const handleGoogleLogin = () => {
-    window.location.href = '/api/auth/google';
+    window.location.href = `${axios.defaults.baseURL}/api/auth/google`;
   };
-
-  const handleAppleLogin = () => {
-    window.location.href = '/api/auth/apple';
-  };
-
   const handleFacebookLogin = () => {
-    window.location.href = '/api/auth/facebook';
+    window.location.href = `${axios.defaults.baseURL}/api/auth/facebook`;
   };
-
-
+  const handleAppleLogin = () => {
+    window.location.href = `${axios.defaults.baseURL}/api/auth/apple`;
+  };
 
   return (
     <div className="signup-container">
@@ -100,11 +102,12 @@ function Signup() {
           />
         </div>
 
+        {/* Password Field */}
         <div className="form-group">
           <label>Password</label>
           <div className="password-field">
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               name="password"
               value={formData.password}
               onChange={onChange}
@@ -118,34 +121,42 @@ function Signup() {
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
+
+          {/* Password Requirements */}
           <ul className={`password-requirements ${formData.password ? 'show' : ''}`}>
             <li>
               <span className={validations.length ? 'valid' : 'invalid'}>
                 {validations.length ? '✓' : '✘'}
               </span>
-              <span className="requirement-text">Must be at least 8 characters</span>
+              <span className="requirement-text">
+                Must be at least 8 characters
+              </span>
             </li>
             <li>
               <span className={validations.combination ? 'valid' : 'invalid'}>
                 {validations.combination ? '✓' : '✘'}
               </span>
-              <span className="requirement-text">Must contain uppercase, lowercase letters, and numbers</span>
+              <span className="requirement-text">
+                Must contain uppercase, lowercase letters, and numbers
+              </span>
             </li>
             <li>
               <span className={validations.special ? 'valid' : 'invalid'}>
                 {validations.special ? '✓' : '✘'}
               </span>
-              <span className="requirement-text">Must contain special character</span>
+              <span className="requirement-text">
+                Must contain a special character
+              </span>
             </li>
           </ul>
-
         </div>
 
+        {/* Confirm Password */}
         <div className="form-group">
           <label>Confirm Password</label>
           <div className="password-field">
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={onChange}
@@ -161,7 +172,9 @@ function Signup() {
           </div>
         </div>
 
-        <button type="submit" disabled={!isFormValid()}>Register</button>
+        <button type="submit" disabled={!isFormValid()}>
+          Register
+        </button>
 
         <div className="signup-link">
           Already have an account? <Link to="/login">Log In</Link>
@@ -176,9 +189,9 @@ function Signup() {
         <button onClick={handleGoogleLogin} className="social-btn google">
           <FcGoogle /> Google
         </button>
-        <button onClick={handleAppleLogin} className="social-btn apple">
+        {/* <button onClick={handleAppleLogin} className="social-btn apple">
           <AiFillApple /> Apple
-        </button>
+        </button> */}
         <button onClick={handleFacebookLogin} className="social-btn facebook">
           <BsFacebook /> Facebook
         </button>

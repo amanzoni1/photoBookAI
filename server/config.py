@@ -72,6 +72,14 @@ class Config:
 
     # Basic Flask config
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key'
+
+    # Social Auth
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    GOOGLE_CALLBACK_URL = "http://localhost:5001/api/auth/google/callback"
+    FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
+    FACEBOOK_CLIENT_SECRET = os.environ.get('FACEBOOK_CLIENT_SECRET')
+    FACEBOOK_CALLBACK_URL = 'http://localhost:5001/api/auth/facebook/callback'
     
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + str(basedir / 'app.db')
