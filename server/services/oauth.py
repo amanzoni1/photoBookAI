@@ -23,10 +23,15 @@ class OAuthService:
             name='facebook',
             client_id=config['FACEBOOK_CLIENT_ID'],
             client_secret=config['FACEBOOK_CLIENT_SECRET'],
-            api_base_url='https://graph.facebook.com/v12.0',
-            access_token_url='https://graph.facebook.com/v12.0/oauth/access_token',
-            authorize_url='https://www.facebook.com/v12.0/dialog/oauth',
-            client_kwargs={'scope': 'email'}  
+            api_base_url='https://graph.facebook.com/v18.0',
+            access_token_url='https://graph.facebook.com/v18.0/oauth/access_token',
+            authorize_url='https://www.facebook.com/v18.0/dialog/oauth',
+            client_kwargs={
+                'scope': 'email public_profile',
+                'display': 'popup',
+                'auth_type': 'rerequest',
+                'response_type': 'code'
+            } 
         )
 
         # # Register Apple
