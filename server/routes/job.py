@@ -1,21 +1,22 @@
-# server/routes/model/job_routes.py
+# server/routes/job.py
 
 from flask import request, jsonify, current_app
 from flask_cors import cross_origin
 import logging
 
-from . import model_bp
-from routes.auth import token_required
+from . import job_bp
+from .auth import token_required
 from services.queue import JobType
 from models import TrainedModel
-from routes import (
+from . import (
     get_job_queue,
-    get_worker_service
+    get_worker_service,
+    get_storage_monitor
 )
 
 logger = logging.getLogger(__name__)
 
-@model_bp.route('/job/<job_id>/status', methods=['GET'])
+@job_bp.route('/job/<job_id>/status', methods=['GET'])
 @cross_origin()
 @token_required
 def get_job_status(current_user, job_id):
@@ -36,7 +37,7 @@ def get_job_status(current_user, job_id):
         logger.error(f"Error getting job status: {str(e)}")
         return jsonify({'message': str(e)}), 500
 
-@model_bp.route('/stats', methods=['GET'])
+@job_bp.route('/stats', methods=['GET'])
 @cross_origin()
 @token_required
 def get_job_stats(current_user):
@@ -49,7 +50,7 @@ def get_job_stats(current_user):
         logger.error(f"Error getting job stats: {str(e)}")
         return jsonify({'message': str(e)}), 500
 
-@model_bp.route('/metrics', methods=['GET'])
+@job_bp.route('/metrics', methods=['GET'])
 @cross_origin()
 @token_required
 def get_job_metrics(current_user):
@@ -63,7 +64,7 @@ def get_job_metrics(current_user):
         logger.error(f"Error getting metrics: {str(e)}")
         return jsonify({'message': str(e)}), 500
 
-@model_bp.route('/worker-status', methods=['GET'])
+@job_bp.route('/worker-status', methods=['GET'])
 @cross_origin()
 @token_required
 def get_worker_status(current_user):
@@ -74,4 +75,22 @@ def get_worker_status(current_user):
         return jsonify(status), 200
     except Exception as e:
         logger.error(f"Error getting worker status: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+    
+@job_bp.route('/storage-status', methods=['GET'])
+@cross_origin()
+@token_required
+def get_storage_status(current_user):
+    """Get storage usage statistics"""
+    try:
+        storage_monitor = get_storage_monitor()
+        if not storage_monitor:
+            logger.error("Storage monitor not initialized")
+            return jsonify({'message': 'Service unavailable'}), 503
+
+        stats = storage_monitor.get_user_stats(current_user.id)
+        return jsonify(stats), 200
+        
+    except Exception as e:
+        logger.error(f"Storage status error: {str(e)}")
         return jsonify({'message': str(e)}), 500

@@ -21,9 +21,10 @@ logger = logging.getLogger(__name__)
 # Create blueprints for different features
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 user_bp = Blueprint('user', __name__, url_prefix='/api/user')
-model_bp = Blueprint('model', __name__, url_prefix='/api/model')
-storage_bp = Blueprint('storage', __name__, url_prefix='/api/storage')
 credits_bp = Blueprint('credits', __name__, url_prefix='/api/credits')
+model_bp = Blueprint('model', __name__, url_prefix='/api/model')
+photoshoot_bp = Blueprint('photoshoot', __name__, url_prefix='/api/photoshoot')
+job_bp = Blueprint('job', __name__, url_prefix='/api/job')
 
 # Service accessor functions
 def get_storage_service():
@@ -120,13 +121,15 @@ def init_app(app):
     # Import routes here to avoid circular imports
     from .auth import auth_bp
     from .user import user_bp
-    from .model import model_bp
-    from .storage import storage_bp
     from .credits import credits_bp
+    from .model import model_bp
+    from .photoshoot import photoshoot_bp
+    from .job import job_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
-    app.register_blueprint(model_bp)
-    app.register_blueprint(storage_bp)
     app.register_blueprint(credits_bp)
+    app.register_blueprint(model_bp)
+    app.register_blueprint(photoshoot_bp)
+    app.register_blueprint(job_bp)
     logger.info("Blueprints registered successfully")

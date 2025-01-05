@@ -1,15 +1,15 @@
 server/
 ├── app.py          
 ├── config.py       
-├── manage.py       
 ├── models.py       
-├── dev.py  
-├── routes/          
+├── routes/
 │   ├── __init__.py
 │   ├── auth.py
+│   ├── credits.py
 │   ├── user.py
 │   ├── model.py
-│   └── storage.py
+│   ├── photoshoot.py
+│   ├── job.py
 ├── services/       
 │   ├── __init__.py
 │   ├── cache.py

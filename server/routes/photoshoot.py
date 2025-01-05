@@ -1,28 +1,79 @@
-# server/routes/model/photobook.py
+# server/routes/photoshoot.py
 
 from flask import request, jsonify
 from flask_cors import cross_origin
 import logging
 
-from . import model_bp
-from routes.auth import token_required
+from . import photoshoot_bp
+from .auth import token_required
 from app import db
 from models import TrainedModel, PhotoBook, JobStatus, CreditType
 from services.queue import JobType
 from config import PHOTOSHOOT_THEMES, IMAGES_PER_THEME
-from routes import (
-    get_storage_service,
+from . import (
     get_job_queue,
     get_credit_service
 )
 
 logger = logging.getLogger(__name__)
 
-@model_bp.route('/<int:model_id>/photobook', methods=['POST'])
+
+@photoshoot_bp.route('/photobooks', methods=['GET'])
+@cross_origin()
+@token_required
+def list_photobooks(current_user):
+    """
+    List all photobooks for current user.
+    Images won't be returned unless the photobook is unlocked,
+    but you can see the top-level data.
+    """
+    try:
+        photobooks = PhotoBook.query.filter_by(
+            user_id=current_user.id
+        ).order_by(PhotoBook.created_at.desc()).all()
+
+        return jsonify({
+            'photobooks': [pb.to_dict() for pb in photobooks]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error listing photobooks: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+
+
+@photoshoot_bp.route('/model/<int:model_id>/photobooks', methods=['GET'])
+@cross_origin()
+@token_required
+def list_photobooks_for_model(current_user, model_id: int):
+    """
+    Return all photobooks for the given model, ensuring it belongs to current_user.
+    """
+    try:
+        model = TrainedModel.query.get_or_404(model_id)
+        if model.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+
+        photobooks = PhotoBook.query.filter_by(
+            user_id=current_user.id,
+            model_id=model_id
+        ).order_by(PhotoBook.created_at.desc()).all()
+        
+        return jsonify({
+            'photobooks': [pb.to_dict() for pb in photobooks]
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error listing photobooks for model {model_id}: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+
+
+@photoshoot_bp.route('/model/<int:model_id>/photobooks', methods=['POST'])
 @cross_origin()
 @token_required
 def create_photobook(current_user, model_id: int):
-    """Create a new themed photoshoot"""
+    """
+    Create a new themed photobook (photoshoot) for a given model.
+    """
     try:
         # Get model and verify ownership
         model = TrainedModel.query.get_or_404(model_id)
@@ -51,9 +102,9 @@ def create_photobook(current_user, model_id: int):
                 'available_themes': list(PHOTOSHOOT_THEMES.keys())
             }), 400
 
-        # Check credits for photoshoot
+        # Check credits (Assuming you're using CreditType.PHOTOSHOOT or IMAGE)
         credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, CreditType.IMAGE, amount=IMAGES_PER_THEME):
+        if not credit_service.use_credits(current_user, CreditType.PHOTOSHOOT, amount=IMAGES_PER_THEME):
             return jsonify({'message': 'Insufficient credits for photoshoot generation'}), 403
 
         # Create photobook record
@@ -63,7 +114,7 @@ def create_photobook(current_user, model_id: int):
             name=f"Photoshoot - {theme_name}",
             theme_name=theme_name,
             status=JobStatus.PENDING,
-            is_unlocked=False  # Will be unlocked after successful generation
+            is_unlocked=False  # Will be unlocked after generation or payment
         )
         
         db.session.add(photobook)
@@ -81,7 +132,7 @@ def create_photobook(current_user, model_id: int):
                 'photobook_id': photobook.id,
                 'model_id': model_id,
                 'theme_name': theme_name,
-                'prompts': theme_prompts,  # Pass the actual prompts to the worker
+                'prompts': theme_prompts,
                 'model_weights_path': model.weights_location.path
             }
         )
@@ -100,48 +151,21 @@ def create_photobook(current_user, model_id: int):
         return jsonify({'message': f'Photoshoot creation failed: {str(e)}'}), 500
 
 
-@model_bp.route('/photobook/<int:photobook_id>', methods=['GET'])
+@photoshoot_bp.route('/photobooks/<int:photobook_id>', methods=['GET'])
 @cross_origin()
 @token_required
 def get_photobook(current_user, photobook_id: int):
-    """Get photobook details and images"""
+    """
+    Get details (and possibly images) of a single photobook.
+    If photobook.is_unlocked == True, images are included in 'to_dict()'.
+    """
     try:
         photobook = PhotoBook.query.get_or_404(photobook_id)
         if photobook.user_id != current_user.id:
             return jsonify({'message': 'Unauthorized'}), 403
-
-        storage_service = get_storage_service()
         
-        # Get all images with their URLs
-        photobook_data = photobook.to_dict()
-        photobook_data['images'] = [{
-            'id': img.id,
-            'url': storage_service.get_public_url(img.storage_location),
-            'prompt': img.prompt,
-            'created_at': img.created_at.isoformat()
-        } for img in photobook.images]
-
-        return jsonify(photobook_data), 200
+        return jsonify(photobook.to_dict()), 200
 
     except Exception as e:
         logger.error(f"Error fetching photobook: {str(e)}")
-        return jsonify({'message': str(e)}), 500
-    
-
-@model_bp.route('/photobooks', methods=['GET'])
-@cross_origin()
-@token_required
-def list_photobooks(current_user):
-    """List all photobooks for current user"""
-    try:
-        photobooks = PhotoBook.query.filter_by(
-            user_id=current_user.id
-        ).order_by(PhotoBook.created_at.desc()).all()
-
-        return jsonify({
-            'photobooks': [pb.to_dict() for pb in photobooks]
-        }), 200
-
-    except Exception as e:
-        logger.error(f"Error listing photobooks: {str(e)}")
         return jsonify({'message': str(e)}), 500

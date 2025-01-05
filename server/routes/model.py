@@ -1,4 +1,4 @@
-# server/routes/model/model_training.py
+# server/routes/model.py
 
 from flask import request, jsonify, current_app
 from flask_cors import cross_origin
@@ -8,11 +8,11 @@ from PIL import Image
 import logging
 
 from . import model_bp
-from routes.auth import token_required 
+from .auth import token_required 
 from app import db
 from models import TrainedModel, JobStatus, CreditType
 from services.queue import JobType
-from routes import (
+from . import (
     get_storage_service,
     get_job_queue,
     get_credit_service,
@@ -164,3 +164,14 @@ def list_models(current_user):
     except Exception as e:
         logger.error(f"Error listing models: {str(e)}")
         return jsonify({'message': str(e)}), 500
+    
+
+@model_bp.route('/<int:model_id>', methods=['GET'])
+@cross_origin()
+@token_required
+def get_model(current_user, model_id):
+    """Fetch a single model by ID (ensuring it belongs to current_user)."""
+    model = TrainedModel.query.get_or_404(model_id)
+    if model.user_id != current_user.id:
+        return jsonify({'message': 'Unauthorized'}), 403
+    return jsonify(model.to_dict()), 200
