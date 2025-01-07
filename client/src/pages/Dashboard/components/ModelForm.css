@@ -28,8 +28,36 @@
     font-size: 1rem;
 }
 
-.photobook-list {
-    margin-top: 20px;
+.photobooks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.photobook-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.photobook-info h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.theme-name {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 4px 0 0 0;
+}
+
+.photobook-item:hover {
+    background-color: #f9fafb;
 }
 
 .photobook-list label {
@@ -53,3 +81,11 @@
 .create-photobook-button:hover {
     opacity: 0.9;
 }
+
+.status-unlocked {
+    color: #059669;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
