@@ -27,7 +27,7 @@
     font-size: 1.5rem;
     margin-top: 1rem;
     /* color: #f0ead6; */
-    color: #000000;
+    color: #f0ead6;
   }
   
   .cta-button {
@@ -39,7 +39,7 @@
     color: #f0ead6; /* Pearl color */
     text-decoration: none;
     border-radius: 30px;
-    background-color: #000000; /* Black background */
+    background-color: transparent;
     border: 2px solid transparent;
     /* background-image: linear-gradient(to right, pink, lightblue), linear-gradient(to right, #000000, #000000); */
     border-color: #f0ead6;

@@ -11,8 +11,8 @@
   background-color: #000000;
   color: #f0ead6;
   border-radius: 8px;
-  box-shadow: 0 0 110px -5px lightblue,
-    0 0 30px -5px pink;
+  /* box-shadow: 0 0 110px -5px lightblue,
+    0 0 30px -5px pink; */
 }
 
 .signup-container h1 {

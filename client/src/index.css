@@ -11,9 +11,10 @@
 
 /* Set body background color and default text color */
 body {
-  background-color: #242c64;
-  color: #000000; 
+  background: linear-gradient(-45deg, #151515 0%, #3c3c3c 100%);
+  color: #f0ead6;
   /* font-family: Arial, sans-serif; */
   /* font-family: 'Courier New', Courier, monospace; */
-  font-family: 'Roboto', sans-serif;
+  /* font-family: 'Roboto', sans-serif; */
+  font-family: "Helvetica neue", Helvetica;
 }

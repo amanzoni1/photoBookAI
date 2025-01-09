@@ -4,7 +4,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 2%;
-  background-color: #242c64;
+  background-color: transparent;
 }
 
 .navbar-logo a {
@@ -40,7 +40,7 @@
   font-size: 1rem;
   font-weight: bold;
   border-radius: 30px;
-  background-color: #000000;
+  background-color: transparent;
   overflow: hidden;
   border: 2px solid transparent;
   border-color: #f0ead6;
