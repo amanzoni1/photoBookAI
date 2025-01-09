@@ -1,92 +1,250 @@
 /* RightContent.css */
 
 .right-content {
-    flex: 1;
-    padding: 20px;
-    background-color: #000000; /* Dark background */
-    color: #444444; /* Text color matches border */
-    overflow-y: auto;
-    border: 1px solid #444444; /* Soft grey border */
-    border-radius: 10px;
-    margin: 30px 20px 0px 5px;
-    text-align: center;
-    box-sizing: border-box;
-    max-height: calc(100vh - 130px); /* Adjust height based on viewport */
-  }
-  
-  .right-title {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    color: #cccccc;
-  }
-  
-  .image-gallery {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  
-  .image-gallery img {
-    width: calc(33.333% - 10px);
-    height: auto;
-    border-radius: 5px;
-  }
+  flex: 1;
+  padding: 20px;
+  background-color: #000000;
+  /* Dark background */
+  color: #444444;
+  /* Text color matches border */
+  overflow-y: auto;
+  border: 1px solid #444444;
+  /* Soft grey border */
+  border-radius: 10px;
+  margin: 30px 20px 0px 5px;
+  text-align: center;
+  box-sizing: border-box;
+  max-height: calc(100vh - 130px);
+  /* Adjust height based on viewport */
+}
 
-  .image-placeholder {
-    height: 92%;
-    border: 1px solid #444444; /* Soft grey border */
-    background-color: #161616; /* Slightly lighter background */
-    border-radius: 10px;
-    padding: 20px;
-    box-sizing: border-box;
-  }
+.right-title {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #cccccc;
+}
 
-  .image-placeholder p {
-    color: #444444;
-    padding: 10px;
-  }
-  
-  /* Style scrollbar */
-  .right-content::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  .right-content::-webkit-scrollbar-track {
-    background: #000000; /* Dark background */
-  }
-  
-  .right-content::-webkit-scrollbar-thumb {
-    background: #444444; /* Soft grey */
-    border-radius: 5px;
-  }
-  
-  .right-content::-webkit-scrollbar-thumb:hover {
-    background: #555555;
-  }
-  
-  /* For Firefox */
-  .right-content {
-    scrollbar-width: thin;
-    scrollbar-color: #444444 #000000;
-  }
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-gallery img {
+  width: calc(33.333% - 10px);
+  height: auto;
+  border-radius: 5px;
+}
+
+.image-placeholder {
+  height: 92%;
+  border: 1px solid #444444;
+  /* Soft grey border */
+  background-color: #161616;
+  /* Slightly lighter background */
+  border-radius: 10px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.image-placeholder p {
+  color: #444444;
+  padding: 10px;
+}
+
+/* Style scrollbar */
+.right-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.right-content::-webkit-scrollbar-track {
+  background: #000000;
+  /* Dark background */
+}
+
+.right-content::-webkit-scrollbar-thumb {
+  background: #444444;
+  /* Soft grey */
+  border-radius: 5px;
+}
+
+.right-content::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* For Firefox */
+.right-content {
+  scrollbar-width: thin;
+  scrollbar-color: #444444 #000000;
+}
 
 
-  .images-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 20px;
-  }
-  
-  .photobook-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-  
-  .photobook-container {
-    margin-bottom: 30px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
-  }
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.photobook-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.photobook-container {
+  position: relative;
+  width: 100%;     /* fixed width */
+  height: 500px;    /* fixed height */
+  margin: 30px auto;   /* center it horizontally */
+  border: 1px solid #444444;
+  border-radius: 10px;
+  background-color: #151515;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.photobook-inner {
+  display: flex;
+  width: 100%;
+  height: 94%;
+  overflow: hidden; /* ensure no overflow unless we do it in the thumbs column */
+}
+
+.photobook-title {
+  margin-bottom: 12px;
+}
+
+/* Big cover area on the left (fixed width, full height) */
+.big-cover-area {
+  flex: 0 0 60%;  /* 60% for the big image, can adjust */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* The big cover image itself */
+.big-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.thumbs-column {
+  flex: 0 0 40%;  /* 40% for thumbs */
+  margin-left: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow-y: auto;  /* allow scrolling if many images */
+  gap: 10px;
+  padding-right: 5px; /* space for scrollbar */
+}
+
+.small-thumb {
+  width: 100%;
+  height: 100%;    /* fixed small thumb height */
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.more-label {
+  color: #999;
+  font-style: italic;
+  margin-top: auto;   /* push to bottom */
+  padding: 5px;
+  text-align: center;
+}
+
+/* Lightbox overlay style */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The enlarged image in the center */
+.enlarged-image {
+  max-width: 80vw;
+  max-height: 80vh;
+  margin: 0 50px;
+  /* spacing for arrows */
+  border-radius: 10px;
+}
+
+/* Close button (top-right corner inside .lightbox-content) */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #2c2c2c;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Nav buttons (left/right arrows) */
+.nav-button {
+  position: relative;
+  background: #2c2c2c;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.nav-button.left {
+  position: absolute;
+  left: 0;
+  margin-left: 10px;
+}
+
+.nav-button.right {
+  position: absolute;
+  right: 0;
+  margin-right: 10px;
+}
+
+/* Download button style (somewhere near the bottom or so) */
+.download-button {
+  position: absolute;
+  bottom: -40px;
+  right: 50%;
+  transform: translateX(50%);
+  background: #2c2c2c;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+}
