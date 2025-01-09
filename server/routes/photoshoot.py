@@ -12,7 +12,8 @@ from services.queue import JobType
 from config import PHOTOSHOOT_THEMES, IMAGES_PER_THEME
 from . import (
     get_job_queue,
-    get_credit_service
+    get_credit_service, 
+    get_storage_service
 )
 
 logger = logging.getLogger(__name__)
@@ -168,4 +169,48 @@ def get_photobook(current_user, photobook_id: int):
 
     except Exception as e:
         logger.error(f"Error fetching photobook: {str(e)}")
+        return jsonify({'message': str(e)}), 500
+    
+@photoshoot_bp.route('/photobooks/<int:photobook_id>/images', methods=['GET'])
+@cross_origin()
+@token_required
+def get_photobook_images(current_user, photobook_id: int):
+    """
+    Return an array of images with presigned URLs
+    for the photobook, if it is COMPLETED & unlocked.
+    """
+    try:
+        photobook = PhotoBook.query.get_or_404(photobook_id)
+        
+        # Ensure ownership
+        if photobook.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+        
+        # Ensure photobook is completed/unlocked
+        if photobook.status != JobStatus.COMPLETED or not photobook.is_unlocked:
+            return jsonify({'message': 'Photobook not available'}), 403
+
+        storage_service = get_storage_service()
+        
+        # Build array of presigned URLs
+        images = []
+        for img in photobook.images:
+            presigned_url = storage_service.get_download_url(
+                img.storage_location,
+                expires_in=3600  # 1 hour (adjust as needed)
+            )
+            images.append({
+                'id': img.id,
+                'url': presigned_url,
+                'prompt': img.prompt
+            })
+
+        return jsonify({
+            'photobook_id': photobook_id,
+            'photobook_name': photobook.name,
+            'images': images
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching photobook images: {str(e)}")
         return jsonify({'message': str(e)}), 500

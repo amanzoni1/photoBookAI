@@ -158,7 +158,7 @@ class TrainedModel(db.Model, TimestampMixin):
     
     # Model file (.safetensors) storage
     weights_location_id = db.Column(db.Integer, db.ForeignKey('storage_locations.id'))
-    status = db.Column(JobStatusEnum, default=JobStatus.PENDING.value)
+    status = db.Column(JobStatusEnum, default=JobStatus.PENDING)
     
     # Training metadata
     training_started_at = db.Column(db.DateTime(timezone=True))
@@ -209,7 +209,7 @@ class PhotoBook(db.Model, TimestampMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     model_id = db.Column(db.Integer, db.ForeignKey('trained_models.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    status = db.Column(JobStatusEnum, default=JobStatus.PENDING.value)
+    status = db.Column(JobStatusEnum, default=JobStatus.PENDING)
     theme_name = db.Column(db.String(100), nullable=False)
     is_unlocked = db.Column(db.Boolean, default=False)
     
@@ -225,7 +225,9 @@ class PhotoBook(db.Model, TimestampMixin):
             'theme_name': self.theme_name,
             'status': self.status.value,
             'created_at': self.created_at.isoformat(),
-            'is_unlocked': self.is_unlocked
+            'is_unlocked': self.is_unlocked,
+            'model_id': self.model_id,
+            'model_name': self.model.name if self.model else None,  
         }
         
         # Only include images if photobook is unlocked

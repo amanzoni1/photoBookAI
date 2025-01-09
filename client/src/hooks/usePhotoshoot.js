@@ -37,6 +37,21 @@ export const usePhotoshoot = () => {
     }
   }, []);
 
+  const fetchPhotobookImages = useCallback(async (photobookId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`/api/photoshoot/photobooks/${photobookId}/images`);
+      return res.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error fetching photobook images';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const createPhotobook = useCallback(async (modelId, themeName) => {
     setLoading(true);
     setError(null);
@@ -56,6 +71,7 @@ export const usePhotoshoot = () => {
   return {
     fetchAllPhotobooks,
     fetchPhotobooksByModel,
+    fetchPhotobookImages,
     createPhotobook,
     loading,
     error
