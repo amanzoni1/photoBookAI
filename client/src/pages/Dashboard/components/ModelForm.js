@@ -108,7 +108,6 @@ function ModelForm({ model, onClose }) {
               onClick={() => handleSelect(book.id, isUnlocked)}
             >
               <div>
-                <div className="photobook-title">{book.name}</div>
                 <div className="theme-name">{book.theme_name}</div>
               </div>
               <div>
