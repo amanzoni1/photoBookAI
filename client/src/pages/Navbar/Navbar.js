@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCredits } from '../../hooks/useCredits';
+import { useCredits } from '../../contexts/CreditsContext';
 import './Navbar.css';
 
 function Navbar({ isAuthenticated, onLogout }) {

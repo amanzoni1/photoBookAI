@@ -1,21 +1,20 @@
 // client/src/App.js
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { CreditsProvider } from './contexts/CreditsContext';
 import Navbar from './pages/Navbar/Navbar';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Signup from './pages/Signup/Signup';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 
-
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
@@ -29,9 +28,11 @@ function AppContent() {
         <Route
           path="/"
           element={
-            isAuthenticated ?
-              <Navigate to="/dashboard" replace /> :
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <LandingPage />
+            )
           }
         />
         <Route
@@ -45,17 +46,21 @@ function AppContent() {
         <Route
           path="/login"
           element={
-            isAuthenticated ?
-              <Navigate to="/dashboard" replace /> :
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <Login />
+            )
           }
         />
         <Route
           path="/signup"
           element={
-            isAuthenticated ?
-              <Navigate to="/dashboard" replace /> :
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <Signup />
+            )
           }
         />
       </Routes>
@@ -66,7 +71,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <CreditsProvider>
+        <AppContent />
+      </CreditsProvider>
     </AuthProvider>
   );
 }

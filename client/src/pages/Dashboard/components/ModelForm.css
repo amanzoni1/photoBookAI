@@ -1,41 +1,39 @@
-/* src/components/ModelForm.css */
-
 .model-form {
     padding: 20px;
     border-radius: 10px;
     color: #cccccc;
-    height: 90%;
-    /* Take up 90% of the left menu's height */
     box-sizing: border-box;
     overflow-y: auto;
-}
-
-.model-form h2 {
+  }
+  
+  .model-form h2 {
     margin-top: 0;
     font-size: 1.2rem;
-}
-
-.model-form-image {
+  }
+  
+  .model-form-image {
     width: 100px;
     height: 100px;
     margin: 20px 0;
     border-radius: 5px;
     object-fit: cover;
-}
-
-.model-form p {
+  }
+  
+  .model-form p {
     margin: 10px 0;
     font-size: 1rem;
-}
-
-.photobooks-list {
+  }
+  
+  /* Photobook list styles */
+  .photobook-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-bottom: 20px;
-}
-
-.photobook-item {
+  }
+  
+  /* Each photobook row */
+  .photobook-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -43,49 +41,62 @@
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     transition: background-color 0.2s;
-}
-
-.photobook-info h4 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.theme-name {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 4px 0 0 0;
-}
-
-.photobook-item:hover {
-    background-color: #f9fafb;
-}
-
-.photobook-list label {
-    display: block;
-    margin-bottom: 10px;
-}
-
-.create-photobook-button {
+    cursor: pointer;
+  }
+  
+  .photobook-item.unlocked {
+    background-color: #0f172a; 
+    color: #fff;
+    opacity: 1;
+  }
+  
+  .photobook-item.locked {
+    background-color: #1f2937; 
+    color: #888; 
+    opacity: 0.6; 
+  }
+  
+  .photobook-item.locked.selected {
+    border: 2px solid pink;
+    opacity: 0.9; 
+  }
+  
+  .photobook-item.locked:hover {
+    opacity: 0.8; 
+  }
+  
+  .photobook-item.unlocked:hover {
+    opacity: 0.9;
+  }
+  
+  .status-unlocked {
+    color: #10b981; 
+    font-size: 0.9rem;
+  }
+  
+  .status-locked {
+    color: #f87171; 
+    font-size: 0.9rem;
+  }
+  
+  .unlock-button {
     width: 100%;
-    padding: 20px;
-    margin-top: 30px;
+    padding: 15px;
+    margin-top: 15px;
     background: linear-gradient(to right, pink, lightblue);
-    color: #000000;
+    color: #000;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-size: 1.1rem;
     font-weight: bold;
-}
-
-.create-photobook-button:hover {
-    opacity: 0.9;
-}
-
-.status-unlocked {
-    color: #059669;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  }
+  
+  .unlock-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .unlock-button:hover:not(:disabled) {
+    filter: brightness(1.2);
   }

@@ -68,11 +68,27 @@ export const usePhotoshoot = () => {
     }
   }, []);
 
+  const unlockPhotobook = useCallback(async (photobookId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.post(`/api/photoshoot/photobooks/${photobookId}/unlock`);
+      return res.data; // e.g. { message: 'Photobook unlocked successfully' }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error unlocking photobook';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     fetchAllPhotobooks,
     fetchPhotobooksByModel,
     fetchPhotobookImages,
     createPhotobook,
+    unlockPhotobook,
     loading,
     error
   };

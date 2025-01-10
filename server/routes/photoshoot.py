@@ -214,3 +214,41 @@ def get_photobook_images(current_user, photobook_id: int):
     except Exception as e:
         logger.error(f"Error fetching photobook images: {str(e)}")
         return jsonify({'message': str(e)}), 500
+    
+# server/routes/photoshoot.py
+
+@photoshoot_bp.route('/photobooks/<int:photobook_id>/unlock', methods=['POST'])
+@cross_origin()
+@token_required
+def unlock_photobook(current_user, photobook_id: int):
+    """
+    Unlock a locked photobook, if user has enough photoshoot credits.
+    Deduct 1 photoshoot credit from user and set photobook.is_unlocked = True.
+    """
+    try:
+        photobook = PhotoBook.query.get_or_404(photobook_id)
+        
+        # Check ownership
+        if photobook.user_id != current_user.id:
+            return jsonify({'message': 'Unauthorized'}), 403
+        
+        # If already unlocked, no need to do anything
+        if photobook.is_unlocked:
+            return jsonify({'message': 'Photobook already unlocked'}), 200
+
+        # If not enough credits, return error
+        from . import get_credit_service
+        credit_service = get_credit_service()
+        if not credit_service.use_credits(current_user, CreditType.PHOTOSHOOT, 1):
+            return jsonify({'message': 'Insufficient photoshoot credits'}), 403
+
+        # Now set unlocked
+        photobook.is_unlocked = True
+        db.session.commit()
+        
+        return jsonify({'message': 'Photobook unlocked successfully'}), 200
+        
+    except Exception as e:
+        logger.error(f"Error unlocking photobook {photobook_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'message': 'Failed to unlock photobook'}), 500

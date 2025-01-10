@@ -7,7 +7,7 @@ import ModelForm from './ModelForm';
 import createIcon from './images/create1.png';
 import modelPlaceholder from './images/bab.png';
 import { useModel } from '../../../hooks/useModel';
-import { useCredits } from '../../../hooks/useCredits';
+import { useCredits } from '../../../contexts/CreditsContext';
 
 function LeftMenu() {
   const [showModelForm, setShowModelForm] = useState(false);

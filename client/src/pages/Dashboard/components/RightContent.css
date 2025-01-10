@@ -3,7 +3,7 @@
 .right-content {
   flex: 1;
   padding: 20px;
-  background-color: #000000;
+  background-color: #c7c4c4;
   /* Dark background */
   color: #444444;
   /* Text color matches border */
@@ -21,7 +21,7 @@
 .right-title {
   margin-top: 10px;
   margin-bottom: 10px;
-  color: #cccccc;
+  color: #535252;
 }
 
 .image-gallery {
@@ -110,7 +110,7 @@
 .photobook-inner {
   display: flex;
   width: 100%;
-  height: 94%;
+  height: 92%;
   overflow: hidden; /* ensure no overflow unless we do it in the thumbs column */
 }
 
