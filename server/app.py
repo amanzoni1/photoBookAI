@@ -55,7 +55,8 @@ def create_app(config_class=Config):
             'job_queue',
             'worker_service',
             'job_monitor',
-            'alert_service'
+            'alert_service',
+            'payment_service'
         ]
 
         for service in required_services:

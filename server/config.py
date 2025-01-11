@@ -42,24 +42,6 @@ PHOTOSHOOT_THEMES = {
     ]
 }
 
-# Add age groups configuration (useful for future)
-AGE_GROUPS = {
-    "newborn": {
-        "min_months": 0,
-        "max_months": 12,
-        "description": "Newborn (0-12 months)"
-    },
-    "toddler": {
-        "min_months": 13,
-        "max_months": 36,
-        "description": "Toddler (1-3 years)"
-    },
-    "kid": {
-        "min_months": 48,
-        "max_months": 96,
-        "description": "Kid (4-8 years)"
-    }
-}
     
 
 class Config:
@@ -72,6 +54,48 @@ class Config:
 
     # Basic Flask config
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key'
+
+    # Stripe configuration
+    STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
+    PRICING = {
+        # 1) Single Model + 2 free photoshoots for $19.99
+        "BUNDLE_MODEL_1_2PS": {
+            "label": "1 Model + 2 Photoshoot Credits",
+            "price_cents": 1999,  # $19.99
+            "credits": [
+                {"type": "MODEL", "quantity": 1},
+                {"type": "PHOTOSHOOT", "quantity": 2}
+            ]
+        },
+        # 2) Double Model + 5 photoshoots for $34.99
+        "BUNDLE_MODEL_2_5PS": {
+            "label": "2 Models + 5 Photoshoot Credits",
+            "price_cents": 3499,  # $34.99
+            "credits": [
+                {"type": "MODEL", "quantity": 2},
+                {"type": "PHOTOSHOOT", "quantity": 5}
+            ]
+        },
+        # 3) Single Photoshoot credit for $2.49
+        "PS_SINGLE": {
+            "label": "1 Photoshoot Credit",
+            "price_cents": 249,   # $2.49
+            "credits": [
+                {"type": "PHOTOSHOOT", "quantity": 1}
+            ]
+        },
+        # 4) 3-pack of photoshoot credits for $4.99
+        "PS_3PACK": {
+            "label": "3 Photoshoot Credits",
+            "price_cents": 499,   # $4.99
+            "credits": [
+                {"type": "PHOTOSHOOT", "quantity": 3}
+            ]
+        }
+    }
 
     # Social Auth
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
