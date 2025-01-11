@@ -98,3 +98,15 @@ def stripe_webhook():
     except Exception as e:
         logger.error(f"Webhook processing error: {e}", exc_info=True)
         return jsonify({'message': 'Webhook processing failed'}), 500
+    
+
+@payments_bp.route('/products', methods=['GET'])
+@cross_origin()
+def list_products():
+    """
+    Return the list of available products/bundles so the frontend can show them.
+    For security, we typically only need id, label, and price, not the entire credits structure.
+    """
+    payment_service = get_payment_service()  
+    all_products = payment_service.get_product_list()
+    return jsonify(all_products), 200

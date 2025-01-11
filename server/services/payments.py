@@ -148,3 +148,17 @@ class PaymentService:
                 logger.error(f"Failed to parse credit segment '{segment}': {ex}")
                 continue
         return items
+    
+    def get_product_list(self):
+        """
+        Return a list of product data suitable for the frontend.
+        e.g. [{ id: 'BUNDLE_MODEL_1_2PS', label: '1 Model + ...', price_cents: 1999 }, ... ]
+        """
+        products = []
+        for pid, pdata in self.pricing.items():
+            products.append({
+                'id': pid,
+                'label': pdata['label'],
+                'price_cents': pdata['price_cents']
+            })
+        return products

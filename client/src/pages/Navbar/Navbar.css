@@ -87,6 +87,21 @@
   color: #f0ead6;
 }
 
+.buy-credits-btn {
+  margin-left: 15px;
+  padding: 12px 14px;
+  background: #10b981; 
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.buy-credits-btn:hover {
+  opacity: 0.9;
+}
+
 .user-menu {
   position: relative;
 }
