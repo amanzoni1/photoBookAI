@@ -10,10 +10,6 @@ basedir = Path(__file__).resolve().parent
 load_dotenv(basedir / '.env')
 
 
-PRICES = {
-    'MODEL': 24.99,
-    'PHOTOSHOOT': 3.99
-}
 IMAGES_PER_PHOTOBOOK = 20 
 IMAGES_PER_THEME = 5
 

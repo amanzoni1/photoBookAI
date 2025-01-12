@@ -11,7 +11,7 @@
 .navbar-logo a {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #f0ead6;
+  color: #333;
   text-decoration: none;
 }
 
@@ -22,7 +22,7 @@
 }
 
 .navbar-links li a {
-  color: #f0ead6;
+  color: #333;
   text-decoration: none;
   font-size: 1rem;
 }
@@ -36,7 +36,7 @@
   display: inline-block;
   padding: 0.5rem 1rem;
   margin-left: 1rem;
-  color: #f0ead6;
+  color: #333;
   text-decoration: none;
   font-size: 1rem;
   font-weight: bold;
@@ -44,7 +44,7 @@
   background-color: transparent;
   overflow: hidden;
   border: 2px solid transparent;
-  border-color: #f0ead6;
+  border-color: #333;
   background-origin: border-box;
   background-clip: padding-box, border-box;
   transition: all 0.3s ease;

@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 class CreditService:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.prices = config.get('PRICES') 
     
     def add_credits(self, 
                 user: User, 

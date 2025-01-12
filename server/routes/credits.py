@@ -9,7 +9,6 @@ from .auth import token_required
 from models import CreditType
 from app import db
 from . import get_credit_service
-from config import PRICES
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,6 @@ def purchase_credits(current_user):
             return jsonify({'message': 'Invalid purchase type'}), 400
 
         credit_type = CreditType[purchase_type]
-        price = PRICES[purchase_type] * quantity
 
         credit_service = get_credit_service()
         if not credit_service:
@@ -51,7 +49,7 @@ def purchase_credits(current_user):
             credit_type=credit_type,  
             amount=quantity,
             payment_id=payment_id,
-            price=price,
+            price=None,
             metadata={
                 'purchase_type': purchase_type,
                 'quantity': quantity
@@ -62,7 +60,6 @@ def purchase_credits(current_user):
             'message': 'Purchase successful',
             'transaction_id': transaction.id,
             'new_balance': credit_service.get_user_credits(current_user),
-            'amount_paid': price
         }), 200
 
     except Exception as e:

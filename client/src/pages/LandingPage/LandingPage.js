@@ -1,12 +1,14 @@
 // client/src/pages/LandingPage/LandingPage.js
 
 import React from 'react';
-import './LandingPage.css'; // Import styles
+import './LandingPage.css'; 
 import { Link } from 'react-router-dom';
+import GradientBackground from './components/GradientBackground';
 
 function LandingPage() {
   return (
     <div className="landing-container">
+      <GradientBackground />
       <div className="landing-content">
         <h1 className="gradient-text">
           Experience Magical AI-Generated Photoshoots for Your Little Ones
