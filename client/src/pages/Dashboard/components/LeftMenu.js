@@ -1,4 +1,4 @@
-// src/components/LeftMenu.js
+// LeftMenu.js
 
 import React, { useState, useEffect } from 'react';
 import './LeftMenu.css';
@@ -8,12 +8,14 @@ import createIcon from './images/create1.png';
 import modelPlaceholder from './images/bab.png';
 import { useModel } from '../../../hooks/useModel';
 import { useCredits } from '../../../contexts/CreditsContext';
+import BuyCreditsModal from '../../BuyCreditsModal/BuyCreditsModal';
 
 function LeftMenu() {
   const [showModelForm, setShowModelForm] = useState(false);
   const [models, setModels] = useState([]);
   const [currentTrainingModel, setCurrentTrainingModel] = useState(null);
   const [selectedModel, setSelectedModel] = useState(null);
+  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
 
   const {
     checkModelStatus,
@@ -22,45 +24,28 @@ function LeftMenu() {
     error: modelError
   } = useModel();
 
-  const { credits, purchaseCredits } = useCredits();
+  const { credits } = useCredits();
 
   /**
-   * Handle clicking the "Create New Model" button.
-   * Checks user credits, and optionally prompts to purchase more.
+   * Handle "Create New Model" button.
+   * If user has model credits, show the training form; otherwise open BuyCreditsModal.
    */
-  const handleCreateModelClick = async () => {
+  const handleCreateModelClick = () => {
     if (credits.model_credits > 0) {
       setShowModelForm(true);
     } else {
-      try {
-        const confirmed = window.confirm(
-          'You need to purchase credits to create a model. Would you like to purchase 1 model credit for $24.99?'
-        );
-        if (confirmed) {
-          const result = await purchaseCredits('MODEL', 1);
-          if (result.message === 'Purchase successful') {
-            alert('Credits purchased successfully! You can now create a model.');
-            setShowModelForm(true);
-          } else {
-            throw new Error('Purchase failed');
-          }
-        }
-      } catch (error) {
-        console.error('Purchase error:', error);
-        alert(error.response?.data?.message || 'Failed to purchase credits. Please try again.');
-      }
+      // Instead of confirm(...) we open the buy-credits popup
+      setShowBuyCreditsModal(true);
     }
   };
 
   /**
-   * After the user creates/starts training a new model:
-   * - We create a placeholder for that model (showing "in progress").
-   * - We poll the model’s status until it’s COMPLETE or FAILED.
+   * After user uploads/trains a new model, we poll the training job status.
    */
   const handleTrainingStart = async (modelName, trainingInfo) => {
     setShowModelForm(false);
 
-    // Create a placeholder for the model being trained
+    // Create a placeholder for the "in progress" model
     const newModel = {
       id: trainingInfo.modelId,
       name: modelName,
@@ -69,19 +54,15 @@ function LeftMenu() {
     };
     setCurrentTrainingModel(newModel);
 
-    // Start polling for training status every 5 seconds
+    // Poll job status every 5 seconds until COMPLETED/FAILED
     const pollInterval = setInterval(async () => {
       try {
         const status = await checkModelStatus(trainingInfo.modelId);
 
         if (status.status === 'COMPLETED') {
           clearInterval(pollInterval);
-          setModels((prevModels) => [
-            {
-              ...newModel,
-              isTraining: false,
-              ...status
-            },
+          setModels(prevModels => [
+            { ...newModel, isTraining: false, ...status },
             ...prevModels
           ]);
           setCurrentTrainingModel(null);
@@ -99,28 +80,26 @@ function LeftMenu() {
   };
 
   /**
-   * When user clicks on a model in the list, open the "ModelForm" for it.
+   * Handle user clicking on a model to manage it.
    */
   const handleModelClick = (model) => {
     setSelectedModel(model);
   };
 
-  /**
-   * Close the ModelForm panel
-   */
   const handleCloseModelForm = () => {
     setSelectedModel(null);
   };
 
   /**
-   * Fetch all user models on component mount
+   * Fetch user’s completed models on mount
    */
   useEffect(() => {
     const loadUserModels = async () => {
       try {
         let fetchedModels = await fetchModels();
         fetchedModels = fetchedModels.filter(m => m.status === 'COMPLETED');
-        fetchedModels = fetchedModels.slice(0, 3) //////////
+        // Example: only show the first 3 (??) 
+        fetchedModels = fetchedModels.slice(0, 3);
         setModels(fetchedModels);
       } catch (err) {
         console.error('Error fetching models:', err);
@@ -130,21 +109,20 @@ function LeftMenu() {
   }, [fetchModels]);
 
   /**
-   * If we have either currentTrainingModel or models.length > 0,
-   * we consider that "we have models".
+   * Determine if user has any existing or training models
    */
   const hasModels = models.length > 0 || currentTrainingModel !== null;
 
   return (
     <div className="left-menu">
-      {/* Optionally, you can show loading/error states */}
+      {/* Show loading or error states if needed */}
       {modelLoading && <p className="loading-text">Loading your models...</p>}
       {modelError && <p className="error-message">{modelError}</p>}
 
-      {/* Show the main menu if no form is active */}
+      {/* If no form is active, show main menu */}
       {!showModelForm && !selectedModel && (
         <>
-          {/* Model in training */}
+          {/* Show the "training in progress" placeholder */}
           {currentTrainingModel && (
             <div key={currentTrainingModel.id} className="model-box training-model">
               <div className="loading-indicator">
@@ -154,8 +132,8 @@ function LeftMenu() {
             </div>
           )}
 
-          {/* Existing models */}
-          {models.map((model) => (
+          {/* Existing completed models */}
+          {models.map(model => (
             <div
               key={model.id}
               className="model-box"
@@ -164,24 +142,16 @@ function LeftMenu() {
               <img src={modelPlaceholder} alt="Model" className="model-image" />
               <div className="model-info">
                 <p className="model-name">{model.name}</p>
-
-                {/* If you want to show the model's age from config */}
                 <p className="model-age">
-                  {model.config?.age_years
-                    ? `${model.config.age_years} yrs`
-                    : ''}
-                  {model.config?.age_months
-                    ? ` ${model.config.age_months} mos`
-                    : ''}
+                  {model.config?.age_years ? `${model.config.age_years} yrs` : ''}
+                  {model.config?.age_months ? ` ${model.config.age_months} mos` : ''}
                 </p>
-
-                {/* Example showing the model's status */}
                 <p className="model-status">Status: {model.status}</p>
               </div>
             </div>
           ))}
 
-          {/* Create New Model button */}
+          {/* "Create Model" button */}
           <button
             className={`create-button ${!hasModels ? 'margin-top-10' : 'margin-top-auto'}`}
             onClick={handleCreateModelClick}
@@ -192,7 +162,7 @@ function LeftMenu() {
         </>
       )}
 
-      {/* Show ModelCreationForm */}
+      {/* Show the training form if showModelForm===true */}
       {showModelForm && (
         <div className="model-creation-container">
           <button
@@ -220,6 +190,12 @@ function LeftMenu() {
           />
         </div>
       )}
+
+      {/* The same buy-credits modal approach as in Navbar */}
+      <BuyCreditsModal
+        isOpen={showBuyCreditsModal}
+        onClose={() => setShowBuyCreditsModal(false)}
+      />
     </div>
   );
 }

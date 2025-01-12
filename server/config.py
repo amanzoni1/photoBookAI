@@ -94,6 +94,8 @@ class Config:
     }
 
     # Social Auth
+    # FRONTEND_URL = ''  ADD HERE for proper auth
+    # BASE_URL = ''  ADD HERE for proper payment
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     GOOGLE_CALLBACK_URL = "http://localhost:5001/api/auth/google/callback"
