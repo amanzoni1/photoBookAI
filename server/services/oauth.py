@@ -14,7 +14,10 @@ class OAuthService:
             client_id=config['GOOGLE_CLIENT_ID'],
             client_secret=config['GOOGLE_CLIENT_SECRET'],
             server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid email profile'},
+            client_kwargs={
+                'scope': 'openid email profile',
+                # 'prompt': 'select_account'  # reselct account Alternative: 'prompt': 'login' or 'prompt': 'consent'
+            },
             nonce_storage=None
         )
 
@@ -29,7 +32,7 @@ class OAuthService:
             client_kwargs={
                 'scope': 'email public_profile',
                 'display': 'popup',
-                'auth_type': 'rerequest',
+                'auth_type': 'rerequest', # or 'reauthenticate'
                 'response_type': 'code'
             } 
         )

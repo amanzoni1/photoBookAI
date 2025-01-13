@@ -1,84 +1,152 @@
-/* client/src/pages/Signup/Signup.css */
-
+/* Container Styling */
 .signup-container {
-  position: fixed;
-  top: 50%;
+  position: absolute;
+  top: 120px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 450px;
+  transform: translate(-50%, 0);
+  max-width: 500px;
   width: 90%;
-  padding: 1.8rem;
-  background-color: #000000;
-  color: #f0ead6;
-  border-radius: 8px;
-  /* box-shadow: 0 0 110px -5px lightblue,
-    0 0 30px -5px pink; */
+  padding: 1.5rem;
+  background-color: #ffffff;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
 }
 
+/* Header */
 .signup-container h1 {
   text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 2.2rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem; /* Reduced margin */
+  color: #222; /* Slightly darker text for better contrast */
 }
 
+/* Form Styling */
 .signup-form {
   display: flex;
   flex-direction: column;
+  gap: 0.6rem; /* Reduced spacing between elements */
+  padding: 0 1rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column; /* Stack label and input */
+  gap: 0.4rem; /* Reduced spacing between label and input */
+  max-width: 400px; /* Restrict the width of each form group */
+  margin: 0 auto; /* Center align the form group */
+  width: 100%;
 }
 
 .signup-form label {
-  margin-top: 1.5rem;
-  margin-bottom: 0.8rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #444;
 }
 
 .signup-form input {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 100%;
+  padding: 0.7rem;
   font-size: 1rem;
+  border: 1px solid #aaa; /* Stronger border for better visibility */
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  outline: none;
+  transition: border-color 0.3s;
+  max-width: 100%;
 }
 
+.signup-form input:focus {
+  border-color: #0056b3; /* Stronger blue for focus */
+}
+
+/* Submit Button */
 .signup-form button {
-  margin-top: 2rem;
-  padding: 0.9rem;
-  background-color: #000000;
-  color: #000000;
-  font-size: 1.1rem;
+  padding: 0.8rem; /* Reduced vertical padding */
+  font-size: 1rem;
   font-weight: bold;
-  border: 2px solid transparent;
-  border-radius: 30px;
-  background-image: linear-gradient(to right, pink, lightblue),
-    linear-gradient(to right, #000000, #000000);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: none;
+  border-radius: 8px;
+  background-color: #007bff; /* Stronger blue button */
+  color: #fff;
   cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  max-width: 400px; 
+  margin: 0 auto; /* Center align the button */
+  width: 100%;
 }
 
 .signup-form button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .signup-form button:hover:not(:disabled) {
-  filter: brightness(1.2);
+  background-color: #0056b3; /* Darker blue on hover */
+  transform: scale(1.02);
 }
 
+/* Error Message */
 .error-message {
   color: #ff4444;
-  margin-bottom: 1rem;
+  font-size: 0.9rem;
   text-align: center;
+  margin-bottom: 0.8rem; /* Reduced margin */
 }
 
+/* Password Field */
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  padding-right: 2.5rem; /* Space for the button inside */
+  font-size: 1rem;
+  border: 1px solid #aaa; /* Match email field styling */
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  width: 100%;
+  padding: 0.7rem; /* Match input padding */
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.password-field input:focus {
+  border-color: #0056b3; /* Consistent focus color */
+}
+
+.show-password-btn {
+  position: absolute;
+  top: 35%;
+  right: 3%;
+  width: 20px !important;
+  transform: translateY(0%);
+  background: none !important;
+  border: none !important;
+  color: #888 !important;
+  cursor: pointer;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+.show-password-btn:focus {
+  outline: none;
+}
+
+.show-password-btn:hover {
+  color: #555; /* Slightly darker color on hover */
+}
+
+/* Password Requirements */
 .password-requirements {
   list-style: none;
   padding: 0;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0; /* Reduced vertical margin */
   font-size: 0.7rem;
   display: none;
 }
@@ -90,16 +158,11 @@
 .password-requirements li {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem; /* Reduced spacing */
 }
 
 .requirement-text {
-  color: #b5b1b1;
-}
-
-.validation-icon {
-  margin-right: 0.5rem;
-  font-weight: bold;
+  color: #aaa;
 }
 
 .valid,
@@ -112,5 +175,90 @@
 }
 
 .invalid {
-  color: #b5b1b1;
+  color: #aaa;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0; /* Reduced margin */
+  color: #aaa;
+  font-size: 0.9rem;
+  max-width: 400px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: #ccc;
+  margin: 0 0.5rem;
+}
+
+/* Social Login */
+.social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem; /* Reduced gap */
+  margin: 1rem auto; 
+  max-width: 400px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.7rem; /* Reduced padding */
+  font-size: 1rem;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  background-color: #f8f9fa; /* Slightly darker background */
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  max-width: 100%; 
+}
+
+.social-btn:hover {
+  background-color: #e2e6ea; /* Slightly darker on hover */
+}
+
+.social-btn svg {
+  font-size: 1.2rem;
+}
+
+/* Links */
+.signup-link {
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.signup-link a {
+  color: #007bff; /* Stronger blue for links */
+  text-decoration: none;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .signup-container {
+    width: 95%;
+    padding: 1.2rem;
+  }
+
+  .signup-container h1 {
+    font-size: 1.6rem;
+  }
+
+  .signup-form button {
+    font-size: 0.9rem;
+  }
 }

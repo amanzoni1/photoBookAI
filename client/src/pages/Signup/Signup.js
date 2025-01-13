@@ -7,6 +7,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { AiFillApple } from 'react-icons/ai';
 import { BsFacebook } from 'react-icons/bs';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import Background from '../Background/Background';
 import './Signup.css';
 
 function Signup() {
@@ -60,7 +61,7 @@ function Signup() {
     e.preventDefault();
     if (!isFormValid()) return;
 
-    const username = formData.email.split('@')[0]; 
+    const username = formData.email.split('@')[0];
 
     try {
       await axios.post('/api/auth/register', {
@@ -86,115 +87,118 @@ function Signup() {
   };
 
   return (
-    <div className="signup-container">
-      <h1>Sign Up</h1>
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
+    <div>
+      <Background />
+      <div className="signup-container">
+        <h1>Sign Up</h1>
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-      <form onSubmit={onSubmit} className="signup-form">
-        <div className="form-group">
-          <label>Email address</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        {/* Password Field */}
-        <div className="form-group">
-          <label>Password</label>
-          <div className="password-field">
+        <form onSubmit={onSubmit} className="signup-form">
+          <div className="form-group">
+            <label>Email address</label>
             <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
+              type="email"
+              name="email"
+              value={formData.email}
               onChange={onChange}
               required
             />
-            <button
-              type="button"
-              className="show-password-btn"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
           </div>
 
-          {/* Password Requirements */}
-          <ul className={`password-requirements ${formData.password ? 'show' : ''}`}>
-            <li>
-              <span className={validations.length ? 'valid' : 'invalid'}>
-                {validations.length ? '✓' : '✘'}
-              </span>
-              <span className="requirement-text">
-                Must be at least 8 characters
-              </span>
-            </li>
-            <li>
-              <span className={validations.combination ? 'valid' : 'invalid'}>
-                {validations.combination ? '✓' : '✘'}
-              </span>
-              <span className="requirement-text">
-                Must contain uppercase, lowercase letters, and numbers
-              </span>
-            </li>
-            <li>
-              <span className={validations.special ? 'valid' : 'invalid'}>
-                {validations.special ? '✓' : '✘'}
-              </span>
-              <span className="requirement-text">
-                Must contain a special character
-              </span>
-            </li>
-          </ul>
-        </div>
+          {/* Password Field */}
+          <div className="form-group">
+            <label>Password</label>
+            <div className="password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={onChange}
+                required
+              />
+              <button
+                type="button"
+                className="show-password-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
 
-        {/* Confirm Password */}
-        <div className="form-group">
-          <label>Confirm Password</label>
-          <div className="password-field">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={onChange}
-              required
-            />
-            <button
-              type="button"
-              className="show-password-btn"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
+            {/* Password Requirements */}
+            <ul className={`password-requirements ${formData.password ? 'show' : ''}`}>
+              <li>
+                <span className={validations.length ? 'valid' : 'invalid'}>
+                  {validations.length ? '✓' : '✘'}
+                </span>
+                <span className="requirement-text">
+                  Must be at least 8 characters
+                </span>
+              </li>
+              <li>
+                <span className={validations.combination ? 'valid' : 'invalid'}>
+                  {validations.combination ? '✓' : '✘'}
+                </span>
+                <span className="requirement-text">
+                  Must contain uppercase, lowercase letters, and numbers
+                </span>
+              </li>
+              <li>
+                <span className={validations.special ? 'valid' : 'invalid'}>
+                  {validations.special ? '✓' : '✘'}
+                </span>
+                <span className="requirement-text">
+                  Must contain a special character
+                </span>
+              </li>
+            </ul>
           </div>
+
+          {/* Confirm Password */}
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <div className="password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={onChange}
+                required
+              />
+              <button
+                type="button"
+                className="show-password-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" disabled={!isFormValid()}>
+            Register
+          </button>
+
+          <div className="signup-link">
+            Already have an account? <Link to="/login">Log In</Link>
+          </div>
+        </form>
+
+        <div className="divider">
+          <span>or continue with</span>
         </div>
 
-        <button type="submit" disabled={!isFormValid()}>
-          Register
-        </button>
-
-        <div className="signup-link">
-          Already have an account? <Link to="/login">Log In</Link>
-        </div>
-      </form>
-
-      <div className="divider">
-        <span>or continue with</span>
-      </div>
-
-      <div className="social-login">
-        <button onClick={handleGoogleLogin} className="social-btn google">
-          <FcGoogle /> Google
-        </button>
-        {/* <button onClick={handleAppleLogin} className="social-btn apple">
+        <div className="social-login">
+          <button onClick={handleGoogleLogin} className="social-btn google">
+            <FcGoogle /> Google
+          </button>
+          {/* <button onClick={handleAppleLogin} className="social-btn apple">
           <AiFillApple /> Apple
         </button> */}
-        <button onClick={handleFacebookLogin} className="social-btn facebook">
-          <BsFacebook /> Facebook
-        </button>
+          <button onClick={handleFacebookLogin} className="social-btn facebook">
+            <BsFacebook /> Facebook
+          </button>
+        </div>
       </div>
     </div>
   );

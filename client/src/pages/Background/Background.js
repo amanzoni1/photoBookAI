@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import './GradientBackground.css';
+import './Background.css';
 
-function GradientBackground() {
+function Background() {
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -9,7 +9,6 @@ function GradientBackground() {
         const ctx = canvas.getContext('2d');
 
         const colors = [
-            // '#75b5ff', // Added: Soft medium blue
             '#90e0ff', // Light blue
             '#ff97c1', // Pink
             '#a960ee'  // Purple
@@ -29,15 +28,35 @@ function GradientBackground() {
             });
 
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
 
-            // Draw angled bottom edge
+            // Draw gradient within the inclined borders
             ctx.beginPath();
-            ctx.moveTo(0, height);
-            ctx.lineTo(width, height * 0.6); // This creates the angle
-            ctx.lineTo(width, height);
+            ctx.moveTo(0, height * 0.65); // Top-left inclined
+            ctx.lineTo(width, height * 0.35); // Top-right inclined
+            ctx.lineTo(width, height * 0.65); // Bottom-right inclined
+            ctx.lineTo(0, height * 0.95); // Bottom-left inclined
             ctx.closePath();
+            ctx.fill();
+
+            // Fill the remaining area with background color
             ctx.fillStyle = '#f6f8fa'; // Match your page background color
+
+            // Fill top area
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(width, 0);
+            ctx.lineTo(width, height * 0.1);
+            ctx.lineTo(0, height * 0.1);
+            ctx.closePath();
+            ctx.fill();
+
+            // Fill bottom area
+            ctx.beginPath();
+            ctx.moveTo(0, height * 0.95);
+            ctx.lineTo(width, height * 0.65);
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
             ctx.fill();
         }
 
@@ -54,8 +73,8 @@ function GradientBackground() {
     }, []);
 
     return (
-        <canvas ref={canvasRef} className="gradient-canvas" />
+        <canvas ref={canvasRef} className="gen-gradient-canvas" />
     );
 }
 
-export default GradientBackground;
+export default Background;
