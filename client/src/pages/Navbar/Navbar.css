@@ -3,7 +3,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 1% 5%;
+  margin: 0.7% 5%;
   padding: 5px 15px;
   background-color: transparent;
 }
@@ -63,36 +63,43 @@
 }
 
 .credits-display {
+  width: 180px;
   display: flex;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
-  border: 1px solid rgba(240, 234, 214, 0.3);
+  flex-direction: column; /* Vertical layout */
+  gap: 0.2rem; /* Space between credit items */
+  background: #ecedef; 
+  padding: 0.2rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .credit-item {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #f0ead6;
+  flex-direction: row; /* Keep "label" and "value" side by side */
+  justify-content: space-between; /* Space between label and value */
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #333;
 }
 
-.credit-icon {
-  font-size: 1.2rem;
+.credit-label {
+  color: #4b5563; /* Slightly muted grey */
 }
 
 .credit-value {
-  font-weight: 600;
-  color: #f0ead6;
+  color: #1f2937; /* Darker grey for numbers */
+  font-weight: bold;
+  margin-left: 20px;
 }
 
 .buy-credits-btn {
   margin-left: 15px;
-  padding: 12px 14px;
+  padding: 14px 64px;
   background: #10b981; 
   color: #fff;
-  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -100,6 +107,7 @@
 
 .buy-credits-btn:hover {
   opacity: 0.9;
+  transform: scale(1.02);
 }
 
 .user-menu {

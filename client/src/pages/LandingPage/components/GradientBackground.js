@@ -12,7 +12,8 @@ function GradientBackground() {
             // '#75b5ff', // Added: Soft medium blue
             '#90e0ff', // Light blue
             '#ff97c1', // Pink
-            '#a960ee'  // Purple
+            '#a960ee',  // Purple
+            '#90e0ff'
         ];
 
         function drawGradient() {
@@ -37,7 +38,7 @@ function GradientBackground() {
             ctx.lineTo(width, height * 0.6); // This creates the angle
             ctx.lineTo(width, height);
             ctx.closePath();
-            ctx.fillStyle = '#f6f8fa'; // Match your page background color
+            ctx.fillStyle = '#ebeef1'; // Match your page background color
             ctx.fill();
         }
 

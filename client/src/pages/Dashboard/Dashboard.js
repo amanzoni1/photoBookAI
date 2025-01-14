@@ -33,13 +33,10 @@ function Dashboard() {
   }
 
   return (
-    <div className="dashboard-container">
-      <h1 className="dashboard-title">AI Image Generator</h1>
       <div className="dashboard">
         <LeftMenu />
         <RightContent />
       </div>
-    </div>
   );
 }
 

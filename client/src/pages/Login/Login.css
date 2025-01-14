@@ -63,7 +63,7 @@
   font-weight: bold;
   border: none;
   border-radius: 8px;
-  background-color: #007bff; /* Stronger blue button */
+  background-color: #333; /* Stronger blue button */
   color: #fff;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
@@ -78,7 +78,7 @@
 }
 
 .login-form button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #232323; /* Darker blue on hover */
   transform: scale(1.02);
 }
 
@@ -116,8 +116,20 @@
   border-color: #0056b3; /* Consistent focus color */
 }
 
-
-
+.show-password-btn {
+  position: absolute;
+  top: 35%;
+  right: 3%;
+  width: 20px !important;
+  transform: translateY(0%);
+  background: none !important;
+  border: none !important;
+  color: #888 !important;
+  cursor: pointer;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
 
 .show-password-btn:focus {
   outline: none;

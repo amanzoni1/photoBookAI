@@ -11,7 +11,8 @@ function Background() {
         const colors = [
             '#90e0ff', // Light blue
             '#ff97c1', // Pink
-            '#a960ee'  // Purple
+            '#a960ee', // Purple
+            '#90e0ff'
         ];
 
         function drawGradient() {
@@ -39,7 +40,7 @@ function Background() {
             ctx.fill();
 
             // Fill the remaining area with background color
-            ctx.fillStyle = '#f6f8fa'; // Match your page background color
+            ctx.fillStyle = '#ebeef1'; // Match your page background color
 
             // Fill top area
             ctx.beginPath();

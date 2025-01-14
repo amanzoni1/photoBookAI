@@ -1,27 +1,13 @@
 /* Dashboard.css */
 
-.dashboard-container {
-  background-color: transparent;
-}
-
-.dashboard-title {
-  text-align: center;
-  font-size: 3rem;
-  margin-top: 20px;
-  background: linear-gradient(to right, pink, lightblue);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-
 .dashboard {
   display: flex;
-  height: calc(100vh - 70px - 80px);
+  height: 100vh; /* Full page height */
 }
 
 .error-message {
-  color: red;
-  margin: 1rem;
+  color: #e63946; /* Elegant red for error messages */
+  text-align: center;
+  margin-top: 20px;
+  font-size: 1rem;
 }

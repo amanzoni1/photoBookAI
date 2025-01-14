@@ -1,37 +1,35 @@
 /* src/components/LeftMenu.css */
 
 .left-menu {
-  width: 30%;
-  background-color: #000000; /* Dark background */
-  padding: 42px 10px 20px 10px;
-  color: #cccccc; /* Soft grey text */
-  border: 1px solid #444444;
-  border-radius: 10px;
-  margin: 30px 5px 0px 20px;
+  width: 25%; /* Narrower for better proportions */
+  padding: 6px;
+  border-right: 2px;
   box-sizing: border-box;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  position: relative;
+  height: calc(100vh - 70px); /* Full height minus padding/margin */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between; /* Ensure the button is always at the bottom */
+  gap: 2px; /* Space between sections */
+  overflow-y: auto; /* Allow scrolling for overflow content */
 }
 
 /* Create Button */
 .create-button {
   width: 100%;
-  height: 90px;
-  background-color: #161616;
-  color: #cccccc;
-  border: 1px solid #c8c75a;
-  border-radius: 10px;
-  cursor: pointer;
+  padding: 20px;
+  background-color: #333; 
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
-  padding: 0 15px;
+  justify-content: center;
+  cursor: pointer;
   transition: background-color 0.3s ease;
+  margin-bottom: 10px;
 }
 
 .margin-top-10 {
@@ -44,6 +42,7 @@
 
 .create-button:hover {
   background-color: #232323;
+  transform: scale(1.02);
 }
 
 .button-icon {
@@ -54,27 +53,27 @@
 
 /* Model box styling */
 .model-box {
-  background-color: #161616;
-  border: 1px solid #444444;
-  border-radius: 10px;
-  padding: 8px;
-  margin-bottom: 10px;
-  color: #cccccc;
-  cursor: pointer;
+  background-color: #f6fbff; 
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); 
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin: 4px;
   display: flex;
+  gap: 10px;
   align-items: center;
-  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-
 .model-box:hover {
-  background-color: #1e1e1e;
+  background-color: #f6f8fa; /* Slightly darker grey on hover */
+  transform: scale(1.02);
 }
 
 .model-image {
-  width: 60px;
-  height: 60px;
-  margin-right: 10px;
-  border-radius: 5px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
   object-fit: cover;
 }
 
@@ -83,9 +82,9 @@
 }
 
 .model-name {
-  margin: 0;
   font-size: 1rem;
   font-weight: bold;
+  color: #333;
 }
 
 /* Training Model Box */

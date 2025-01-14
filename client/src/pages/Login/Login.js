@@ -52,34 +52,38 @@ function Login() {
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         <form onSubmit={onSubmit} className="login-form">
-          <label>Email address</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={onChange}
-            required
-            disabled={isLoading}
-          />
-
-          <label>Password</label>
-          <div className="password-field">
+          <div className="form-group">
+            <label>Email address</label>
             <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
+              type="email"
+              name="email"
+              value={formData.email}
               onChange={onChange}
               required
               disabled={isLoading}
             />
-            <button
-              type="button"
-              className="show-password-btn"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={isLoading}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={onChange}
+                required
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                className="show-password-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
           </div>
 
           <div className="forgot-password">

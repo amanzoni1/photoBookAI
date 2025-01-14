@@ -76,11 +76,11 @@ function Navbar({ isAuthenticated, onLogout }) {
             {!loading && credits && (
               <div className="credits-display">
                 <div className="credit-item">
-                  <span className="credit-icon">🎨</span>
+                  <span className="credit-label">Model</span>
                   <span className="credit-value">{credits.model_credits}</span>
                 </div>
                 <div className="credit-item">
-                  <span className="credit-icon">📚</span>
+                  <span className="credit-label">Photoshoot</span>
                   <span className="credit-value">{credits.photoshoot_credits}</span>
                 </div>
               </div>
