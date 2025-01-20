@@ -9,7 +9,7 @@ from .auth import token_required
 from app import db
 from models import TrainedModel, PhotoBook, JobStatus, CreditType
 from services.queue import JobType
-from config import PHOTOSHOOT_THEMES, IMAGES_PER_THEME
+from config import PHOTOSHOOT_THEMES
 from . import (
     get_job_queue,
     get_credit_service, 
@@ -68,88 +68,88 @@ def list_photobooks_for_model(current_user, model_id: int):
         return jsonify({'message': str(e)}), 500
 
 
-@photoshoot_bp.route('/model/<int:model_id>/photobooks', methods=['POST'])
-@cross_origin()
-@token_required
-def create_photobook(current_user, model_id: int):
-    """
-    Create a new themed photobook (photoshoot) for a given model.
-    """
-    try:
-        # Get model and verify ownership
-        model = TrainedModel.query.get_or_404(model_id)
-        if model.user_id != current_user.id:
-            return jsonify({'message': 'Unauthorized'}), 403
+# @photoshoot_bp.route('/model/<int:model_id>/photobooks', methods=['POST'])
+# @cross_origin()
+# @token_required
+# def create_photobook(current_user, model_id: int):
+#     """
+#     Create a new themed photobook (photoshoot) for a given model.
+#     """
+#     try:
+#         # Get model and verify ownership
+#         model = TrainedModel.query.get_or_404(model_id)
+#         if model.user_id != current_user.id:
+#             return jsonify({'message': 'Unauthorized'}), 403
 
-        # Check if model is ready
-        is_ready, message = model.is_ready_for_generation()
-        if not is_ready:
-            return jsonify({'message': message}), 400
+#         # Check if model is ready
+#         is_ready, message = model.is_ready_for_generation()
+#         if not is_ready:
+#             return jsonify({'message': message}), 400
 
-        # Get request data
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'No data provided'}), 400
+#         # Get request data
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({'message': 'No data provided'}), 400
 
-        # Validate theme name
-        theme_name = data.get('theme_name')
-        if not theme_name:
-            return jsonify({'message': 'Theme name is required'}), 400
+#         # Validate theme name
+#         theme_name = data.get('theme_name')
+#         if not theme_name:
+#             return jsonify({'message': 'Theme name is required'}), 400
             
-        # Verify theme exists
-        if theme_name not in PHOTOSHOOT_THEMES:
-            return jsonify({
-                'message': 'Invalid theme',
-                'available_themes': list(PHOTOSHOOT_THEMES.keys())
-            }), 400
+#         # Verify theme exists
+#         if theme_name not in PHOTOSHOOT_THEMES:
+#             return jsonify({
+#                 'message': 'Invalid theme',
+#                 'available_themes': list(PHOTOSHOOT_THEMES.keys())
+#             }), 400
 
-        # Check credits (Assuming you're using CreditType.PHOTOSHOOT or IMAGE)
-        credit_service = get_credit_service()
-        if not credit_service.use_credits(current_user, CreditType.PHOTOSHOOT, amount=IMAGES_PER_THEME):
-            return jsonify({'message': 'Insufficient credits for photoshoot generation'}), 403
+#         # Check credits (Assuming you're using CreditType.PHOTOSHOOT or IMAGE)
+#         credit_service = get_credit_service()
+#         if not credit_service.use_credits(current_user, CreditType.PHOTOSHOOT, amount=IMAGES_PER_THEME):
+#             return jsonify({'message': 'Insufficient credits for photoshoot generation'}), 403
 
-        # Create photobook record
-        photobook = PhotoBook(
-            user_id=current_user.id,
-            model_id=model_id,
-            name=f"Photoshoot - {theme_name}",
-            theme_name=theme_name,
-            status=JobStatus.PENDING,
-            is_unlocked=False  # Will be unlocked after generation or payment
-        )
+#         # Create photobook record
+#         photobook = PhotoBook(
+#             user_id=current_user.id,
+#             model_id=model_id,
+#             name=f"Photoshoot - {theme_name}",
+#             theme_name=theme_name,
+#             status=JobStatus.PENDING,
+#             is_unlocked=False  # Will be unlocked after generation or payment
+#         )
         
-        db.session.add(photobook)
-        db.session.commit()
+#         db.session.add(photobook)
+#         db.session.commit()
 
-        # Get theme prompts
-        theme_prompts = PHOTOSHOOT_THEMES[theme_name]
+#         # Get theme prompts
+#         theme_prompts = PHOTOSHOOT_THEMES[theme_name]
 
-        # Enqueue generation job
-        job_queue = get_job_queue()
-        job_id = job_queue.enqueue_job(
-            JobType.PHOTOBOOK_GENERATION,
-            current_user.id,
-            {
-                'photobook_id': photobook.id,
-                'model_id': model_id,
-                'theme_name': theme_name,
-                'prompts': theme_prompts,
-                'model_weights_path': model.weights_location.path
-            }
-        )
+#         # Enqueue generation job
+#         job_queue = get_job_queue()
+#         job_id = job_queue.enqueue_job(
+#             JobType.PHOTOBOOK_GENERATION,
+#             current_user.id,
+#             {
+#                 'photobook_id': photobook.id,
+#                 'model_id': model_id,
+#                 'theme_name': theme_name,
+#                 'prompts': theme_prompts,
+#                 'model_weights_path': model.weights_location.path
+#             }
+#         )
 
-        return jsonify({
-            'message': 'Photoshoot generation started',
-            'photobook_id': photobook.id,
-            'job_id': job_id,
-            'theme': theme_name,
-            'num_images': IMAGES_PER_THEME
-        }), 200
+#         return jsonify({
+#             'message': 'Photoshoot generation started',
+#             'photobook_id': photobook.id,
+#             'job_id': job_id,
+#             'theme': theme_name,
+#             'num_images': IMAGES_PER_THEME
+#         }), 200
 
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Photoshoot creation error: {str(e)}")
-        return jsonify({'message': f'Photoshoot creation failed: {str(e)}'}), 500
+#     except Exception as e:
+#         db.session.rollback()
+#         logger.error(f"Photoshoot creation error: {str(e)}")
+#         return jsonify({'message': f'Photoshoot creation failed: {str(e)}'}), 500
 
 
 @photoshoot_bp.route('/photobooks/<int:photobook_id>', methods=['GET'])

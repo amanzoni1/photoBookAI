@@ -505,18 +505,32 @@ class AIService:
 
             # Generate photobooks for each theme
             logger.info("Generating initial photobooks")
-            for theme_name, prompts in PHOTOSHOOT_THEMES.items():
+            for theme_name, items in PHOTOSHOOT_THEMES.items():
                 try:
                     logger.info(f"Generating images for theme: {theme_name}")
+                    # items = list of { 'prompt': str, 'count': int }
+                    
+                    expanded_prompts = []
+                    for item in items:
+                        base = item["prompt"]
+                        how_many = item["count"]
+                        # Add 'base' multiple times
+                        for _ in range(how_many):
+                            expanded_prompts.append(base)
+                    
+                    # Now pass expanded_prompts to your generate function
                     image_paths = self.generate_theme_images(
                         instance=instance,
                         model_path=remote_model_path,
                         theme_name=theme_name,
-                        prompts=prompts
+                        prompts=expanded_prompts
                     )
                     theme_images[theme_name] = image_paths
+                    
                 except Exception as e:
-                    logger.error(f"Failed to generate theme {theme_name}: {str(e)}")
+                    logger.error(f"Failed to generate theme {theme_name}: {str(e)}", exc_info=True)
+                    # Skip this theme, continue with next
+                    theme_images[theme_name] = []
                     continue
             
             # Download weights file

@@ -277,7 +277,7 @@ class WorkerService:
     def _save_initial_photobook(self, user_id: int, model_id: int, theme_name: str, image_paths: List[str]) -> None:
         """Helper function to save initial photobook and its images"""
         storage_service = self.config['storage_service']
-        theme_prompts = PHOTOSHOOT_THEMES[theme_name]
+        theme_items = PHOTOSHOOT_THEMES[theme_name] 
         
         try:
             # Create photobook entry
@@ -291,38 +291,48 @@ class WorkerService:
             )
             db.session.add(photobook)
             db.session.commit()
+
+            index_pointer = 0
             
-            # Save each image with its prompt
-            for idx, (image_path, prompt) in enumerate(zip(image_paths, theme_prompts)):
-                try:
-                    # First save the image and get storage location
+            for item in theme_items:
+                # e.g. item = { "prompt": "...", "count": 4 }
+                base_prompt = item["prompt"]
+                count_for_prompt = item["count"]
+                
+                for i in range(count_for_prompt):
+                    if index_pointer >= len(image_paths):
+                        # Safety check if there's a mismatch
+                        logger.warning("Ran out of image_paths while saving photobook images.")
+                        break
+
+                    image_path = image_paths[index_pointer]
+                    index_pointer += 1
+
+                    # Save to storage
                     with open(image_path, 'rb') as f:
                         image_data = f.read()
-                        location = storage_service.save_photobook_image(
-                            user_id=user_id,
-                            photobook_id=photobook.id,
-                            image_data=image_data,
-                            image_number=idx + 1,
-                            prompt=f"{prompt}, p3r5onTr1g style"
-                        )
-                        # Add storage location to session and commit to get ID
-                        db.session.add(location)
-                        db.session.commit()
-                        
-                        # Now create GeneratedImage with the storage location ID
-                        image = GeneratedImage(
-                            user_id=user_id,
-                            model_id=model_id,
-                            photobook_id=photobook.id,
-                            storage_location_id=location.id,  
-                            prompt=f"{prompt}, p3r5onTr1g style"
-                        )
-                        db.session.add(image)
-                        db.session.commit()
-                        
-                except Exception as e:
-                    logger.error(f"Failed to save image {idx} for theme {theme_name}: {str(e)}")
-                    continue
+
+                    location = storage_service.save_photobook_image(
+                        user_id=user_id,
+                        photobook_id=photobook.id,
+                        image_data=image_data,
+                        image_number=index_pointer, 
+                        prompt=base_prompt
+                    )
+
+                    db.session.add(location)
+                    db.session.commit()
+
+                    # Now create the GeneratedImage record
+                    gen_image = GeneratedImage(
+                        user_id=user_id,
+                        model_id=model_id,
+                        photobook_id=photobook.id,
+                        storage_location_id=location.id,
+                        prompt=base_prompt
+                    )
+                    db.session.add(gen_image)
+                    db.session.commit()
                     
             logger.info(f"Successfully saved initial photobook for theme {theme_name}")
             

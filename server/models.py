@@ -7,7 +7,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.postgresql import JSONB
 from enum import Enum as PyEnum
 from typing import Optional, Dict, List
-from config import IMAGES_PER_PHOTOBOOK
 from sqlalchemy.types import Enum as SAEnum
 
 class CreditType(PyEnum):
