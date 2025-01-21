@@ -39,6 +39,7 @@ python-dotenv==1.0.1
 PyYAML>=5.0
 redis==5.2.0
 requests==2.32.3
+resend=2.5.1
 s3transfer==0.10.3
 schedule==1.2.2
 six==1.16.0

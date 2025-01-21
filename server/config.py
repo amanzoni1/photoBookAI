@@ -86,6 +86,9 @@ PHOTOSHOOT_THEMES = {
 class Config:
     # Base directory for the application
     BASE_DIR = Path(__file__).parent.parent
+    FRONTEND_URL = 'http://localhost:3001'
+    # FRONTEND_URL = ''  ADD HERE for proper auth
+    # BASE_URL = ''  ADD HERE for proper payment
 
     # Temporary files configuration
     TEMP_FILES_DIR = os.getenv('TEMP_FILES_DIR', Path(tempfile.gettempdir()) / 'ai_training')
@@ -98,6 +101,11 @@ class Config:
     STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
+    # Resend config
+    RESEND_API_KEY = os.getenv('RESEND_API_KEY')
+    EMAIL_FROM = 'onboarding@resend.dev' 
+    EMAIL_TEMPLATES_DIR = 'services/templates/email'
 
     PRICING = {
         # 1) Single Model + 2 free photoshoots for $19.99
@@ -137,8 +145,6 @@ class Config:
     }
 
     # Social Auth
-    # FRONTEND_URL = ''  ADD HERE for proper auth
-    # BASE_URL = ''  ADD HERE for proper payment
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     GOOGLE_CALLBACK_URL = "http://localhost:5001/api/auth/google/callback"

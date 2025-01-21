@@ -9,6 +9,7 @@ from services.queue import JobQueue
 from services.worker import WorkerService
 from services.job_monitor import JobMonitor
 from services.alerts import AlertService
+from services.emailer import EmailService
 from services.temp_files import TempFileManager
 from services.oauth import OAuthService
 from services.payments import PaymentService
@@ -64,6 +65,10 @@ def get_job_monitor():
 def get_alert_service():
     """Get alert service from current app"""
     return current_app.config.get('alert_service')
+
+def get_email_service():
+    """Get email service from current app"""
+    return current_app.config.get('email_service')
 
 def get_temp_manager():
     """Get temp file manager from current app"""
@@ -128,6 +133,10 @@ def init_services(app):
 
         # Connect alert service to worker
         worker_service.add_alert_handler(alert_service.handle_alert)
+
+        email_service = EmailService(app.config)
+        app.config['email_service'] = email_service
+        logger.info("Initialized email service")
 
         # Start monitoring thread
         def run_monitoring():

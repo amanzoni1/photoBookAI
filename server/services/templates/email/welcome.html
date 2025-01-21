@@ -1,0 +1,32 @@
+<!-- server/services/templates/email/welcome.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .button { 
+            background: #4A90E2; 
+            color: white; 
+            padding: 12px 25px; 
+            text-decoration: none;
+            border-radius: 3px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to AI Training Platform!</h2>
+        <p>Hi {{ user_name }},</p>
+        <p>Welcome to our AI Training Platform. We're excited to have you on board!</p>
+        <p>Get started by logging into your account:</p>
+        <p>
+            <a href="{{ login_url }}" class="button">Login to Your Account</a>
+        </p>
+        <p>If you have any questions, feel free to reply to this email.</p>
+        <p>Best regards,<br>The AI Training Team</p>
+    </div>
+</body>
+</html>

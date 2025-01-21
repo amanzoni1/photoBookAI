@@ -3,10 +3,11 @@
 from flask import request, jsonify, current_app, redirect
 from flask_cors import cross_origin
 from functools import wraps
-from . import auth_bp, get_token_manager, get_oauth_service
+from . import auth_bp, get_token_manager, get_oauth_service, get_email_service
 from app import db
 from models import User
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,32 @@ def register():
     user = User(email=email, username=username)
     user.set_password(password)
 
-    db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.add(user)
+        db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+        # Send welcome email
+        email_service = get_email_service()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            loop.run_until_complete(
+                email_service.send_welcome_email(
+                    user_email=email,
+                    user_name=username
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to send welcome email: {str(e)}")
+        finally:
+            loop.close()
+
+        return jsonify({'message': 'User registered successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Registration error: {str(e)}")
+        return jsonify({'message': 'Registration failed'}), 500
 
 @auth_bp.route('/login', methods=['POST'])
 @cross_origin()
@@ -109,11 +132,30 @@ def google_callback():
         
         email = user_info.get('email')
         user = User.query.filter_by(email=email).first()
+
         if not user:
-            # Use part before @ as default username, or do something else
-            user = User(email=email, username=email.split('@')[0])
+            # Use part before @ as default username
+            username = email.split('@')[0]
+            user = User(email=email, username=username)
             db.session.add(user)
             db.session.commit()
+
+            # Send welcome email for new users
+            email_service = get_email_service()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                loop.run_until_complete(
+                    email_service.send_welcome_email(
+                        user_email=email,
+                        user_name=username
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to send welcome email: {str(e)}")
+            finally:
+                loop.close()
 
         token_manager = get_token_manager()
         tokens = token_manager.create_token(user.id)
@@ -137,7 +179,6 @@ def facebook_callback():
     try:
         oauth = get_oauth_service().get_facebook_oauth()
         token = oauth.authorize_access_token()
-        # Now fetch user profile
         resp = oauth.get('me?fields=id,name,email')
         user_info = resp.json()
 
@@ -146,12 +187,30 @@ def facebook_callback():
             email = f"{user_info['id']}@facebook-oauth.local"
 
         user = User.query.filter_by(email=email).first()
+
         if not user:
             # Use FB name or id if you prefer
             username = user_info.get('name') or user_info['id']
             user = User(email=email, username=username)
             db.session.add(user)
             db.session.commit()
+
+            # Send welcome email for new users
+            email_service = get_email_service()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                loop.run_until_complete(
+                    email_service.send_welcome_email(
+                        user_email=email,
+                        user_name=username
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Failed to send welcome email: {str(e)}")
+            finally:
+                loop.close()
 
         token_manager = get_token_manager()
         tokens = token_manager.create_token(user.id)
