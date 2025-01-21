@@ -453,14 +453,24 @@ class WorkerService:
             
             db.session.commit()
             
-            # Update job status
+            try:
+                email_service = self.config.get('email_service')
+                if email_service:
+                    # Fetch user from the DB or relationship
+                    user = model.user  # If there's a relationship: model.user_id => user, or fetch from DB
+                    email_service.send_training_complete(
+                        user_email=user.email,
+                        user_name=user.username,
+                        success=True
+                    )
+            except Exception as ex:
+                logger.error(f"Failed to send training completion email: {ex}", exc_info=True)
+
+            # Update job queue status to COMPLETED
             self.job_queue.update_job_status(
                 job_id,
                 JobStatus.COMPLETED,
-                {
-                    'model_id': model_id,
-                    'weights_location_id': weights_location.id
-                }
+                {'model_id': model_id, 'weights_location_id': weights_location.id}
             )
         
         except Exception as e:

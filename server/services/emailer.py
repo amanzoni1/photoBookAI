@@ -172,22 +172,22 @@ class EmailService:
         user_email: str,
         user_name: str,
         model_name: str,
-        training_time: float,
         success: bool = True
     ) -> bool:
         """
-        Send an email notifying that the model training has completed (or failed).
+        Send training completion notification.
+        Currently, the template doesn't show model_name or time, so it's optional.
         """
+        template = "training_complete" if success else "training_failed"
+
         context = {
             'user_name': user_name,
-            'model_name': model_name,
-            'training_time': training_time,
-            'success': success,
-            'model_url': f"{self.frontend_url}/models/{model_name}"
+            'model_url': f"{self.config['FRONTEND_URL']}/models/{model_name}"  
         }
 
-        subject = f"Model Training {'Complete' if success else 'Failed'}: {model_name}"
-        template = "training_complete" if success else "training_failed"
+        subject = "Training Complete!"
+        if not success:
+            subject = "Training Failed"
 
         return self.send_email(
             to_email=user_email,
