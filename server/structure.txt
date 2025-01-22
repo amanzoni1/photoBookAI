@@ -29,7 +29,6 @@ server/
 └── tests/  
 
 
--mails
 -front contents
 -front style
 -dash functionality .loadingModel .imgsRendering
