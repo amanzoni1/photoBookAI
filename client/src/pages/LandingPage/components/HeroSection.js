@@ -1,26 +1,44 @@
-// client/src/pages/LandingPage/LandingPage.js
+// client/src/pages/LandingPage/components/HeroSection.js
 
 import React from 'react';
-import './HeroSection.css'; 
 import { Link } from 'react-router-dom';
-import GradientBackground from './GradientBackground'
+import GradientBackground from './GradientBackground';
+import './HeroSection.css';
 
 function HeroSection() {
   return (
-    <div className="landing-container">
+    <section className="hero-section">
       <GradientBackground />
-      <div className="landing-content">
-        <h1 className="gradient-text">
-          Experience Magical AI-Generated Photoshoots for Your Little Ones
-        </h1>
-        <p className="subtitle">
-          Transform your child's moments into stunning art with the power of AI.
-        </p>
-        <Link to="/signup" className="cta-button">
-          Get Started
-        </Link>
+
+      <div className="hero-inner">
+        {/* Left column: text content */}
+        <div className="hero-text">
+          <p className="hero-tagline">No Photographer Needed</p>
+
+          <h1 className="hero-title">
+            Studio Quality Photoshoots for Your Little Ones
+          </h1>
+
+          <h2 className="hero-subtitle">
+            Get professional, share-worthy portraits in minutes.
+            Skip the scheduling, travel, and costs of a physical studio —
+            our AI photo generator does it all from your favorite device.
+          </h2>
+
+          <Link to="/signup" className="cta-button">
+            Get Started
+          </Link>
+        </div>
+
+        {/* Right column: hero image (example) */}
+        <div className="hero-image">
+          <img
+            src="https://via.placeholder.com/500x400.png?text=Your+Hero+Image"
+            alt="Example of AI-generated child photoshoot"
+          />
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 

@@ -1,57 +1,120 @@
-/* client/src/pages/LandingPage/LandingPage.css */
+/* client/src/pages/LandingPage/components/HeroSection.css */
 
-.landing-container {
-    height: calc(100vh - 70px);
-    /* Adjust for navbar height */
+/* Hero section container */
+.hero-section {
+    position: relative; /* for background layering */
+    width: 100%;
+    min-height: 80vh;
     display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 11rem 4rem 2rem 4rem;
   }
   
-  .landing-content {
-    margin-left: 10%;
-    width: 45%;
-    position: relative;
-    z-index: 1;
+  /* Inner wrapper for two-column layout */
+  .hero-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    max-width: 1200px; /* optional container width */
+    width: 100%;
+    z-index: 1; /* ensure it's above the gradient background */
   }
   
-  .gradient-text {
-    font-size: 4.5rem;
+  /* Left column: text */
+  .hero-text {
+    flex: 1;
+  }
+  
+  /* A small tagline above the h1 */
+  .hero-tagline {
+    font-size: 1.4rem;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
     font-weight: bolder;
-    line-height: 1;
+    line-height: 1.1;
+    margin-bottom: 1rem;
     color: #333;
   }
   
-  .subtitle {
-    font-size: 1.5rem;
-    margin-top: 1rem;
-    color: #333;
+  .hero-subtitle {
+    font-size: 1.4rem;
+    font-weight: 500;
+    line-height: 1.1;
+    margin-bottom: 2rem;
+    color: #444;
   }
   
+  /* CTA Button (matching your .auth-button style) */
   .cta-button {
+    position: relative;
     display: inline-block;
-    margin-top: 2rem;
-    padding: 0.8rem 2rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #333;
+    padding: 0.5rem 2.3rem;
+    color: #fbfbfb;
     text-decoration: none;
+    font-size: 1.3rem;
+    font-weight: bold;
     border-radius: 30px;
-    background-color: transparent;
-    border: 2px solid transparent;
-    /* background-image: linear-gradient(to right, pink, lightblue), linear-gradient(to right, #000000, #000000); */
-    border-color: #333;
+    background-color: #333;
+    overflow: hidden;
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    transition: all 0.3s ease;
   }
   
   .cta-button:hover {
-    color: #333;
-    filter: brightness(1.1);
+    transform: scale(1.04);
   }
   
-  .bottom-content {
-    padding: 4rem 10%;
-    color: #333;
-    /* Dark text for bottom section */
+  /* Right column: hero image */
+  .hero-image {
+    flex: 1;
+    display: flex;
+    justify-content: center; /* center the image horizontally */
+  }
+  
+  .hero-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px; /* small rounding if you like */
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    /* Stack columns vertically on small screens */
+    .hero-inner {
+      flex-direction: column;
+    }
+  
+    /* Reduce the big padding so it doesn't look off on mobile */
+    .hero-section {
+      padding: 8rem 2rem 2rem 2rem;
+      min-height: auto; /* Let content define height if smaller screens */
+    }
+  
+    .hero-text {
+      text-align: center;
+      margin-bottom: 2rem; /* space after text before image on mobile */
+    }
+  
+    .hero-tagline {
+      font-size: 0.9rem;
+    }
+  
+    .hero-title {
+      font-size: 1.75rem;
+    }
+  
+    .hero-subtitle {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+  
+    .hero-image {
+      width: 100%;
+    }
   }
