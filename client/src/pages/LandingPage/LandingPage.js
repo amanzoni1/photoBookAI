@@ -3,20 +3,21 @@
 import React from 'react';
 import './LandingPage.css';
 import HeroSection from './components/HeroSection';
-// import WhyIsGood from './components/WhyIsGood';
-// import HowItWorksSection from './components/HowItWorksSection';
-// import PricingSection from './components/PricingSection';
-// import FAQSection from './components/FAQSection';
+import WhyIsGoodSection from './components/WhyIsGoodSection';
+import HowItWorksSection from './components/HowItWorksSection';
+import ComparisonSection from './components/ComparisonSection';
+import PricingSection from './components/PricingSection';
+import FAQSection from './components/FAQSection';
 
 function LandingPage() {
   return (
     <div className="landing-container">
-      {/* Possibly a background component or gradient */}
       <HeroSection />
-      {/* <WhyIsGood />
+      <WhyIsGoodSection />
+      <ComparisonSection />
       <HowItWorksSection />
       <PricingSection />
-      <FAQSection />  */}
+      <FAQSection /> 
     </div>
   );
 }

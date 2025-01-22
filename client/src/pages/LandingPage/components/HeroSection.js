@@ -16,7 +16,7 @@ function HeroSection() {
           <p className="hero-tagline">No Photographer Needed</p>
 
           <h1 className="hero-title">
-            Studio Quality Photoshoots for Your Little Ones
+            Professional Quality Photoshoots for Your Little Ones
           </h1>
 
           <h2 className="hero-subtitle">

@@ -11,6 +11,7 @@
 body {
   background-color: #ebeef1;
   color: #333;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  /* font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; */
   line-height: 1.4;
 }

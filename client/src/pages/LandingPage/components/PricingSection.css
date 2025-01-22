@@ -1,0 +1,176 @@
+/* client/src/pages/LandingPage/components/PricingSection.css */
+
+.pricing-section {
+    width: 100%;
+    background-color: transparent;
+    padding: 5rem 3rem;
+    color: #333;
+  }
+  
+  .pricing-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center; /* Center text for headings, etc. */
+  }
+  
+  .section-title {
+    font-size: 2.8rem;
+    font-weight: bolder;
+    line-height: 1.3;
+    margin-bottom: 1.2rem;
+    color: #333;
+  }
+  
+  .section-subtitle {
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+    color: #444;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .pricing-category-title {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+  
+  /* Grid for price cards */
+  .pricing-grid {
+    display: grid;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  /* 1 col on mobile, 2 col on med, 3 col on wide if you want */
+  @media (max-width: 768px) {
+    .pricing-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (min-width: 769px) and (max-width: 1199px) {
+    .pricing-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    .pricing-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  /* Base styling for all price cards */
+  .price-card {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #ddd; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center text inside the card */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center; /* Center text inside the card */
+  }
+  
+  /* Slight hover highlight: scale up + darker shadow */
+  .price-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  .plan-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .plan-price {
+    font-size: 1.8rem;
+    color: #333;
+    font-weight: bolder;
+    margin: 0.5rem 0 1rem 0;
+  }
+  
+  /* plan-features uses checkmarks, in green when normal or hovered */
+  .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    width: 100%;
+  }
+  
+  .plan-features li {
+    font-size: 1.05rem;
+    color: #444;
+    line-height: 1.4;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .checkmark {
+    color: #4CAF50; /* green check color */
+    margin-right: 0.5rem;
+  }
+  
+  .cta-button {
+    background-color: #333;
+    color: #fff;
+    border-radius: 30px;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .cta-button:hover {
+    transform: scale(1.04);
+  }
+  
+  /* Subtle differences for the smaller credit-pack cards */
+  .credit-pack-card {
+    padding: 1rem; /* Slightly smaller padding */
+  }
+  
+  /* Minor difference for bundles if you want (optional) */
+  .bundle-card {
+    /* Additional styling if desired */
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+    .section-subtitle {
+      font-size: 1.1rem;
+    }
+    .pricing-category-title {
+      font-size: 1.3rem;
+    }
+    .plan-title {
+      font-size: 1.1rem;
+    }
+    .plan-price {
+      font-size: 1.4rem;
+    }
+    .plan-features li {
+      font-size: 1rem;
+    }
+    .cta-button {
+      font-size: 1rem;
+    }
+  }

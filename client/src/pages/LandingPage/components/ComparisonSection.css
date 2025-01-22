@@ -1,19 +1,18 @@
-/* client/src/pages/LandingPage/components/HowItWorksSection.css */
+/* client/src/pages/LandingPage/components/ComparisonSection.css */
 
-.how-it-works-section {
-    width: 100%;
-    background-color: #f9f9fa;
+.comparison-section {
     width: 100%;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    background-color: transparent;
     padding: 6rem 4rem; 
     color: #333;
   }
   
-  .how-it-works-inner {
+  .comparison-inner {
     max-width: 1200px;
     margin: 0 auto;
     text-align: center;
@@ -38,27 +37,17 @@
     margin-right: auto;
   }
   
-  .how-steps {
-    display: grid;
-    gap: 2.5rem;
-    margin-top: 2rem;
+  .comparison-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
   }
   
-  /* 1 col on mobile, 2 col on mid, 3 col on large if you want */
-  @media (max-width: 1199px) {
-    .how-steps {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  @media (min-width: 1200px) {
-    .how-steps {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  
-  /* Each step card */
-  .how-step {
+  /* Each column */
+  .comparison-column {
+    flex: 1 1 300px; /* Minimum width of 300px, flexible growth */
+    max-width: 500px; /* You can adjust to fit design */
     background-color: #fff;
     padding: 2rem;
     border-radius: 8px;
@@ -67,15 +56,37 @@
     text-align: left;
   }
   
-  .how-step h3 {
+  .comparison-heading {
     font-size: 1.3rem;
     font-weight: bold;
-    margin-bottom: 0.7rem;
+    margin-bottom: 1rem;
     color: #333;
   }
   
-  .how-step p {
+  .comparison-column ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  
+  .comparison-column li {
     font-size: 1.1rem;
     color: #444;
     line-height: 1.4;
+    margin-bottom: 0.8rem;
+  }
+  
+  /* Optional: Adjust for mobile screens */
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+  
+    .section-subtitle {
+      font-size: 1.2rem;
+    }
+  
+    .comparison-column {
+      max-width: 100%; /* columns will stack vertically */
+    }
   }
