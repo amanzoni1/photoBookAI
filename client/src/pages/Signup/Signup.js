@@ -88,7 +88,7 @@ function Signup() {
 
   return (
     <div>
-      <Background />
+      {/* <Background /> */}
       <div className="signup-container">
         <h1>Sign Up</h1>
         {errorMessage && <p className="error-message">{errorMessage}</p>}

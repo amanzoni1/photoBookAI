@@ -46,7 +46,7 @@ function Login() {
 
   return (
     <div>
-      <Background />
+      {/* <Background /> */}
       <div className="login-container">
         <h1>Login</h1>
         {errorMessage && <p className="error-message">{errorMessage}</p>}

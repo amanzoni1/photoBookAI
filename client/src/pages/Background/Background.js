@@ -40,7 +40,7 @@ function Background() {
             ctx.fill();
 
             // Fill the remaining area with background color
-            ctx.fillStyle = '#ebeef1'; // Match your page background color
+            ctx.fillStyle = 'transparent';
 
             // Fill top area
             ctx.beginPath();

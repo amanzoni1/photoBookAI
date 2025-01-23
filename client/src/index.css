@@ -9,9 +9,37 @@
 
 /* 2. Body Setup */
 body {
-  background-color: #ebeef1;
+  background-color: #F9FAFB;
   color: #333;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  /* font-family: 'Roboto', sans-serif; */
+  font-family: 'DM Sans', sans-serif;
+  /* font-family: 'Plus Jakarta Sans', sans-serif; */
   /* font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; */
   line-height: 1.4;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("data:image/svg+xml,%3csvg%20width='1440'%20height='781'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cg%20filter='url(%23a)'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M74.824%20337.02c5.223-99.662%20319.515-150.734%20651.494-133.335%20350.912%2018.39%20702.382%2098.654%20696.862%20204-6.06%20115.535-331.58%20189.72-716.439%20169.55C339.066%20557.966%2069.039%20447.399%2074.824%20337.02Z'%20fill='url(%23b)'%20fill-opacity='.5'/%3e%3c/g%3e%3cdefs%3e%3clinearGradient%20id='b'%20x1='73.788'%20y1='356.775'%20x2='1422.14'%20y2='427.44'%20gradientUnits='userSpaceOnUse'%3e%3cstop%20stop-color='%2352A8EB'/%3e%3cstop%20offset='1'%20stop-color='%23FFCFF4'/%3e%3c/linearGradient%3e%3cfilter%20id='a'%20x='-125.268'%20y='.327'%20width='1748.51'%20height='780.21'%20filterUnits='userSpaceOnUse'%20color-interpolation-filters='sRGB'%3e%3cfeFlood%20flood-opacity='0'%20result='BackgroundImageFix'/%3e%3cfeBlend%20in='SourceGraphic'%20in2='BackgroundImageFix'%20result='shape'/%3e%3cfeGaussianBlur%20stdDeviation='100'%20result='effect1_foregroundBlur_12672_53483'/%3e%3c/filter%3e%3c/defs%3e%3c/svg%3e");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.5); /* Soft white overlay */
+  backdrop-filter: blur(50px);
+  z-index: -1;
 }
