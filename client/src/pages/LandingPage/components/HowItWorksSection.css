@@ -1,81 +1,96 @@
 /* client/src/pages/LandingPage/components/HowItWorksSection.css */
 
 .how-it-works-section {
-    width: 100%;
-    background-color: transparent;
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 6rem 4rem; 
-    color: #333;
-  }
-  
-  .how-it-works-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-  }
-  
-  .section-title {
-    font-size: 2.7rem; 
-    font-weight: bolder;
-    line-height: 1.3;
-    margin-bottom: 0.2rem;
-    color: #333;
-  }
-  
-  .section-subtitle {
-    font-size: 1.3rem;
-    font-weight: 500;
-    line-height: 1.3;
-    margin-bottom: 4rem;
-    color: #444;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .how-steps {
-    display: grid;
-    gap: 2.5rem;
-    margin-top: 2rem;
-  }
-  
-  /* 1 col on mobile, 2 col on mid, 3 col on large if you want */
-  @media (max-width: 1199px) {
-    .how-steps {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  @media (min-width: 1200px) {
-    .how-steps {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  
-  /* Each step card */
-  .how-step {
-    background-color: #fff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    text-align: left;
-  }
-  
-  .how-step h3 {
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin-bottom: 0.7rem;
-    color: #333;
-  }
-  
-  .how-step p {
-    font-size: 1rem;
-    color: #444;
-    line-height: 1.4;
-  }
+  width: 100%;
+  background-color: transparent;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 6rem 4rem;
+  color: #333;
+}
+
+.how-it-works-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2.7rem;
+  font-weight: bolder;
+  line-height: 1.3;
+  margin-bottom: 0.2rem;
+  color: #333;
+}
+
+.section-subtitle {
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: 4rem;
+  color: #444;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.how-steps {
+  display: grid;
+}
+
+/* Each step card */
+.how-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  margin: 0.5rem auto;
+}
+
+.how-step:nth-child(1),
+.how-step:nth-child(3) {
+  width: 70%;
+  margin-left: 0;
+  text-align: left;
+}
+
+.how-step:nth-child(2) {
+  width: 70%;
+  margin-right: 0;
+  text-align: right;
+}
+
+.how-step h3 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.how-step p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.step-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+}
+
+.step-icon {
+  width: 64px;
+  height: 64px;
+  color: #444;
+}
+
+.step-text {
+  flex: 1;
+}

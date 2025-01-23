@@ -9,7 +9,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 10rem 5rem 1rem 5rem;
+    padding: 10rem 4rem 2rem 4rem;
   }
   
   /* Inner wrapper for two-column layout */
@@ -36,7 +36,7 @@
   }
   
   .hero-title {
-    font-size: 3.2rem;
+    font-size: 3rem;
     font-weight: bolder;
     line-height: 1.2;
     margin-bottom: 1.3rem;

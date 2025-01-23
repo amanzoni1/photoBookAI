@@ -68,12 +68,38 @@
   .benefit-card h3 {
     font-size: 1.3rem;
     font-weight: bold;
-    margin-bottom: 0.7rem;
-    color: #333;
+    margin-bottom: 0.2rem;
+    color: #444;
   }
   
   .benefit-card p {
     font-size: 1rem;
-    color: #444;
+    color: #555;
     line-height: 1.4;
+  }
+
+  .icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .benefit-icon {
+    width: 45px;
+    height: 45px;
+    color: #444;
+  }
+  
+  .benefit-card {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+
+  .benefit-text {
+    flex: 1;
   }

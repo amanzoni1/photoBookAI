@@ -1,6 +1,8 @@
 // client/src/pages/LandingPage/components/ComparisonSection.js
 import React from 'react';
 import './ComparisonSection.css';
+import relaxed from './images/relaxed.jpeg';
+import messySchedule from './images/messySchedule.webp';
 
 function ComparisonSection() {
   return (
@@ -14,6 +16,13 @@ function ComparisonSection() {
         <div className="comparison-wrapper">
           {/* AI Photoshoot Column */}
           <div className="comparison-column">
+            <div className="comparison-image">
+              <img
+                src={relaxed}
+                alt="AI-generated portrait variations"
+                className="comparison-img"
+              />
+            </div>
             <h3 className="comparison-heading">AI Photoshoot</h3>
             <ul>
               <li>Upload your child’s photos any time—no strict scheduling</li>
@@ -26,6 +35,13 @@ function ComparisonSection() {
 
           {/* Traditional Photoshoot Column */}
           <div className="comparison-column">
+            <div className="comparison-image">
+              <img
+                src={messySchedule}
+                alt="AI-generated portrait variations"
+                className="comparison-img"
+              />
+            </div>
             <h3 className="comparison-heading">Traditional Photoshoot</h3>
             <ul>
               <li>Find a child-friendly photographer and align schedules</li>
