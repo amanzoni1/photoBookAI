@@ -27,3 +27,12 @@ server/
 └── migrations/     
 └── cache/  
 └── tests/  
+
+
+
+
+
+
+compleanno, documenti, giochi, profili
+economico, pratico, sicuro, prompt ottimizzati
+ps da 20img, esempi di ps

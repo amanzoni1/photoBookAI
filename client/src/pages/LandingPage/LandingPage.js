@@ -8,14 +8,17 @@ import HowItWorksSection from './components/HowItWorksSection';
 import ComparisonSection from './components/ComparisonSection';
 import PricingSection from './components/PricingSection';
 import FAQSection from './components/FAQSection';
+import PhotoRow from './components/PhotoRow';
 
 function LandingPage() {
   return (
     <div className="landing-container">
       <HeroSection />
       <WhyIsGoodSection />
-      <ComparisonSection />
+      <PhotoRow />
       <HowItWorksSection />
+      <ComparisonSection />
+      <PhotoRow />
       <PricingSection id="pricing-section" />
       <FAQSection id="faq-section" />
     </div>

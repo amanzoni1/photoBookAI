@@ -1,5 +1,7 @@
 // client/src/pages/LandingPage/components/HowItWorksSection.js
+
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './HowItWorksSection.css';
 
 function HowItWorksSection() {
@@ -57,6 +59,13 @@ function HowItWorksSection() {
               </div>
             </div>
           </div>
+
+          <div>
+            <Link to="/login" className="cta-button">
+              Start Creating
+            </Link>
+          </div>
+
 
         </div>
       </div>

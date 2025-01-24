@@ -1,122 +1,160 @@
-/* client/src/pages/LandingPage/components/HeroSection.css */
-
 /* Hero section container */
 .hero-section {
-    position: relative; /* for background layering */
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 8rem 4rem 2rem 4rem;
-  }
-  
-  /* Inner wrapper for two-column layout */
+  position: relative;
+  width: 100%;
+  min-height: 100vh; /* Full viewport height, if desired */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 8rem 0rem 2rem 5rem;
+}
+
+/* Main wrapper: 2 columns => text (flex:2) + images (flex:1) */
+.hero-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 1200px;
+  width: 100%;
+  z-index: 1; /* above gradient */
+}
+
+/* Left column: text */
+.hero-text {
+  flex: 2;
+}
+
+/* Tagline */
+.hero-tagline {
+  font-size: 1.3rem;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: #444;
+}
+
+/* Title */
+.hero-title {
+  font-size: 3rem;
+  font-weight: bolder;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* Subtitle */
+.hero-subtitle {
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 1.7rem;
+  color: #444;
+}
+
+/* CTA Button */
+.cta-button {
+  position: relative;
+  display: inline-block;
+  padding: 0.6rem 2.2rem;
+  color: #fbfbfb;
+  text-decoration: none;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-left: 1.2rem;
+  border-radius: 30px;
+  background-color: #4CAF50;
+  overflow: hidden;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  transition: transform 0.2s ease;
+}
+
+.cta-button:hover {
+  transform: scale(1.04);
+}
+
+/* Right column: 2 images stacked with tilt */
+.hero-images {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center them horizontally in the column */
+  position: relative;
+  margin-left: 2rem;
+}
+
+/* Common styling for the images: white border, box shadow, etc. */
+.hero-images img {
+  border: 4px solid #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  background-color: #fff;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+/* Top image: smaller, negative margin, tilt */
+.top-photo {
+  width: 60%;
+  transform: rotate(-5deg);
+  margin-right: -20px; 
+  margin-bottom: -30px;
+  z-index: 2;
+}
+
+/* Bottom image: bigger, slight tilt (120% means bigger than container) */
+.bottom-photo {
+  width: 100%;        /* bigger than the container's 100% */
+  transform: rotate(3deg);
+  margin-top: 40px;
+  margin-right: -20px; 
+  z-index: 1;
+}
+
+/* Optional hover on images 
+.hero-images img:hover {
+  transform: rotate(0deg) scale(1.03);
+}
+*/
+
+/* ============ Responsive Adjustments for Mobile ============ */
+@media (max-width: 768px) {
+  /* Stack text above images on small screens */
   .hero-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    max-width: 1200px; /* optional container width */
-    width: 100%;
-    z-index: 1; /* ensure it's above the gradient background */
+    flex-direction: column;
+    justify-content: flex-start;
+    /* min-height: 100vh; */
   }
-  
-  /* Left column: text */
+
+  /* Reduce top padding for smaller screens */
+  .hero-section {
+    padding: 10rem 2rem 2rem 2rem;
+    min-height: auto;
+  }
+
+  /* Center the text on mobile */
   .hero-text {
-    flex: 1;
+    text-align: center;
+    margin-bottom: 2rem;
   }
-  
-  /* A small tagline above the h1 */
+
   .hero-tagline {
-    font-size: 1.3rem;
-    margin-bottom: 0.4rem;
-    font-weight: 500;
-    color: #444;
+    font-size: 1rem;
   }
-  
   .hero-title {
-    font-size: 3rem;
-    font-weight: bolder;
-    line-height: 1.2;
-    margin-bottom: 1rem;
-    color: #333;
+    font-size: 2rem;
   }
-  
   .hero-subtitle {
-    font-size: 1.4rem;
-    font-weight: 500;
-    line-height: 1.2;
-    margin-bottom: 1.7rem;
-    color: #444;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
   }
-  
-  /* CTA Button (matching your .auth-button style) */
   .cta-button {
-    position: relative;
-    display: inline-block;
-    padding: 0.6rem 2.2rem;
-    color: #fbfbfb;
-    text-decoration: none;
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-left: 1.2rem;
-    border-radius: 8px;
-    background-color: #4CAF50;
-    overflow: hidden;
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
+    margin-left: 0; /* no left margin so it aligns center */
+    font-size: 1.5rem;
   }
-  
-  .cta-button:hover {
-    transform: scale(1.04);
+
+  /* Hide images on mobile */
+  .hero-images {
+    display: none;
   }
-  
-  /* Right column: hero image */
-  .hero-image {
-    flex: 1;
-    display: flex;
-    justify-content: center; /* center the image horizontally */
-  }
-  
-  .hero-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px; /* small rounding if you like */
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    /* Stack columns vertically on small screens */
-    .hero-inner {
-      flex-direction: column;
-    }
-  
-    /* Reduce the big padding so it doesn't look off on mobile */
-    .hero-section {
-      padding: 8rem 2rem 2rem 2rem;
-      min-height: auto; /* Let content define height if smaller screens */
-    }
-  
-    .hero-text {
-      text-align: center;
-      margin-bottom: 2rem; /* space after text before image on mobile */
-    }
-  
-    .hero-tagline {
-      font-size: 0.9rem;
-    }
-  
-    .hero-title {
-      font-size: 1.75rem;
-    }
-  
-    .hero-subtitle {
-      font-size: 1rem;
-      margin-bottom: 1.5rem;
-    }
-  
-    .hero-image {
-      width: 100%;
-    }
-  }
+}

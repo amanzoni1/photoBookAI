@@ -9,7 +9,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 6%;
+  padding: 18px 6%;
   background: transparent;
 }
 
@@ -63,7 +63,7 @@
   color: #fbfbfb;
   font-size: 1rem;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 30px;
   text-decoration: none;
   overflow: hidden;
   background-origin: border-box;
