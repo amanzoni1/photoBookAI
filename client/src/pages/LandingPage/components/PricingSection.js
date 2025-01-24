@@ -1,10 +1,11 @@
 // client/src/pages/LandingPage/components/PricingSection.js
+
 import React from 'react';
 import './PricingSection.css';
 
-function PricingSection() {
+function PricingSection({ id }) {
   return (
-    <section className="pricing-section">
+    <section id={id} className="pricing-section">
       <div className="pricing-inner">
 
         {/* Heading area */}

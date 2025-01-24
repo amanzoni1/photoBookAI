@@ -11,6 +11,7 @@
   justify-content: space-between; /* Ensure the button is always at the bottom */
   gap: 2px; /* Space between sections */
   overflow-y: auto; /* Allow scrolling for overflow content */
+  margin-top: 30px;
 }
 
 /* Create Button */

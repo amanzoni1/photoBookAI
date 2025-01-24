@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
-import { AiFillApple } from 'react-icons/ai';
 import { BsFacebook } from 'react-icons/bs';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Background from '../Background/Background';

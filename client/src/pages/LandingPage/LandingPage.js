@@ -16,8 +16,8 @@ function LandingPage() {
       <WhyIsGoodSection />
       <ComparisonSection />
       <HowItWorksSection />
-      <PricingSection />
-      <FAQSection /> 
+      <PricingSection id="pricing-section" />
+      <FAQSection id="faq-section" />
     </div>
   );
 }

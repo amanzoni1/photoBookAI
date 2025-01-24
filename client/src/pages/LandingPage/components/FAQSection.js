@@ -2,7 +2,7 @@
 import React from 'react';
 import './FAQSection.css';
 
-function FAQSection() {
+function FAQSection({ id }) {
   const faqs = [
     {
       question: "What kind of photos should I upload for my child's AI photoshoot?",
@@ -57,7 +57,7 @@ function FAQSection() {
   ];
 
   return (
-    <section className="faq-section">
+    <section  id={id} className="faq-section">
       <div className="faq-inner">
         <h2 className="section-title">Frequently Asked Questions</h2>
         <p className="section-subtitle">
@@ -79,63 +79,3 @@ function FAQSection() {
 }
 
 export default FAQSection;
-
-
-
-// const faqs = [
-//     {
-//       question: "What kind of photos should I upload of my child?",
-//       answer:
-//         "Aim for variety. Include close-ups, different angles, and various lighting scenarios. Avoid heavy makeup or large accessories. The more diverse your child's photos, the better our AI can learn their unique features."
-//     },
-//     {
-//       question: "How do you handle my uploaded photos?",
-//       answer:
-//         "We use your photos solely to train our AI model, which then generates the final images. These photos are stored securely and automatically deleted within 7 days—or sooner if you request immediate deletion."
-//     },
-//     {
-//       question: "Who owns the AI-generated portraits?",
-//       answer:
-//         "You do! We provide you with full commercial rights and ownership. Use them on social media, print them for family albums—whatever you wish."
-//     },
-//     {
-//       question: "What if I’m unhappy with the results?",
-//       answer:
-//         "We aim for stunning, high-quality portraits. But if you feel you didn’t get a single keeper, just let us know. We’ll either re-run the process or offer a refund, no questions asked."
-//     },
-//     {
-//       question: "Is it safe to upload kids’ photos? Are prompts moderated?",
-//       answer:
-//         "Absolutely. We closely moderate prompts to ensure child safety. Our system blocks inappropriate requests and keeps images private and secure."
-//     },
-//     {
-//       question: "How long does it usually take?",
-//       answer:
-//         "Our AI typically delivers results within a few hours—often the same day. Expect a rapid turnaround without compromising on realism."
-//     },
-//     {
-//       question: "How secure are my payments?",
-//       answer:
-//         "We use a trusted third-party payment processor (Stripe) that meets bank-level security standards. We do not store your card details on our servers."
-//     },
-//     {
-//       question: "Which payment methods do you accept?",
-//       answer:
-//         "You can pay with major credit or debit cards (VISA, MasterCard, American Express), plus several regional methods like iDeal, Bancontact, and more. We currently do not accept PayPal or cryptocurrency."
-//     },
-//     {
-//       question: "Can I delete my child’s photos or my entire account?",
-//       answer:
-//         "Yes. You can remove individual images from your gallery at any time. For total account deletion, simply cancel your subscription and request account removal. We permanently delete all associated data as requested."
-//     },
-//     {
-//       question: "Can I cancel my subscription anytime?",
-//       answer:
-//         "Absolutely. Head to our Billing section to manage or cancel your plan instantly. You’ll retain access until the end of your current billing cycle."
-//     },
-//     {
-//       question: "Can I use AI photos on LinkedIn or social media?",
-//       answer:
-//         "Yes! Many parents and professionals share these AI-generated photos on personal or professional platforms. Just make sure it aligns with each platform’s guidelines."
-//     }
-//   ];

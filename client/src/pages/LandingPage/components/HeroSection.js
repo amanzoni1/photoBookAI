@@ -26,7 +26,7 @@ function HeroSection() {
           </h2>
 
           <Link to="/signup" className="cta-button">
-            Get Started
+            Get Started Now
           </Link>
         </div>
 

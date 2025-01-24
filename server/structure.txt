@@ -27,8 +27,3 @@ server/
 └── migrations/     
 └── cache/  
 └── tests/  
-
-
--front contents
--front style
--dash functionality .loadingModel .imgsRendering

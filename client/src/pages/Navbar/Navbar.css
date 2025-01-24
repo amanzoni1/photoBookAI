@@ -9,7 +9,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 5%;
+  padding: 14px 6%;
   background: transparent;
 }
 
@@ -24,7 +24,9 @@
 .navbar-links {
   list-style: none;
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
+  margin-right: 0.5rem;
+  margin-left: auto;
 }
 
 .navbar-links li a {
@@ -35,30 +37,42 @@
 
 .navbar-auth {
   display: flex;
+  margin-left: 0;
 }
 
-.auth-button {
+.auth-button.signup-btn{
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 0rem;
+  margin-left: 1rem;
+  color: #333;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  overflow: hidden;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.auth-button.login{
   position: relative;
   display: inline-block;
   padding: 0.5rem 1rem;
   margin-left: 1rem;
-  color: #333;
-  text-decoration: none;
+  background-color: #333;
+  color: #fbfbfb;
   font-size: 1rem;
   font-weight: bold;
-  border-radius: 30px;
-  background-color: transparent;
+  border-radius: 8px;
+  text-decoration: none;
   overflow: hidden;
-  border: 2px solid transparent;
-  border-color: #333;
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  transition: all 0.3s ease;
 }
 
-.auth-button:hover {
-  color: #ffffff;
-  filter: brightness(1.1);
+.auth-button.login:hover {
+  transform: scale(1.01);
+  filter: brightness(1.05);
 }
 
 /* New styles for user section */

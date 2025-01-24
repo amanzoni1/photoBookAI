@@ -94,3 +94,31 @@
 .step-text {
   flex: 1;
 }
+
+/* MOBILE RESPONSIVE BEHAVIOR */
+@media (max-width: 768px) {
+  .how-step {
+    width: 90%;
+    justify-content: center;
+  }
+
+  /* Mobile: Icons & text stacked but alternating */
+  .how-step:nth-child(odd) .step-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .how-step:nth-child(even) .step-content {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+
+  .step-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .step-text {
+    width: 100%;
+  }
+}
