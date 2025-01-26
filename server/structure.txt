@@ -34,5 +34,5 @@ server/
 
 
 compleanno, documenti, giochi, profili
-economico, pratico, sicuro, prompt ottimizzati
-ps da 20img, esempi di ps
+economico, pratico/timing, sicuro, prompt ottimizzati per ricordo momenti da ricordare
+ps son tematici, ps da 20img, esempi di ps

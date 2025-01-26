@@ -2,7 +2,8 @@
 
 .dashboard {
   display: flex;
-  height: 100vh; /* Full page height */
+  margin-top: 80px;          
+  min-height: calc(100vh - 80px);
 }
 
 .error-message {

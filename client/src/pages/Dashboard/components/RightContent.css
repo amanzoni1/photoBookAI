@@ -3,15 +3,14 @@
 .right-content {
   flex: 1;
   padding: 6px;
-  margin: 4px;
   overflow-y: auto;
   border: 1px solid #dddddd; /* Light border for definition */
-  background-color: #ffffff; /* Clean white background */
+  background-color: transparent;
+  color: #dddddd;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border: 1px solid rgba(153, 149, 149, 0.1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  height: calc(100vh - 40px); /* Full height minus padding/margin */
+  height: calc(100vh - 70px); 
 }
 
 .right-title {
@@ -83,13 +82,13 @@
   height: 500px;    /* fixed height */
   margin: 10px auto;   /* center it horizontally */
   border-radius: 8px;
-  background-color: #ebeef1;
+  background-color: transparent;
   overflow: hidden;
   box-sizing: border-box;
   padding: 6px;
   margin: 20px 10px;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+  box-shadow: 0 4px 10px rgba(137, 136, 136, 0.2); 
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 

@@ -86,10 +86,8 @@
   width: 180px;
   display: flex;
   flex-direction: column;
-  /* Vertical layout */
   gap: 0.2rem;
-  /* Space between credit items */
-  background: #ecedef;
+  background: transparent;
   padding: 0.2rem 1rem;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -104,31 +102,23 @@
   /* Space between label and value */
   font-size: 0.8rem;
   font-weight: 500;
-  color: #333;
-}
-
-.credit-label {
-  color: #4b5563;
-  /* Slightly muted grey */
 }
 
 .credit-value {
-  color: #1f2937;
-  /* Darker grey for numbers */
   font-weight: bold;
   margin-left: 20px;
 }
 
 .buy-credits-btn {
   margin-left: 15px;
-  padding: 14px 64px;
-  background: #10b981;
-  color: #fff;
+  padding: 10px 64px;
+  background: linear-gradient(to right, pink, lightblue);
+  color: #333;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
 }
 
 .buy-credits-btn:hover {

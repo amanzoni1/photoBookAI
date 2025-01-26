@@ -95,7 +95,11 @@
   flex: 1;
 }
 
-.cta-button {
+.how-cta {
+  margin-top: 3rem;
+}
+
+.cta-button-hw {
   background-color: #4CAF50;
   color: #fff;
   border-radius: 30px;
@@ -107,7 +111,6 @@
   text-align: center;
   text-decoration: none;
   transition: transform 0.2s ease;
-  margin-top: 2.5rem;
 }
 
 /* MOBILE RESPONSIVE BEHAVIOR */

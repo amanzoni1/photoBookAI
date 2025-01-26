@@ -60,8 +60,8 @@ function HowItWorksSection() {
             </div>
           </div>
 
-          <div>
-            <Link to="/login" className="cta-button">
+          <div className='how-cta'> 
+            <Link to="/login" className="cta-button-hw">
               Start Creating
             </Link>
           </div>

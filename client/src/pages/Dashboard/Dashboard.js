@@ -24,6 +24,14 @@ function Dashboard() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add('logged-in');
+    return () => {
+      document.body.classList.remove('logged-in');
+    };
+  }, []);
+
+
   if (errorMessage) {
     return <p className="error-message">{errorMessage}</p>;
   }
@@ -33,10 +41,10 @@ function Dashboard() {
   }
 
   return (
-      <div className="dashboard">
-        <LeftMenu />
-        <RightContent />
-      </div>
+    <div className="dashboard">
+      <LeftMenu />
+      <RightContent />
+    </div>
   );
 }
 

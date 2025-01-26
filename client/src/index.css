@@ -1,13 +1,11 @@
 /* client/src/index.css */
 
-/* 1. Global Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* 2. Body Setup */
 body {
   background-color: #F9FAFB;
   color: #333;
@@ -42,4 +40,16 @@ body::after {
   background: rgba(255, 255, 255, 0.5); 
   backdrop-filter: blur(50px);
   z-index: -1;
+}
+
+body.logged-in {
+  background: linear-gradient(to bottom, #2e2e2e, #000000) !important;
+  color: #F9FAFB; 
+}
+
+body.logged-in::before,
+body.logged-in::after {
+  content: none !important;  
+  background: none !important;
+  backdrop-filter: none !important;
 }
