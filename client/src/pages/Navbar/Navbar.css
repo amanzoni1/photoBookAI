@@ -17,7 +17,7 @@
 .navbar-logo a {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #333;
+  color: #6e6363;
   text-decoration: none;
 }
 
@@ -79,46 +79,42 @@
 .user-section {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
 }
 
 .credits-display {
-  width: 180px;
+  width: 10rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
   background: transparent;
   padding: 0.2rem 1rem;
-  border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid #444444;
 }
 
 .credit-item {
   display: flex;
   flex-direction: row;
-  /* Keep "label" and "value" side by side */
   justify-content: space-between;
-  /* Space between label and value */
   font-size: 0.8rem;
   font-weight: 500;
 }
 
 .credit-value {
   font-weight: bold;
-  margin-left: 20px;
+  margin-left: 10px;
 }
 
 .buy-credits-btn {
-  margin-left: 15px;
-  padding: 10px 64px;
-  background: linear-gradient(to right, pink, lightblue);
+  padding: 0.6rem 2.5rem;
+  background: linear-gradient(45deg, #90e0ff, #ffb6c1);
   color: #333;
+  font-weight: bold;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1.2rem;
+  margin-right: 1.5rem;
 }
 
 .buy-credits-btn:hover {
@@ -132,10 +128,9 @@
 
 .user-button {
   background: none;
-  border: 2px solid #f0ead6;
+  border: 1px solid #444444;
   padding: 0.5rem;
   cursor: pointer;
-  border-radius: 50%;
   width: 44px;
   height: 44px;
   display: flex;
@@ -166,7 +161,7 @@
 
 .dropdown-item {
   display: block;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   color: #000000;
   text-decoration: none;
   transition: background-color 0.2s;
@@ -179,7 +174,9 @@
 }
 
 .dropdown-item:hover {
-  background-color: #f5f5f5;
+  background-color: #dddddd; 
+  color: #333;             
+  transition: background-color 0.2s;
 }
 
 /* Mobile responsiveness */

@@ -43,7 +43,6 @@
 
 .right-content::-webkit-scrollbar-track {
   background: #000000;
-  /* Dark background */
 }
 
 .right-content::-webkit-scrollbar-thumb {
@@ -87,9 +86,9 @@
   box-sizing: border-box;
   padding: 6px;
   margin: 20px 10px;
-  border-radius: 8px;
+  /* border-radius: 8px;
   box-shadow: 0 4px 10px rgba(137, 136, 136, 0.2); 
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1); */
 }
 
 .photobook-inner {
@@ -124,7 +123,6 @@
 
 .big-cover:hover {
   filter: brightness(1.2);
-  transform: scale(1.01);
 }
 
 .thumbs-column {
@@ -146,7 +144,6 @@
 }
 .small-thumb:hover{
   filter: brightness(1.2);
-  transform: scale(1.01);
 }
 
 .more-label {

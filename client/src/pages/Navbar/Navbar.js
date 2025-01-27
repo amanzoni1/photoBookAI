@@ -1,3 +1,5 @@
+// client/src/pages/Navbar/Navbar.js
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCredits } from '../../contexts/CreditsContext';
@@ -8,7 +10,7 @@ function Navbar({ isAuthenticated, onLogout }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Get current route
+  const location = useLocation(); 
   const { credits, loading } = useCredits();
 
   useEffect(() => {
@@ -103,8 +105,6 @@ function Navbar({ isAuthenticated, onLogout }) {
                   </button>
                   {showDropdown && (
                     <div className="dropdown-menu">
-                      <Link to="/dashboard" className="dropdown-item">Dashboard</Link>
-                      <Link to="/profile" className="dropdown-item">Profile</Link>
                       <button
                         onClick={() => {
                           onLogout();

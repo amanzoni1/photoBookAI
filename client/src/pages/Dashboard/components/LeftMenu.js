@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import './LeftMenu.css';
 import ModelCreationForm from './ModelCreationForm';
 import ModelForm from './ModelForm';
-import createIcon from './images/create1.png';
 import modelPlaceholder from './images/bab.png';
 import { useModel } from '../../../hooks/useModel';
 import { useCredits } from '../../../contexts/CreditsContext';
@@ -151,12 +150,34 @@ function LeftMenu() {
             </div>
           ))}
 
-          {/* "Create Model" button */}
+          {/* Create Model button */}
           <button
             className={`create-button ${!hasModels ? 'margin-top-10' : 'margin-top-auto'}`}
             onClick={handleCreateModelClick}
           >
-            <img src={createIcon} alt="Create Icon" className="button-icon" />
+            <span className="button-icon">
+              <svg
+                width="35" height="35"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M13.2632 15.934C12.9123 15.8729 12.9123 15.3691 13.2632 15.3081C14.5346 15.0869 15.5457 14.1185 15.8217 12.8579L15.8428 12.7613C15.9188 12.4145 16.4126 12.4123 16.4915 12.7585L16.5172 12.8711C16.8034 14.1257 17.8148 15.0859 19.0827 15.3065C19.4354 15.3678 19.4354 15.8742 19.0827 15.9356C17.8148 16.1561 16.8034 17.1163 16.5172 18.371L16.4915 18.4836C16.4126 18.8297 15.9188 18.8276 15.8428 18.4807L15.8217 18.3841C15.5457 17.1235 14.5346 16.1551 13.2632 15.934Z"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M1.99989 9.46036C1.21618 9.32161 1.21618 8.1776 1.99989 8.03896C4.83915 7.53668 7.09738 5.33761 7.71365 2.47491L7.76088 2.25547C7.93045 1.46786 9.03338 1.46295 9.20958 2.24903L9.26698 2.50475C9.90613 5.35396 12.1648 7.53443 14.9964 8.03532C15.784 8.17467 15.784 9.32456 14.9964 9.46399C12.1648 9.96473 9.90613 12.1452 9.26698 14.9945L9.20958 15.2502C9.03338 16.0362 7.93045 16.0314 7.76088 15.2437L7.71365 15.0243C7.09738 12.1616 4.83915 9.96245 1.99989 9.46036Z"
+                  stroke="currentColor"
+                  strokeWidth="1.68"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             <span>Create a new model</span>
           </button>
         </>
