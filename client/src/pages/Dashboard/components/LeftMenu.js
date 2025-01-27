@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './LeftMenu.css';
-import ModelCreationForm from './ModelCreationForm';
+import CreationForm from './CreationForm';
 import ModelForm from './ModelForm';
 import modelPlaceholder from './images/bab.png';
 import { useModel } from '../../../hooks/useModel';
@@ -192,7 +192,7 @@ function LeftMenu() {
           >
             ×
           </button>
-          <ModelCreationForm
+          <CreationForm
             onClose={() => setShowModelForm(false)}
             onTrainingStart={handleTrainingStart}
           />

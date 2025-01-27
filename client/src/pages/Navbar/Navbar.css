@@ -106,7 +106,7 @@
 
 .buy-credits-btn {
   padding: 0.6rem 2.5rem;
-  background: linear-gradient(45deg, #90e0ff, #ffb6c1);
+  background: linear-gradient(to right, pink, lightblue);
   color: #333;
   font-weight: bold;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);

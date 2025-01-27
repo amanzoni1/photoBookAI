@@ -1,19 +1,20 @@
-// ModelCreationForm.js
+// CreationForm.js
 
 import React, { useState } from 'react';
 import { useModel } from '../../../hooks/useModel';
-import './ModelCreationForm.css';
+import './CreationForm.css';
 
-function ModelCreationForm({ onClose, onTrainingStart }) {
+function CreationForm({ onClose, onTrainingStart }) {
   const { createModel } = useModel();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     ageYears: '',
     ageMonths: '',
+    sex: '',
     files: []
   });
-  
+
   const [fileMessage, setFileMessage] = useState('No files uploaded');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
@@ -24,8 +25,8 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
 
   const handleFileChange = (e) => {
     const files = e.target.files;
-    if (files.length < 5 || files.length > 30) {
-      alert('Please upload between 5 and 30 pictures.');
+    if (files.length < 5 || files.length > 40) {
+      alert('Please upload between 5 and 40 pictures.');
       e.target.value = '';
       setFileMessage('No files uploaded');
     } else {
@@ -41,7 +42,7 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validations
+    // Basic validations
     if (!formData.name) {
       setMessage('Name is required');
       return;
@@ -49,6 +50,11 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
 
     if (!formData.ageYears && !formData.ageMonths) {
       setMessage('Please provide either age in years or months');
+      return;
+    }
+
+    if (!formData.sex) {
+      setMessage('Please select sex');
       return;
     }
 
@@ -62,7 +68,8 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
     data.append('name', formData.name);
     data.append('ageYears', formData.ageYears);
     data.append('ageMonths', formData.ageMonths);
-    
+    data.append('sex', formData.sex);
+
     Array.from(formData.files).forEach(file => {
       data.append('files', file);
     });
@@ -73,7 +80,7 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
         setMessage(`Uploading: ${progress}%`);
       });
 
-      // Notify parent component of successful start
+      // Notify parent of successful start
       onTrainingStart(formData.name, {
         modelId: result.model_id,
         jobId: result.job_id
@@ -94,7 +101,7 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
   return (
     <div className="model-creation-form">
       <h2>Create New Model</h2>
-      
+
       {message && (
         <p className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
           {message}
@@ -102,15 +109,37 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        <label>Name:</label>
-        <input 
-          type="text" 
-          name="name" 
-          value={formData.name}
-          onChange={handleInputChange} 
-          required 
-        />
+        {/* TOP ROW: Name & Sex side-by-side */}
+        <div className="top-row">
+          {/* Name Field */}
+          <div className="name-field">
+            <label>Name:</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
 
+          {/* Sex Field */}
+          <div className="sex-field">
+            <label>Sex:</label>
+            <select
+              name="sex"
+              value={formData.sex}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">--</option>
+              <option value="M">M</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+        </div>
+
+        {/* AGE */}
         <label>Age:</label>
         <div className="age-inputs">
           <input
@@ -132,9 +161,15 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
           />
         </div>
 
-        <label>Upload Photos (5-30 images):</label>
+        {/* UPLOAD PHOTOS, ETC. */}
+        <label>Upload Photos (5-40 images):</label>
         <label htmlFor="file-upload" className="custom-file-upload">
-          <span className="upload-icon">⬆</span> Upload Photos (PNG, JPG)
+          <span className="upload-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff">
+              <path d="M450-313v-371L330-564l-43-43 193-193 193 193-43 43-120-120v371h-60ZM220-160q-24 0-42-18t-18-42v-143h60v143h520v-143h60v143q0 24-18 42t-42 18H220Z" />
+            </svg>
+          </span>
+          Upload Photos (PNG, JPG)
         </label>
         <input
           id="file-upload"
@@ -148,15 +183,15 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
 
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div className="progress-bar">
-            <div 
-              className="progress" 
+            <div
+              className="progress"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
         )}
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={!formData.files.length || uploadProgress > 0}
         >
           Start Training
@@ -166,4 +201,4 @@ function ModelCreationForm({ onClose, onTrainingStart }) {
   );
 }
 
-export default ModelCreationForm;
+export default CreationForm;

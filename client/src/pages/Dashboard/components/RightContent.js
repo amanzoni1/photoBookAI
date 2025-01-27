@@ -98,7 +98,7 @@ function RightContent() {
 
       {photobooks.length === 0 ? (
         <div className="image-placeholder">
-          <p>Your photobooks will be displayed here.</p>
+          <p>Your photoshoots will be displayed here.</p>
         </div>
       ) : (
         photobooks.map(book => {
