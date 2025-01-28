@@ -68,15 +68,19 @@ function ModelForm({ model, onClose }) {
 
   return (
     <div className="model-form">
-      <h2>Manage Model: {model.name}</h2>
-      <img src={modelPlaceholder} alt="Model" className="model-form-image" />
+      <h2>Manage Model</h2>
 
-      <p>
-        Age:
-        {model.config?.age_years ? ` ${model.config.age_years} years` : ''}
-        {model.config?.age_months ? ` ${model.config.age_months} months` : ''}
-      </p>
-      <p>Model ID: {model.id}</p>
+      <div className="model-info-container">
+        <img src={modelPlaceholder} alt="Model" className="model-form-image" />
+        <div className="model-info">
+          <p>{model.name}</p>
+          <p>
+            Age:
+            {model.config?.age_years ? ` ${model.config.age_years} years` : ''}
+            {model.config?.age_months ? ` ${model.config.age_months} months` : ''}
+          </p>
+        </div>
+      </div>
 
       <div className="photobook-list">
         {photobooks.map(book => {
@@ -91,13 +95,6 @@ function ModelForm({ model, onClose }) {
             >
               <div>
                 <div className="theme-name">{book.theme_name}</div>
-              </div>
-              <div>
-                {isUnlocked ? (
-                  <span className="status-unlocked">Unlocked</span>
-                ) : (
-                  <span className="status-locked">Locked</span>
-                )}
               </div>
             </div>
           );

@@ -141,11 +141,6 @@ function LeftMenu() {
               <img src={modelPlaceholder} alt="Model" className="model-image" />
               <div className="model-info">
                 <p className="model-name">{model.name}</p>
-                <p className="model-age">
-                  {model.config?.age_years ? `${model.config.age_years} yrs` : ''}
-                  {model.config?.age_months ? ` ${model.config.age_months} mos` : ''}
-                </p>
-                <p className="model-status">Status: {model.status}</p>
               </div>
             </div>
           ))}

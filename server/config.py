@@ -141,6 +141,14 @@ class Config:
             "credits": [
                 {"type": "PHOTOSHOOT", "quantity": 3}
             ]
+        },
+        # 4) 7-pack of photoshoot credits for $9.99
+        "PS_7PACK": {
+            "label": "7 Photoshoot Credits",
+            "price_cents": 999,   # $9.99
+            "credits": [
+                {"type": "PHOTOSHOOT", "quantity": 7}
+            ]
         }
     }
 

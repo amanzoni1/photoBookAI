@@ -1,102 +1,112 @@
 .model-form {
-    padding: 20px;
-    border-radius: 10px;
-    color: #cccccc;
-    box-sizing: border-box;
-    overflow-y: auto;
-  }
-  
-  .model-form h2 {
-    margin-top: 0;
-    font-size: 1.2rem;
-  }
-  
-  .model-form-image {
-    width: 100px;
-    height: 100px;
-    margin: 20px 0;
-    border-radius: 5px;
-    object-fit: cover;
-  }
-  
-  .model-form p {
-    margin: 10px 0;
-    font-size: 1rem;
-  }
-  
-  /* Photobook list styles */
-  .photobook-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  /* Each photobook row */
-  .photobook-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    transition: background-color 0.2s;
-    cursor: pointer;
-  }
-  
-  .photobook-item.unlocked {
-    background-color: #0f172a; 
-    color: #fff;
-    opacity: 1;
-  }
-  
-  .photobook-item.locked {
-    background-color: #1f2937; 
-    color: #888; 
-    opacity: 0.6; 
-  }
-  
-  .photobook-item.locked.selected {
-    border: 2px solid pink;
-    opacity: 0.9; 
-  }
-  
-  .photobook-item.locked:hover {
-    opacity: 0.8; 
-  }
-  
-  .photobook-item.unlocked:hover {
-    opacity: 0.9;
-  }
-  
-  .status-unlocked {
-    color: #10b981; 
-    font-size: 0.9rem;
-  }
-  
-  .status-locked {
-    color: #f87171; 
-    font-size: 0.9rem;
-  }
-  
-  .unlock-button {
-    width: 100%;
-    padding: 15px;
-    margin-top: 15px;
-    background: linear-gradient(to right, pink, lightblue);
-    color: #000;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
-  
-  .unlock-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .unlock-button:hover:not(:disabled) {
-    filter: brightness(1.2);
-  }
+  margin: 2.5rem 4px 0 4px;
+  padding: 0.4rem;
+  color: #cccccc;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.model-form h2 {
+  font-size: 1.1rem;
+}
+
+.model-info-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1.6rem 0 1.2rem 0;
+}
+
+.model-form-image {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.model-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.model-info p {
+  font-size: 1rem;
+}
+
+/* Photobook list styles */
+.photobook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 3rem 0 1.5rem 0;
+}
+
+/* Each photobook row */
+.photobook-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.photobook-item.unlocked {
+  color: #fff;
+}
+
+.photobook-item.locked {
+  opacity: 0.4;
+  cursor: pointer;
+}
+
+.photobook-item.locked.selected {
+  border: 2px solid #fff;
+  color: #fff;;
+  opacity: 0.7;
+}
+
+.photobook-item.locked:hover {
+  opacity: 0.8;
+}
+
+
+.status-unlocked {
+  color: #10b981;
+  font-size: 0.9rem;
+}
+
+.status-locked {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+.unlock-button {
+  width: 100%;
+  padding: 1rem;
+  margin: 1rem 0;
+  gap: 0.4rem;
+  background: linear-gradient(45deg, lightblue, #ffc0cb);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-weight: bold;
+  border: 1px solid rgba(255, 182, 193, 0.1);
+  border-radius: 8px;
+}
+
+.unlock-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.unlock-button:hover:not(:disabled) {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+}
