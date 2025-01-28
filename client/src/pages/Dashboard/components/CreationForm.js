@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useModel } from '../../../hooks/useModel';
 import './CreationForm.css';
+import FileUploadModal from './FileUploadModal';
 
 function CreationForm({ onClose, onTrainingStart }) {
   const { createModel } = useModel();
@@ -15,28 +16,12 @@ function CreationForm({ onClose, onTrainingStart }) {
     files: []
   });
 
-  const [fileMessage, setFileMessage] = useState('No files uploaded');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e) => {
-    const files = e.target.files;
-    if (files.length < 5 || files.length > 40) {
-      alert('Please upload between 5 and 40 pictures.');
-      e.target.value = '';
-      setFileMessage('No files uploaded');
-    } else {
-      setFormData({ ...formData, files: files });
-      setFileMessage(
-        <span>
-          <span className="file-success">✓</span> {files.length} files selected
-        </span>
-      );
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,6 +48,11 @@ function CreationForm({ onClose, onTrainingStart }) {
       return;
     }
 
+    if (formData.files.length < 5) {
+      setMessage('Please upload at least 5 images');
+      return;
+    }
+
     // Prepare form data
     const data = new FormData();
     data.append('name', formData.name);
@@ -80,7 +70,6 @@ function CreationForm({ onClose, onTrainingStart }) {
         setMessage(`Uploading: ${progress}%`);
       });
 
-      // Notify parent of successful start
       onTrainingStart(formData.name, {
         modelId: result.model_id,
         jobId: result.job_id
@@ -161,25 +150,47 @@ function CreationForm({ onClose, onTrainingStart }) {
           />
         </div>
 
-        {/* UPLOAD PHOTOS, ETC. */}
+        {/* UPLOAD PHOTOS */}
         <label>Upload Photos (5-40 images):</label>
-        <label htmlFor="file-upload" className="custom-file-upload">
+        <button
+          type="button"
+          className="upload-button"
+          onClick={() => setIsUploadModalOpen(true)}
+        >
           <span className="upload-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#cccccc">
               <path d="M450-313v-371L330-564l-43-43 193-193 193 193-43 43-120-120v371h-60ZM220-160q-24 0-42-18t-18-42v-143h60v143h520v-143h60v143q0 24-18 42t-42 18H220Z" />
             </svg>
           </span>
-          Upload Photos (PNG, JPG)
-        </label>
-        <input
-          id="file-upload"
-          type="file"
-          multiple
-          accept=".png,.jpg,.jpeg"
-          onChange={handleFileChange}
-          required
+          Upload Photos
+        </button>
+
+        <FileUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => {
+            if (formData.files.length > 0 && formData.files.length < 5) {
+              setMessage('Please upload at least 5 images');
+            }
+            setIsUploadModalOpen(false);
+          }}
+          files={formData.files}
+          onFilesChange={(files) => {
+            if (files.length > 40) {
+              setMessage('Maximum 40 images allowed');
+              return;
+            }
+            setFormData(prev => ({ ...prev, files }));
+          }}
         />
-        <div className="file-message">{fileMessage}</div>
+        <div className="file-message">
+          {formData.files.length > 0 ? (
+            <span>
+              <span className="file-success">✓</span> {formData.files.length} files selected
+            </span>
+          ) : (
+            'No files uploaded'
+          )}
+        </div>
 
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div className="progress-bar">

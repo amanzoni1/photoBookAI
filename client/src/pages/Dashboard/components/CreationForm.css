@@ -1,9 +1,10 @@
 /* client/src/components/CreationForm.css */
 
+/* Base Form Styles */
 .model-creation-form {
     margin: 3.5rem 4px 0 4px;
     padding: 0.4rem;
-    color: #cccccc; /* Soft grey text */
+    color: #cccccc;
 }
 
 .model-creation-form h2 {
@@ -11,60 +12,50 @@
     margin-bottom: 20px;
 }
 
-/* Shared label styling */
+/* Form Labels */
 .model-creation-form form label {
     display: block;
     margin-top: 15px;
     font-weight: normal;
     font-size: 0.75rem;
-    color: #cccccc; /* Soft grey text */
+    color: #cccccc;
 }
 
-/* -----------------------------
-   TOP ROW: Name & Sex side by side
------------------------------ */
+/* Name & Sex Row Layout */
 .top-row {
     display: flex;
-    gap: 1rem;       /* spacing between name & sex */
-    margin-top: 15px;/* optional spacing above */
+    gap: 1rem;
+    margin-top: 15px;
 }
 
-/* Make the name field grow */
 .name-field {
     flex: 1;
 }
 
-/* Keep sex field narrower */
 .sex-field {
-    width: 40px;   /* or any desired fixed width (like 80px) */
-    flex-shrink: 0; /* ensure it doesn't shrink further */
+    width: 40px;
+    flex-shrink: 0;
 }
 
-/* -----------------------------
-   Inputs & Selects
------------------------------ */
+
+/* Form Inputs */
 .model-creation-form form input[type="text"],
-.model-creation-form form input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    margin-top: 4px;
-    border-radius: 8px;
-    border: 1px solid #444444; /* Soft grey border */
-    background-color: transparent;
-    color: #cccccc; /* Soft grey text */
-}
-
+.model-creation-form form input[type="number"],
 .model-creation-form form select {
     width: 100%;
     padding: 10px;
     margin-top: 4px;
     border-radius: 8px;
-    border: 1px solid #444444; 
-    background-color: transparent; 
-    color: #cccccc;           
-    appearance: none; /* hide default arrow in some browsers */
+    border: 1px solid #444444;
+    background-color: transparent;
+    color: #cccccc;
 }
 
+.model-creation-form form select {
+    appearance: none;
+}
+
+/* Age Inputs */
 .age-inputs {
     display: flex;
     gap: 10px;
@@ -75,12 +66,14 @@
     width: calc(50% - 5px);
 }
 
+/* Remove number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
+/* Focus states */
 input:focus,
 textarea:focus,
 select:focus {
@@ -88,41 +81,35 @@ select:focus {
     border-color: #444444;
 }
 
-/* -----------------------------
-   File Upload
------------------------------ */
-.custom-file-upload {
-    display: flex; 
-    align-items: center; 
-    text-align: center;
-    gap: 10px; 
+/* File Upload */
+.upload-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    padding: 1rem;
-    margin-top: 4px !important;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 4px;
     background-color: transparent;
     color: #cccccc;
     border: 1px solid #444444;
     border-radius: 8px;
     cursor: pointer;
+    font-size: 0.9rem;
 }
 
-.custom-file-upload .upload-icon {
-    font-size: 2rem;
-    margin-right: 10px;
+.upload-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
-.custom-file-upload svg {
-    height: 40px; 
-    width: 40px;  
-    fill: currentColor; 
+.upload-icon {
+    display: flex;
+    align-items: center;
 }
 
-.custom-file-upload:hover {
-    opacity: 0.9;
-}
-
-input[type="file"] {
-    display: none;
+.upload-icon svg {
+    height: 40px;
+    width: 40px;
 }
 
 .file-message {
@@ -133,18 +120,12 @@ input[type="file"] {
 }
 
 .file-success {
-    color: #28a745; /* Green color for the checkmark */
+    color: #28a745;
     font-weight: bold;
     margin-right: 5px;
 }
 
-.upload-icon {
-    vertical-align: middle;
-}
-
-/* -----------------------------
-   Progress Bar
------------------------------ */
+/* Progress Bar */
 .progress-bar {
     width: 100%;
     background-color: #444444;
@@ -160,10 +141,8 @@ input[type="file"] {
     transition: width 0.3s ease;
 }
 
-/* -----------------------------
-   Submit Button
------------------------------ */
-.model-creation-form form button {
+/* Submit Button */
+.model-creation-form form button[type="submit"] {
     width: 100%;
     padding: 1rem;
     margin-top: 1.4rem;
@@ -176,7 +155,7 @@ input[type="file"] {
     font-weight: bold;
 }
 
-.model-creation-form form button:hover {
+.model-creation-form form button[type="submit"]:hover {
     opacity: 0.9;
     transform: scale(1.02);
 }
