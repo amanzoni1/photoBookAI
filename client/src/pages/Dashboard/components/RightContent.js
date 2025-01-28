@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // For the blob download
+import { useModel } from '../../../hooks/useModel';
 import { usePhotoshoot } from '../../../hooks/usePhotoshoot';
 import './RightContent.css';
 
 function RightContent() {
+  const { fetchModels } = useModel();
+  const { fetchAllPhotobooks, fetchPhotobookImages, loading, error } = usePhotoshoot();
+  const [models, setModels] = useState([]);
   const [photobooks, setPhotobooks] = useState([]);
   const [imagesByPhotobook, setImagesByPhotobook] = useState({});
   const [lightbox, setLightbox] = useState({ photobookId: null, currentIndex: 0, isOpen: false });
-  const { fetchAllPhotobooks, fetchPhotobookImages, loading, error } = usePhotoshoot();
+
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const fetchedModels = await fetchModels();
+        setModels(fetchedModels);
+      } catch (err) {
+        console.error('Error loading models:', err);
+      }
+    };
+    loadModels();
+  }, [fetchModels]);
 
   useEffect(() => {
     const loadPhotobooks = async () => {
@@ -92,12 +107,12 @@ function RightContent() {
 
   return (
     <div className="right-content">
-      <h2 className="right-title">Your PhotoShoots</h2>
       {loading && <p>Loading photobooks or images...</p>}
       {error && <p className="error-message">{error}</p>}
 
       {photobooks.length === 0 ? (
         <div className="image-placeholder">
+          <h2 className="right-title">Your PhotoShoots</h2>
           <p>Your photoshoots will be displayed here.</p>
         </div>
       ) : (
@@ -118,7 +133,9 @@ function RightContent() {
 
           return (
             <div key={book.id} className="photobook-container">
-              <h3 className='photobook-title'>{book.theme_name}</h3>
+              <h3 className='photobook-title'>
+                {models.find(m => m.id === book.model_id)?.name} - {book.theme_name}
+              </h3>
 
               <div className="photobook-inner">
                 {/* Left side: big cover area */}
@@ -133,18 +150,20 @@ function RightContent() {
 
                 {/* Right side: thumbs column */}
                 <div className="thumbs-column">
-                  {thumbsToShow.map((img, idx) => (
+                  {otherImages.slice(0, 4).map((img, idx) => (
                     <img
                       key={img.id || idx}
                       src={img.url}
                       alt={`Thumb ${idx + 1}`}
                       className="small-thumb"
-                      onClick={() => openLightbox(book.id, idx + 1)} 
+                      onClick={() => openLightbox(book.id, idx + 1)}
                     />
                   ))}
-
                   {extraCount > 0 && (
-                    <div className="more-label">
+                    <div
+                      className="more-overlay"
+                      onClick={() => openLightbox(book.id, 0)}
+                    >
                       +{extraCount} more
                     </div>
                   )}
@@ -159,23 +178,46 @@ function RightContent() {
       {lightbox.isOpen && currentImage && (
         <div className="lightbox-overlay">
           <div className="lightbox-content">
-            <button className="close-button" onClick={closeLightbox}>×</button>
-            <button className="nav-button left" onClick={prevImage}>←</button>
+            <button className="close-button" onClick={closeLightbox}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff">
+                <path d="m251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z" />
+              </svg>
+            </button>
+            <button className="nav-button left" onClick={prevImage}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff">
+                <path d="M650-80 250-480l400-400 61 61.67L372.67-480 711-141.67 650-80Z" />
+              </svg>
+            </button>
 
-            <img 
+            <img
               src={currentImage.url}
               alt="Enlarged"
               className="enlarged-image"
             />
 
-            <button
-              className="download-button"
-              onClick={() => downloadImage(currentImage.url)}
-            >
-              Download
+            <button className="download-button" onClick={() => downloadImage(currentImage.url)}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff">
+                <path d="M480-315.33 284.67-510.67l47.33-48L446.67-444v-356h66.66v356L628-558.67l47.33 48L480-315.33ZM226.67-160q-27 0-46.84-19.83Q160-199.67 160-226.67V-362h66.67v135.33h506.66V-362H800v135.33q0 27-19.83 46.84Q760.33-160 733.33-160H226.67Z" />
+              </svg>
             </button>
 
-            <button className="nav-button right" onClick={nextImage}>→</button>
+            <button className="nav-button right" onClick={nextImage}>
+              <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff">
+                <path d="m309.67-81.33-61-61.67L587-481.33 248.67-819.67l61-61.66 400 400-400 400Z" />
+              </svg>
+            </button>
+
+            <div className="lightbox-preview-strip">
+              {imagesByPhotobook[lightbox.photobookId]?.map((img, idx) => (
+                <img
+                  key={img.id || idx}
+                  src={img.url}
+                  alt={`Preview ${idx + 1}`}
+                  className={`preview-thumb ${idx === lightbox.currentIndex ? 'active' : ''}`}
+                  onClick={() => setLightbox(prev => ({ ...prev, currentIndex: idx }))}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}

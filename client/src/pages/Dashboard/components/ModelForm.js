@@ -50,14 +50,9 @@ function ModelForm({ model, onClose }) {
       const response = await unlockPhotobook(selectedPhotobook);
       alert(response.message || 'Photobook unlocked successfully.');
 
-      // Re-fetch photobooks to show updated is_unlocked
       const updated = await fetchPhotobooksByModel(model.id);
       setPhotobooks(updated);
-
-      // Clear selection
       setSelectedPhotobook(null);
-
-      // Refresh credits in case the server decremented them
       await refreshCredits();
 
     } catch (error) {
@@ -66,39 +61,47 @@ function ModelForm({ model, onClose }) {
     }
   };
 
+  const sortedPhotobooks = [...photobooks].sort((a, b) => {
+    if (a.is_unlocked === b.is_unlocked) return 0;
+    return a.is_unlocked ? -1 : 1;
+  });
+
+
   return (
     <div className="model-form">
-      <h2>Manage Model</h2>
+      <div className="content-wrapper">
+        <h2>Manage Model</h2>
 
-      <div className="model-info-container">
-        <img src={modelPlaceholder} alt="Model" className="model-form-image" />
-        <div className="model-info">
-          <p>{model.name}</p>
-          <p>
-            Age:
-            {model.config?.age_years ? ` ${model.config.age_years} years` : ''}
-            {model.config?.age_months ? ` ${model.config.age_months} months` : ''}
-          </p>
+        <div className="model-info-container">
+          <img src={modelPlaceholder} alt="Model" className="model-form-image" />
+          <div className="model-info">
+            <p>{model.name}</p>
+            <p>
+              Age:
+              {model.config?.age_years ? ` ${model.config.age_years} years` : ''}
+              {model.config?.age_months ? ` ${model.config.age_months} months` : ''}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="photobook-list">
-        {photobooks.map(book => {
-          const isUnlocked = book.is_unlocked;
-          const isSelected = selectedPhotobook === book.id;
-          return (
-            <div
-              key={book.id}
-              className={`photobook-item ${isUnlocked ? 'unlocked' : 'locked'} 
+        <div className="photobook-list">
+          {sortedPhotobooks.map(book => {
+            const isUnlocked = book.is_unlocked;
+            const isSelected = selectedPhotobook === book.id;
+            return (
+              <div
+                key={book.id}
+                className={`photobook-item ${isUnlocked ? 'unlocked' : 'locked'} 
                           ${!isUnlocked && isSelected ? 'selected' : ''}`}
-              onClick={() => handleSelect(book.id, isUnlocked)}
-            >
-              <div>
-                <div className="theme-name">{book.theme_name}</div>
+                onClick={() => handleSelect(book.id, isUnlocked)}
+              >
+                <div>
+                  <div className="theme-name">{book.theme_name}</div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <button
