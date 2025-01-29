@@ -27,33 +27,13 @@ function CreationForm({ onClose, onTrainingStart }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validations
-    if (!formData.name) {
-      setMessage('Name is required');
-      return;
-    }
-
-    if (!formData.ageYears && !formData.ageMonths) {
-      setMessage('Please provide either age in years or months');
-      return;
-    }
-
-    if (!formData.sex) {
-      setMessage('Please select sex');
-      return;
-    }
-
-    if (!formData.files.length) {
-      setMessage('Please upload images');
-      return;
-    }
-
+    // File validation (not covered by HTML5 validation)
     if (formData.files.length < 5) {
       setMessage('Please upload at least 5 images');
       return;
     }
 
-    // Prepare form data
+    // Form data preparation
     const data = new FormData();
     data.append('name', formData.name);
     data.append('ageYears', formData.ageYears);
@@ -92,7 +72,11 @@ function CreationForm({ onClose, onTrainingStart }) {
       <h2>Create New Model</h2>
 
       {message && (
-        <p className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+        <p className={`message ${
+          message.includes('Error') || message.includes('Please upload') 
+            ? 'error' 
+            : 'success'
+        }`}>
           {message}
         </p>
       )}
@@ -100,7 +84,6 @@ function CreationForm({ onClose, onTrainingStart }) {
       <form onSubmit={handleSubmit}>
         {/* TOP ROW: Name & Sex side-by-side */}
         <div className="top-row">
-          {/* Name Field */}
           <div className="name-field">
             <label>Name:</label>
             <input
@@ -112,7 +95,6 @@ function CreationForm({ onClose, onTrainingStart }) {
             />
           </div>
 
-          {/* Sex Field */}
           <div className="sex-field">
             <label>Sex:</label>
             <select
@@ -138,6 +120,7 @@ function CreationForm({ onClose, onTrainingStart }) {
             value={formData.ageYears}
             onChange={handleInputChange}
             min="0"
+            required={!formData.ageMonths}
           />
           <input
             type="number"
@@ -147,6 +130,7 @@ function CreationForm({ onClose, onTrainingStart }) {
             onChange={handleInputChange}
             min="0"
             max="11"
+            required={!formData.ageYears}
           />
         </div>
 
@@ -165,6 +149,15 @@ function CreationForm({ onClose, onTrainingStart }) {
           Upload Photos
         </button>
 
+        {/* Hidden input for file validation */}
+        <input 
+          type="text"
+          style={{ display: 'none' }}
+          value={formData.files.length ? 'has-files' : ''}
+          onChange={() => {}}
+          required
+        />
+
         <FileUploadModal
           isOpen={isUploadModalOpen}
           onClose={() => {
@@ -182,11 +175,18 @@ function CreationForm({ onClose, onTrainingStart }) {
             setFormData(prev => ({ ...prev, files }));
           }}
         />
+
         <div className="file-message">
           {formData.files.length > 0 ? (
-            <span>
-              <span className="file-success">✓</span> {formData.files.length} files selected
-            </span>
+            formData.files.length >= 5 ? (
+              <span>
+                <span className="file-success">✓</span> {formData.files.length} files selected
+              </span>
+            ) : (
+              <span className="file-warning">
+                {formData.files.length} files selected (minimum 5 required)
+              </span>
+            )
           ) : (
             'No files uploaded'
           )}
@@ -203,7 +203,7 @@ function CreationForm({ onClose, onTrainingStart }) {
 
         <button
           type="submit"
-          disabled={!formData.files.length || uploadProgress > 0}
+          disabled={uploadProgress > 0}
         >
           Start Training
         </button>
