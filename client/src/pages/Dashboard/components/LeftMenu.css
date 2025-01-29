@@ -39,7 +39,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   /* box-shadow: 0 1px 1px rgba(255, 182, 193, 0.45);  */
-  border: 2px solid rgba(255, 182, 193, 0.3);
+  border: 2px solid rgba(255, 182, 193, 0.2);
   border-radius: 8px;
   cursor: pointer;
 }

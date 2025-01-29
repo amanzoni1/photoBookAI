@@ -13,7 +13,7 @@ function BuyCreditsModal({ isOpen, onClose }) {
     createCheckoutSession,
   } = usePayments();
 
-  
+
   useEffect(() => {
     if (isOpen) {
       // For simplicity, always call fetchProducts. 
@@ -56,16 +56,45 @@ function BuyCreditsModal({ isOpen, onClose }) {
 
         {/* The product list */}
         <div className="products-list">
-          {products.map((prod) => (
-            <button
-              key={prod.id}
-              className="product-button"
-              onClick={() => handleBuy(prod.id)}
-              disabled={loading}
-            >
-              {prod.label} — ${ (prod.price_cents / 100).toFixed(2) }
-            </button>
-          ))}
+          {/* Model Credits Section */}
+          <div className="product-section">
+            <div className="product-section-title">Model Credits</div>
+            {products
+              .filter(prod => prod.label.toLowerCase().includes('model'))
+              .map((prod) => (
+                <button
+                  key={prod.id}
+                  className="product-button model-product"
+                  onClick={() => handleBuy(prod.id)}
+                  disabled={loading}
+                >
+                  <span className="product-label">{prod.label}</span>
+                  <span className="product-price">
+                    ${(prod.price_cents / 100).toFixed(2)}
+                  </span>
+                </button>
+              ))}
+          </div>
+
+          {/* Photoshoot Credits Section */}
+          <div className="product-section">
+            <div className="product-section-title">Photoshoot Credits</div>
+            {products
+              .filter(prod => !prod.label.toLowerCase().includes('model'))
+              .map((prod) => (
+                <button
+                  key={prod.id}
+                  className="product-button"
+                  onClick={() => handleBuy(prod.id)}
+                  disabled={loading}
+                >
+                  <span className="product-label">{prod.label}</span>
+                  <span className="product-price">
+                    ${(prod.price_cents / 100).toFixed(2)}
+                  </span>
+                </button>
+              ))}
+          </div>
         </div>
       </div>
     </div>
