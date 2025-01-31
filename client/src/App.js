@@ -1,14 +1,14 @@
 // client/src/App.js
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { CreditsProvider } from './contexts/CreditsContext';
-import Navbar from './pages/Navbar/Navbar';
-import LandingPage from './pages/LandingPage/LandingPage';
-import Signup from './pages/Signup/Signup';
-import Login from './pages/Login/Login';
-import Dashboard from './pages/Dashboard/Dashboard';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { CreditsProvider } from "./contexts/CreditsContext";
+import Navbar from "./pages/Navbar/Navbar";
+import LandingPage from "./pages/LandingPage/LandingPage";
+import Signup from "./pages/Signup/Signup";
+import Login from "./pages/Login/Login";
+import Dashboard from "./pages/Dashboard/Dashboard";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,21 +46,13 @@ function AppContent() {
         <Route
           path="/login"
           element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Login />
-            )
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
           }
         />
         <Route
           path="/signup"
           element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Signup />
-            )
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />
           }
         />
       </Routes>

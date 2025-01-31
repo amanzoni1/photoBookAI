@@ -17,6 +17,7 @@ login_manager = LoginManager()
 
 logger = logging.getLogger(__name__)
 
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -28,28 +29,32 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
 
     # Configure CORS
-    CORS(app,
+    CORS(
+        app,
         resources={r"/api/*": {"origins": "*"}},
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization"],
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     )
 
     with app.app_context():
         # Initialize services first
         from routes import init_services
+
         init_services(app)
 
         # Then register blueprints
         from routes import init_app as init_routes
+
         init_routes(app)
 
         logger.info("Application initialized successfully")
 
     return app
 
+
 # Create the app instance
 app = create_app()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

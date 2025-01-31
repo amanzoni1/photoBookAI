@@ -9,7 +9,6 @@ from .auth import token_required
 from app import db
 from models import TrainedModel, PhotoBook, JobStatus, CreditType
 from services.queue import JobType
-from config import PHOTOSHOOT_THEMES
 from . import (
     get_job_queue,
     get_credit_service, 

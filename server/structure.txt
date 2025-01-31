@@ -1,7 +1,7 @@
 server/
-├── app.py          
-├── config.py       
-├── models.py       
+├── app.py
+├── config.py
+├── models.py
 ├── routes/
 │   ├── __init__.py
 │   ├── auth.py
@@ -11,7 +11,7 @@ server/
 │   ├── photoshoot.py
 │   ├── payments.py
 │   ├── job.py
-├── services/       
+├── services/
 │   ├── __init__.py
 │   ├── ai_service.py
 │   ├── auth.py
@@ -24,9 +24,9 @@ server/
 │   ├── storage.py
 │   ├── temp_files.py
 │   └── worker.py
-└── migrations/     
-└── cache/  
-└── tests/  
+└── migrations/
+└── cache/
+└── tests/
 
 
 
@@ -34,6 +34,7 @@ server/
 
 
 compleanno, documenti, giochi, profili
+
 economico, pratico/timing, sicuro, prompt ottimizzati per ricordo momenti da ricordare
 ps son tematici, ps da 20img, esempi di ps
 
