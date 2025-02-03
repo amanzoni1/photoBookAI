@@ -4,7 +4,6 @@ import React from "react";
 import "./PhotoRow.css";
 
 // Example usage with default images:
-// If you want each PhotoRow to have dynamic images, accept them as props.
 import img1 from "./images/img3M.png";
 import img2 from "./images/img2.png";
 import img3 from "./images/img9M.png";

@@ -5,7 +5,7 @@ import GradientBackground from "./GradientBackground";
 import "./HeroSection.css";
 
 // Example: two images for the right column
-import childImgTop from "./images/img9M.png";
+import childImgTop from "./images/img2M.png";
 import childImgBottom from "./images/img5.png";
 
 function HeroSection() {
