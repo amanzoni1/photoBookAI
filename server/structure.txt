@@ -33,10 +33,15 @@ server/
 
 
 
-compleanno, documenti, giochi, profili
-
+-cancellare img da ui
+-content landingpage
 economico, pratico/timing, sicuro, prompt ottimizzati per ricordo momenti da ricordare
 ps son tematici, ps da 20img, esempi di ps
+-creare scenari ps
+compleanno, documenti, giochi, profili
+-reindirizzamenti, anche dopo pagamenti ed errori
+-model training piu efficente, creare img profilo
+-ricontrollare training che funzioni
 
-
-foto profilo.. sbloccati up, sex to api
+check finale definitivo con hardcoded stuff
+check finale ui con seo

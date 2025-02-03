@@ -1,12 +1,12 @@
 // client/src/pages/LandingPage/components/HeroSection.js
-import React from 'react';
-import { Link } from 'react-router-dom';
-import GradientBackground from './GradientBackground';
-import './HeroSection.css';
+import React from "react";
+import { Link } from "react-router-dom";
+import GradientBackground from "./GradientBackground";
+import "./HeroSection.css";
 
 // Example: two images for the right column
-import childImgTop from './images/ex.png';
-import childImgBottom from './images/ex1.png';
+import childImgTop from "./images/img9M.png";
+import childImgBottom from "./images/img5.png";
 
 function HeroSection() {
   return (
@@ -21,9 +21,9 @@ function HeroSection() {
             Professional Quality Photoshoots for Your Little Ones
           </h1>
           <h2 className="hero-subtitle">
-            Get professional, share-worthy portraits in minutes.
-            Skip the scheduling, travel, and costs of a physical studio —
-            our AI photo generator does it all from your favorite device.
+            Get professional, share-worthy portraits in minutes. Skip the
+            scheduling, travel, and costs of a physical studio — our AI photo
+            generator does it all from your favorite device.
           </h2>
           <Link to="/login" className="cta-button">
             Get Started Now
