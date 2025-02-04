@@ -56,7 +56,6 @@ class User(db.Model, UserMixin, TimestampMixin):
     photoshoot_credits = db.Column(db.Integer, default=0)
 
     # Relationships
-    uploaded_images = db.relationship("UserImage", backref="user", lazy=True)
     trained_models = db.relationship("TrainedModel", backref="user", lazy=True)
     generation_jobs = db.relationship("GenerationJob", backref="user", lazy=True)
     credit_transactions = db.relationship(
@@ -134,34 +133,6 @@ class StorageLocation(db.Model, TimestampMixin):
         return f"{self.bucket}/{self.path}"
 
 
-class UserImage(db.Model, TimestampMixin):
-    """Training images uploaded by users"""
-
-    __tablename__ = "user_images"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    storage_location_id = db.Column(
-        db.Integer, db.ForeignKey("storage_locations.id"), nullable=False
-    )
-
-    original_filename = db.Column(db.String(255), nullable=False)
-    file_size = db.Column(db.Integer)
-    mime_type = db.Column(db.String(100))
-    width = db.Column(db.Integer)
-    height = db.Column(db.Integer)
-
-    # Relationship to storage
-    storage_location = db.relationship("StorageLocation", lazy=True)
-
-    # Relationship to models this image was used to train
-    trained_models = db.relationship(
-        "TrainedModel",
-        secondary="model_training_images",
-        back_populates="training_images",
-    )
-
-
 class TrainedModel(db.Model, TimestampMixin):
     __tablename__ = "trained_models"
 
@@ -183,9 +154,6 @@ class TrainedModel(db.Model, TimestampMixin):
 
     # Relationships
     weights_location = db.relationship("StorageLocation", lazy=True)
-    training_images = db.relationship(
-        "UserImage", secondary="model_training_images", back_populates="trained_models"
-    )
     generated_images = db.relationship("GeneratedImage", backref="model", lazy=True)
 
     def is_ready_for_generation(self) -> tuple[bool, str]:
@@ -323,21 +291,7 @@ class GenerationJob(db.Model, TimestampMixin):
     )
 
 
-# Association tables
-model_training_images = db.Table(
-    "model_training_images",
-    db.Column(
-        "model_id", db.Integer, db.ForeignKey("trained_models.id"), primary_key=True
-    ),
-    db.Column(
-        "image_id", db.Integer, db.ForeignKey("user_images.id"), primary_key=True
-    ),
-    db.Column("created_at", db.DateTime(timezone=True), default=datetime.utcnow),
-)
-
-
 # Create indexes
-db.Index("idx_user_images_user_id", UserImage.user_id)
 db.Index("idx_trained_models_user_id", TrainedModel.user_id)
 db.Index("idx_generation_jobs_user_id", GenerationJob.user_id)
 db.Index("idx_generation_jobs_status", GenerationJob.status)

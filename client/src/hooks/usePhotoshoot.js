@@ -97,12 +97,50 @@ export const usePhotoshoot = () => {
     }
   }, []);
 
+  const deletePhotobook = useCallback(async (photobookId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.delete(
+        `/api/photoshoot/photobooks/${photobookId}`
+      );
+      return res.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Error deleting photobook";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deletePhotobookImage = useCallback(async (photobookId, imageId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.delete(
+        `/api/photoshoot/photobooks/${photobookId}/images/${imageId}`
+      );
+      return res.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Error deleting image";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     fetchAllPhotobooks,
     fetchPhotobooksByModel,
     fetchPhotobookImages,
     createPhotobook,
     unlockPhotobook,
+    deletePhotobook,
+    deletePhotobookImage,
     loading,
     error,
   };

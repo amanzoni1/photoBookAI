@@ -12,7 +12,7 @@ from queue import Queue
 
 from flask import Flask
 from app import db
-from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook, UserImage
+from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook
 from .queue import JobQueue
 from .ai_service import AIService
 

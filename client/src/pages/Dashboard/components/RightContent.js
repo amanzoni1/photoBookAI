@@ -1,3 +1,5 @@
+// RightContent.js
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useModel } from "../../../hooks/useModel";
@@ -6,8 +8,14 @@ import "./RightContent.css";
 
 function RightContent() {
   const { fetchModels } = useModel();
-  const { fetchAllPhotobooks, fetchPhotobookImages, loading, error } =
-    usePhotoshoot();
+  const {
+    fetchAllPhotobooks,
+    fetchPhotobookImages,
+    deletePhotobook,
+    deletePhotobookImage,
+    loading,
+    error,
+  } = usePhotoshoot();
   const [models, setModels] = useState([]);
   const [photobooks, setPhotobooks] = useState([]);
   const [imagesByPhotobook, setImagesByPhotobook] = useState({});
@@ -78,15 +86,25 @@ function RightContent() {
   }, [photobooks, fetchPhotobookImages]);
 
   const handleDelete = async () => {
-    if (deleteType === "image") {
-      // TODO: Implement actual image deletion logic here
-      console.log("Deleting image:", itemToDelete);
-      closeLightbox();
-    } else {
-      // TODO: Implement actual photoshoot deletion logic here
-      console.log("Deleting photoshoot:", itemToDelete);
+    try {
+      if (deleteType === "image") {
+        await deletePhotobookImage(lightbox.photobookId, itemToDelete);
+        setImagesByPhotobook((prev) => ({
+          ...prev,
+          [lightbox.photobookId]: prev[lightbox.photobookId].filter(
+            (img) => img.id !== itemToDelete
+          ),
+        }));
+        closeLightbox();
+      } else {
+        await deletePhotobook(itemToDelete);
+        setPhotobooks((prev) => prev.filter((pb) => pb.id !== itemToDelete));
+      }
+    } catch (err) {
+      console.error("Error during deletion:", err);
+    } finally {
+      setShowDeleteModal(false);
     }
-    setShowDeleteModal(false);
   };
 
   // Lightbox helper functions
