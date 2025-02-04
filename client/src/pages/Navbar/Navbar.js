@@ -1,16 +1,17 @@
 // client/src/pages/Navbar/Navbar.js
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useCredits } from '../../contexts/CreditsContext';
-import BuyCreditsModal from '../BuyCreditsModal/BuyCreditsModal';
-import './Navbar.css';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useCredits } from "../../contexts/CreditsContext";
+import BuyCreditsModal from "../BuyCreditsModal/BuyCreditsModal";
+import "./Navbar.css";
+import logo from "./logo.png";
 
 function Navbar({ isAuthenticated, onLogout }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
   const { credits, loading } = useCredits();
 
   useEffect(() => {
@@ -21,34 +22,34 @@ function Navbar({ isAuthenticated, onLogout }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDropdown && !event.target.closest('.user-menu')) {
+      if (showDropdown && !event.target.closest(".user-menu")) {
         setShowDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
   // Smooth scrolling function
   const handleSmoothScroll = (sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
+      section.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   // Hide all links/buttons when on Login or Signup pages
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/signup";
 
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        {isAuthenticated ? (
-          <Link to="/dashboard">YourLogo</Link>
-        ) : (
-          <Link to="/">YourLogo</Link>
-        )}
+        <Link to={isAuthenticated ? "/dashboard" : "/"} className="logo-text">
+          <img src={logo} alt="tinyMemories Logo" className="logo-img" />
+          tinyMemories
+        </Link>
       </div>
 
       {/* If on login or signup page, show only the logo */}
@@ -57,8 +58,19 @@ function Navbar({ isAuthenticated, onLogout }) {
           {/* If not authenticated, show public links */}
           {!isAuthenticated && (
             <ul className="navbar-links">
-              <li><Link to="/" onClick={() => handleSmoothScroll('pricing-section')}>Pricing</Link></li>
-              <li><Link to="/" onClick={() => handleSmoothScroll('faq-section')}>FAQ</Link></li>
+              <li>
+                <Link
+                  to="/"
+                  onClick={() => handleSmoothScroll("pricing-section")}
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/" onClick={() => handleSmoothScroll("faq-section")}>
+                  FAQ
+                </Link>
+              </li>
             </ul>
           )}
 
@@ -87,11 +99,15 @@ function Navbar({ isAuthenticated, onLogout }) {
                   <div className="credits-display">
                     <div className="credit-item">
                       <span className="credit-label">Model</span>
-                      <span className="credit-value">{credits.model_credits}</span>
+                      <span className="credit-value">
+                        {credits.model_credits}
+                      </span>
                     </div>
                     <div className="credit-item">
                       <span className="credit-label">Photoshoot</span>
-                      <span className="credit-value">{credits.photoshoot_credits}</span>
+                      <span className="credit-value">
+                        {credits.photoshoot_credits}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -109,7 +125,7 @@ function Navbar({ isAuthenticated, onLogout }) {
                         onClick={() => {
                           onLogout();
                           setShowDropdown(false);
-                          navigate('/');
+                          navigate("/");
                         }}
                         className="dropdown-item"
                       >

@@ -33,7 +33,6 @@ server/
 
 
 
--cancellare img da ui
 -content landingpage
 economico, pratico/timing, sicuro,
 prompt ottimizzati per ricordo momenti da ricordare, possibilita di far calendari etc
@@ -41,7 +40,7 @@ ps son tematici, ps da 20img, esempi di ps
 -ui seo
 
 -creare scenari ps
-compleanno, documenti, giochi, profili
+compleanno, documenti, giochi, profili, polaroid, cuori
 
 -reindirizzamenti, anche dopo pagamenti ed errori, hardcoded stuff
 

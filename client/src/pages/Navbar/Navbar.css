@@ -13,12 +13,34 @@
   background: transparent;
 }
 
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-.navbar-logo a {
-  font-size: 1.5rem;
+.logo-img {
+  width: 40px;
+  height: auto;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+.logo-text {
+  display: flex;
+  align-items: center;
+  font-family: 'Quicksand', cursive;
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #6e6363;
   text-decoration: none;
+  transition: color 0.3s ease-in-out;
+}
+
+body:not(.logged-in) .logo-text {
+  color: #0b2430;
+}
+
+body.logged-in .logo-text {
+  color: #F9FAFB;
 }
 
 .navbar-links {
@@ -174,8 +196,8 @@
 }
 
 .dropdown-item:hover {
-  background-color: #dddddd; 
-  color: #333;             
+  background-color: #dddddd;
+  color: #333;
   transition: background-color 0.2s;
 }
 
