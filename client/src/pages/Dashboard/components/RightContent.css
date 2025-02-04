@@ -14,26 +14,26 @@
 /* Scrollbar styling */
 .right-content::-webkit-scrollbar {
   width: 6px;
- }
- 
- .right-content::-webkit-scrollbar-track {
+}
+
+.right-content::-webkit-scrollbar-track {
   background: transparent;
- }
- 
- .right-content::-webkit-scrollbar-thumb {
+}
+
+.right-content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
- }
- 
- .right-content::-webkit-scrollbar-thumb:hover {
+}
+
+.right-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
- }
- 
- /* For Firefox */
- .right-content {
+}
+
+/* For Firefox */
+.right-content {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
- }
+}
 
 .right-title {
   text-align: center;
@@ -73,6 +73,7 @@
   border-radius: 8px;
 }
 
+/* Photobook container and header styling */
 .photobook-container {
   position: relative;
   width: auto;
@@ -85,33 +86,48 @@
   box-sizing: border-box;
 }
 
+.photobook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.photobook-title {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+/* Album delete button (in header) styling */
+.album-delete-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.album-delete-button:hover {
+  transform: scale(1.1);
+}
+
+/* Photobook inner area styling */
 .photobook-inner {
   display: flex;
   width: auto;
   min-width: 0;
   height: 95%;
   overflow: hidden;
-  /* ensure no overflow unless we do it in the thumbs column */
 }
 
-.photobook-title {
-  margin-bottom: 4px;
-  margin-left: 10px;
-  text-align: left;
-  text-transform: capitalize;
-}
-
-/* Big cover area on the left (fixed width, full height) */
 .big-cover-area {
   flex: 0 0 60%;
-  /* 60% for the big image, can adjust */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
 
-/* The big cover image itself */
 .big-cover {
   width: 100%;
   height: 100%;
@@ -126,16 +142,11 @@
 .thumbs-column {
   flex: 0 0 40%;
   margin-left: 10px;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
   gap: 6px;
   position: relative;
   height: 100%;
   border-radius: 8px;
-}
-
-.thumbs-column::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 .small-thumb {
@@ -192,7 +203,7 @@
   background: rgba(0, 0, 0, 0.8);
 }
 
-/* Lightbox overlay style */
+/* Lightbox overlay styling */
 .lightbox-overlay {
   position: fixed;
   top: 0;
@@ -216,7 +227,6 @@
   justify-content: center;
 }
 
-/* The enlarged image in the center */
 .enlarged-image {
   max-width: 70vw;
   max-height: 70vh;
@@ -224,7 +234,6 @@
   border-radius: 10px;
 }
 
-/* Close button (top-right corner inside .lightbox-content) */
 .close-button {
   position: absolute;
   top: 10px;
@@ -240,7 +249,6 @@
   text-align: center;
 }
 
-/* Nav buttons (left/right arrows) */
 .nav-button {
   position: relative;
   background: #2c2c2c;
@@ -268,13 +276,12 @@
   margin-right: 10px;
 }
 
-/* Download button style (somewhere near the bottom or so) */
 .download-button {
   position: absolute;
   top: 4px;
   left: 25px;
   transform: translateX(50%);
-  background: rgb(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.2);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -282,7 +289,11 @@
   font-size: 24px;
   padding: 2px 8px;
 }
+.download-button:hover {
+  background: #3c3c3c;
+}
 
+/* Lightbox preview strip styling */
 .lightbox-preview-strip {
   position: relative;
   width: 50%;
@@ -300,7 +311,6 @@
 }
 
 .lightbox-preview-strip::-webkit-scrollbar {
-  display: block;
   height: 6px;
 }
 
@@ -330,4 +340,86 @@
 .preview-thumb:hover {
   opacity: 1;
   transform: scale(1.2);
+}
+
+/* Delete button in lightbox (top right) */
+.delete-button {
+  position: absolute;
+  top: 58px;
+  left: 25px;
+  transform: translateX(50%);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 24px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background: #3c3c3c;
+}
+
+/* Full-screen modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.delete-modal {
+  background: #2c2c2c;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  color: #fff;
+}
+
+.delete-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-cancel,
+.modal-delete-btn {
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: background 0.2s;
+}
+
+.modal-cancel:hover,
+.modal-delete-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
 }

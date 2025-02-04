@@ -35,13 +35,17 @@ server/
 
 -cancellare img da ui
 -content landingpage
-economico, pratico/timing, sicuro, prompt ottimizzati per ricordo momenti da ricordare
+economico, pratico/timing, sicuro,
+prompt ottimizzati per ricordo momenti da ricordare, possibilita di far calendari etc
 ps son tematici, ps da 20img, esempi di ps
+-ui seo
+
 -creare scenari ps
 compleanno, documenti, giochi, profili
--reindirizzamenti, anche dopo pagamenti ed errori
+
+-reindirizzamenti, anche dopo pagamenti ed errori, hardcoded stuff
+
 -model training piu efficente, creare img profilo
 -ricontrollare training che funzioni
 
-check finale definitivo con hardcoded stuff
-check finale ui con seo
+check finale
