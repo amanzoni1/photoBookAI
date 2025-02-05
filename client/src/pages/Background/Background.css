@@ -1,9 +1,0 @@
-.gen-gradient-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh; /* Full height for proper scaling */
-    pointer-events: none; /* Non-interactive canvas */
-    z-index: -1;
-  }

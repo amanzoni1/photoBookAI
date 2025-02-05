@@ -14,12 +14,36 @@ import img6 from "./images/img3.png";
 function PhotoRow() {
   return (
     <div className="photo-row">
-      <img className="photo-1" src={img1} alt="Example photo 1" />
-      <img className="photo-2" src={img2} alt="Example photo 2" />
-      <img className="photo-3" src={img3} alt="Example photo 3" />
-      <img className="photo-4" src={img4} alt="Example photo 4" />
-      <img className="photo-5" src={img5} alt="Example photo 5" />
-      <img className="photo-6" src={img6} alt="Example photo 6" />
+      <img
+        className="photo-1"
+        src={img1}
+        alt="Smiling child in a fairytale-themed AI photoshoot 1"
+      />
+      <img
+        className="photo-2"
+        src={img2}
+        alt="Smiling child in a fairytale-themed AI photoshoot 2"
+      />
+      <img
+        className="photo-3"
+        src={img3}
+        alt="Smiling child in a fairytale-themed AI photoshoot 3"
+      />
+      <img
+        className="photo-4"
+        src={img4}
+        alt="Smiling child in a fairytale-themed AI photoshoot 4"
+      />
+      <img
+        className="photo-5"
+        src={img5}
+        alt="Smiling child in a fairytale-themed AI photoshoot 5"
+      />
+      <img
+        className="photo-6"
+        src={img6}
+        alt="Smiling child in a fairytale-themed AI photoshoot 6"
+      />
     </div>
   );
 }

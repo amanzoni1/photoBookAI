@@ -1,16 +1,18 @@
 // client/src/pages/LandingPage/components/ComparisonSection.js
-import React from 'react';
-import './ComparisonSection.css';
-import relaxed from './images/relaxed.jpeg';
-import messySchedule from './images/messySchedule.webp';
+import React from "react";
+import "./ComparisonSection.css";
+import relaxed from "./images/relaxed.jpeg";
+import messySchedule from "./images/messySchedule.webp";
 
 function ComparisonSection() {
   return (
     <section className="comparison-section">
       <div className="comparison-inner">
-        <h2 className="section-title">AI Photoshoot vs. Traditional Photography</h2>
+        <h2 className="section-title">
+          AI Photoshoot vs. Traditional Photography
+        </h2>
         <p className="section-subtitle">
-          Discover how our AI approach compares to hiring a conventional photography studio.
+          See how TinyMemories stacks up against the usual studio session.
         </p>
 
         <div className="comparison-wrapper">

@@ -1,68 +1,63 @@
 // client/src/pages/LandingPage/components/FAQSection.js
-import React from 'react';
-import './FAQSection.css';
+import React from "react";
+import "./FAQSection.css";
 
 function FAQSection({ id }) {
   const faqs = [
     {
-      question: "What kind of photos should I upload for my child's AI photoshoot?",
+      question: "What kind of photos should I upload?",
       answer:
-        "Aim for variety. Include different angles, facial expressions, and backgrounds. Avoid heavy makeup or large accessories. The more unique photos you provide, the richer the final AI-generated photoshoot becomes."
+        "Aim for variety: different angles, expressions, and simple backgrounds. Avoid heavy filters, makeup, or oversized accessories. The more diverse your photos, the more accurate the AI-generated results.",
     },
     {
       question: "How do you handle the photos I upload?",
       answer:
-        "We use your child's photos only to train our AI model. Once the model is generated, we securely delete those original images—within a few days or immediately upon your request."
-    },
-    {
-      question: "Who owns the AI photoshoot results?",
-      answer:
-        "You do! We grant full commercial rights and ownership of your AI-generated images. Share them on social media, print them for family, or use them anywhere else you like."
-    },
-    {
-      question: "What if I don’t like any of the generated photos?",
-      answer:
-        "If you’re truly unhappy and can’t find a single ‘keeper,’ we’ll offer a re-run or a full refund. We want you to love your AI photoshoot results."
+        "We only use the photos to train our AI model. Once training is complete, these original images are securely deleted—immediately after processing or upon your request. Your privacy and your child's safety are our top concerns.",
     },
     {
       question: "Is it safe to upload kids’ photos? Are prompts moderated?",
       answer:
-        "Yes. Child privacy and safety are top priorities. We closely monitor prompts and secure your uploads so they remain private. Inappropriate requests are blocked."
+        "Yes. We have strict child-safety protocols in place and automatically block inappropriate or explicit prompts. All uploaded images are stored with top-level security.",
+    },
+    {
+      question: "What happens to the generated AI photos?",
+      answer:
+        "The AI-generated photos belong to you. You can keep them on our platform as long as you like or delete them anytime if you prefer. We store them securely for quick access and downloads.",
+    },
+    {
+      question: "How many images do I get from each photoshoot?",
+      answer:
+        "Each themed photoshoot includes 20 unique, high-resolution images. You can select your favorites to download, print, or share.",
+    },
+    {
+      question: "What photoshoot themes are available?",
+      answer:
+        "We offer a variety of fun scenarios like Superhero, Nature Adventure, Princess, Christmas, Floral Garden, Dream Jobs, School Time, Fairyland, and more. We’re always adding new themes to keep things fresh.",
     },
     {
       question: "How long does it usually take?",
       answer:
-        "Most photoshoots finish within a few hours. This may vary slightly depending on server load, but same-day results are typical."
+        "Most photoshoots finish within a few hours of uploading your child's snapshots. Exact times may vary depending on server load, but same-day results are the norm.",
+    },
+    {
+      question: "Can I use these images for personal or commercial products?",
+      answer:
+        "Absolutely. Many parents turn them into calendars, photo books, mugs, or social media posts. Your AI portraits come in high resolution, perfect for both digital and print uses.",
     },
     {
       question: "How secure is the payment process?",
       answer:
-        "We partner with Stripe, a reputable payment provider that uses bank-level encryption. We never store your card details on our servers."
+        "We use Stripe, a trusted payment provider with industry-leading security protocols. Your card details never touch our servers.",
     },
-    {
-      question: "Which payment methods do you accept?",
-      answer:
-        "We accept major credit or debit cards (Visa, MasterCard, AmEx), as well as certain regional payment methods like iDeal or Bancontact. We do not currently accept PayPal or cryptocurrency."
-    },
-    {
-      question: "Can I delete the AI photos or my child's uploaded pictures afterward?",
-      answer:
-        "Absolutely. You can remove individual uploads at any time, and we permanently delete them from our servers. If you have any concerns, just let us know."
-    },
-    {
-      question: "Are these AI photos suitable for social media or professional use?",
-      answer:
-        "Yes! Many parents share them on personal Instagram feeds or even use them for family gifts. They’re high-resolution and perfect for both casual and professional settings."
-    }
   ];
 
   return (
-    <section  id={id} className="faq-section">
+    <section id={id} className="faq-section">
       <div className="faq-inner">
         <h2 className="section-title">Frequently Asked Questions</h2>
         <p className="section-subtitle">
-          Learn more about our AI-powered photoshoot process, child safety, and how
-          you can make the most of your final images.
+          Learn more about our AI-powered photoshoot process, child safety, and
+          how you can make the most of your final images.
         </p>
 
         <div className="faqs-container">

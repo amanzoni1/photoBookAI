@@ -36,7 +36,7 @@
 }
 
 body:not(.logged-in) .logo-text {
-  color: #0b2430;
+  color: #444;
 }
 
 body.logged-in .logo-text {

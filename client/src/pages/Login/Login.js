@@ -1,39 +1,39 @@
 // client/src/pages/Login/Login.js
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { FcGoogle } from 'react-icons/fc';
-import { BsFacebook } from 'react-icons/bs';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
-import Background from '../Background/Background';
-import './Login.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { FcGoogle } from "react-icons/fc";
+import { BsFacebook } from "react-icons/bs";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
   const { login, socialLogin, handleAuthCallback } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errorMessage, setErrorMessage] = useState('');
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (handleAuthCallback()) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [handleAuthCallback, navigate]);
 
-  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = async e => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
+    setErrorMessage("");
     setIsLoading(true);
     try {
       await login(formData);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err) {
-      setErrorMessage(err.message || 'Login failed');
+      setErrorMessage(err.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +45,6 @@ function Login() {
 
   return (
     <div>
-      {/* <Background /> */}
       <div className="login-container">
         <h1>Login</h1>
         {errorMessage && <p className="error-message">{errorMessage}</p>}
@@ -90,7 +89,7 @@ function Login() {
           </div>
 
           <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? "Logging in..." : "Login"}
           </button>
 
           <div className="signup-link">
@@ -103,13 +102,19 @@ function Login() {
         </div>
 
         <div className="social-login">
-          <button onClick={handleSocialLogin('google')} className="social-btn google" disabled={isLoading}>
+          <button
+            onClick={handleSocialLogin("google")}
+            className="social-btn google"
+            disabled={isLoading}
+          >
             <FcGoogle /> Google
           </button>
-          {/* <button onClick={handleSocialLogin('apple')} className="social-btn apple" disabled={isLoading}>
-          <AiFillApple /> Apple
-        </button> */}
-          <button onClick={handleSocialLogin('facebook')} className="social-btn facebook" disabled={isLoading}>
+
+          <button
+            onClick={handleSocialLogin("facebook")}
+            className="social-btn facebook"
+            disabled={isLoading}
+          >
             <BsFacebook /> Facebook
           </button>
         </div>

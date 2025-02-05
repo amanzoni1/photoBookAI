@@ -33,11 +33,6 @@ server/
 
 
 
--content landingpage
-economico, pratico/timing, sicuro,
-prompt ottimizzati per ricordo momenti da ricordare, possibilita di far calendari etc
-ps son tematici, ps da 20img, esempi di ps
--ui seo
 
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori
@@ -47,4 +42,4 @@ compleanno, documenti, giochi, profili, polaroid, cuori
 -model training piu efficente, creare img profilo
 -ricontrollare training che funzioni
 
-check finale
+check finale -ui seo

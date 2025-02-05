@@ -9,10 +9,7 @@
 body {
   background-color: #F9FAFB;
   color: #333;
-  /* font-family: 'Roboto', sans-serif; */
   font-family: 'DM Sans', sans-serif;
-  /* font-family: 'Plus Jakarta Sans', sans-serif; */
-  /* font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; */
   line-height: 1.4;
 }
 
@@ -37,19 +34,19 @@ body::after {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.5); 
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(50px);
   z-index: -1;
 }
 
 body.logged-in {
   background: linear-gradient(to bottom, #2e2e2e, #000000) !important;
-  color: #F9FAFB; 
+  color: #F9FAFB;
 }
 
 body.logged-in::before,
 body.logged-in::after {
-  content: none !important;  
+  content: none !important;
   background: none !important;
   backdrop-filter: none !important;
 }

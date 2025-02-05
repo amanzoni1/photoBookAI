@@ -59,7 +59,8 @@
   text-align: left;
 }
 
-.how-step:nth-child(2) {
+.how-step:nth-child(2),
+.how-step:nth-child(4) {
   width: 70%;
   margin-right: 0;
   text-align: right;

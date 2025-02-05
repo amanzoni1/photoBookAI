@@ -16,14 +16,14 @@ function HeroSection() {
       <div className="hero-inner">
         {/* Left column: text content */}
         <div className="hero-text">
-          <p className="hero-tagline">No Photographer Needed</p>
+          <p className="hero-tagline">Create Treasured Memories, Instantly</p>
           <h1 className="hero-title">
-            Professional Quality Photoshoots for Your Little Ones
+            Stunning Quality Photoshoots for Your Little Ones
           </h1>
           <h2 className="hero-subtitle">
             Get professional, share-worthy portraits in minutes. Skip the
-            scheduling, travel, and costs of a physical studio — our AI photo
-            generator does it all from your favorite device.
+            scheduling, travel, and costs of a physical studio. Our AI photo
+            generator does it all for you, safely, from home.
           </h2>
           <Link to="/login" className="cta-button">
             Get Started Now
