@@ -32,14 +32,31 @@ server/
 
 
 
-
+-ricontrollare training che funzioni
+-capire come settare cheap istance
+-capire flux vs flex pro e contro / best set up
+-model training piu efficente, creare img profilo
+-loop per decidere server
 
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori
 
--reindirizzamenti, anche dopo pagamenti ed errori, hardcoded stuff
 
--model training piu efficente, creare img profilo
--ricontrollare training che funzioni
+
+
+-reindirizzamenti, anche dopo pagamenti ed errori, hardcoded stuff
+gestire processo crediti e rimborso, anche cio che vedi in ui
+verificare training in progress rimane anche se logout
+in schermata stripe appare photosoot-ai e nn tiny memories
+
+---------
+  File "/Users/andreamanzoni/Desktop/code/babyPhotoAI/server/services/worker.py", line 487, in _process_training_job
+    email_service.send_training_complete(
+TypeError: EmailService.send_training_complete() missing 1 required positional argument: 'model_name'
+--------
+
+
+
+-per seo img in webp e descrizione in js
 
 check finale -ui seo

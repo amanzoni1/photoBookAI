@@ -302,8 +302,8 @@ class AIService:
             git submodule update --init --recursive && \
             python3 -m venv venv && \
             source venv/bin/activate && \
-            pip install torch && \
-            pip install -r requirements.txt
+            pip3 install torch && \
+            pip3 install -r requirements.txt
             """
             logger.info("Executing setup commands on the instance...")
             command_result = instance.execute_command_ssh(setup_commands)
@@ -447,6 +447,18 @@ class AIService:
 
         return updated
 
+    def safe_int(self, value: Any, default: int) -> int:
+        """
+        Attempts to convert the value to an integer.
+        Returns the default if value is None, an empty string, or cannot be converted.
+        """
+        if value in (None, ""):
+            return default
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return default
+
     def train_model(
         self, model_id: int, user_id: int, training_config: Dict
     ) -> Tuple[str, Dict[str, List[str]]]:
@@ -483,7 +495,7 @@ class AIService:
             model_name = f"model_{model_id}"
             update_config_cmd = f"""
             cd {self.remote_workspace} && \
-            sed -i 's/name: ".*"/name: "{model_name}"/' base_training.yaml
+            sed -i 's/name: ".*"/name: "{model_name}"/' base_training_new.yaml
             """
             instance.execute_command_ssh(update_config_cmd)
 
@@ -505,7 +517,7 @@ class AIService:
             cd {self.remote_workspace} && \
             source venv/bin/activate && \
             export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
-            python run.py base_training.yaml
+            python run.py base_training_new.yaml
             """
             result = instance.execute_command_ssh(train_cmd)
             logger.debug(f"Training command output: {result}")
@@ -531,8 +543,8 @@ class AIService:
             all_themes = self.config["PHOTOSHOOT_THEMES"]
 
             user_sex = training_config.get("sex", "M")
-            age_years = int(training_config.get("age_years", 4))
-            age_months = int(training_config.get("age_months", 0))
+            age_years = self.safe_int(training_config.get("age_years"), 4)
+            age_months = self.safe_int(training_config.get("age_months"), 0)
             user_age_years = age_years + (age_months / 12.0)
 
             for theme_name, theme_data in all_themes.items():
