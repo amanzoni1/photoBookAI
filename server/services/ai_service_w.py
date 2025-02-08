@@ -46,7 +46,7 @@ class LambdaInstance:
                 url=url,
                 headers=headers,
                 json=data,
-                timeout=30,
+                timeout=30,  # Add timeout
             )
             response.raise_for_status()
             return response.json()
@@ -291,25 +291,51 @@ class AIService:
         logger.error(error_msg)
         raise LambdaAPIException(error_msg)
 
-    def _pull_docker_image(self, instance: LambdaInstance):
-        """Pull the pre-built Docker image on the remote instance."""
+    def _setup_training_environment(self, instance: LambdaInstance):
+        """Setup training environment with the specified steps."""
         try:
-            logger.info(f"Pulling Docker image on instance {instance.instance_ip}")
-            pull_cmd = "docker pull amanzoni1/aitoolkit:arm64-latest"
-            result = instance.execute_command_ssh(pull_cmd)
-            logger.debug(f"Docker pull result: {result}")
+            # Commands to execute on the instance
+            setup_commands = f"""
+            cd {self.remote_base} && \
+            git clone https://github.com/amanzoni1/ai-toolkit.git && \
+            cd ai-toolkit && \
+            git submodule update --init --recursive && \
+            python3 -m venv venv && \
+            source venv/bin/activate && \
+            pip3 install torch && \
+            pip3 install -r requirements.txt
+            """
+            logger.info("Executing setup commands on the instance...")
+            command_result = instance.execute_command_ssh(setup_commands)
+            logger.debug(f"Setup command output: {command_result}")
+            logger.info("Environment setup completed successfully.")
+        except LambdaAPIException as e:
+            logger.error(f"Environment setup failed: {str(e)}")
+            raise
         except Exception as e:
-            logger.error(f"Failed to pull Docker image: {str(e)}")
+            logger.error(f"Environment setup failed: {str(e)}")
+            raise
+
+    def _setup_generation_environment(self, instance: LambdaInstance):
+        """Setup generation environment"""
+        try:
+            setup_commands = f"""
+            cd {self.remote_workspace} && \
+            source venv/bin/activate && \
+            pip install --no-cache-dir transformers accelerate peft diffusers safetensors
+            """
+
+            logger.info("Setting up generation environment...")
+            command_result = instance.execute_command_ssh(setup_commands)
+            logger.info("Generation environment setup completed")
+        except Exception as e:
+            logger.error(f"Generation environment setup failed: {str(e)}")
             raise
 
     def prepare_dataset(
         self, model_id: int, file_info: List[Dict]
     ) -> Tuple[Path, List[str]]:
-        """
-        Prepare dataset locally.
-        Return (local_dataset_path, list_of_files).
-        Same as your original logic.
-        """
+        """Prepare dataset with validation."""
         dataset_path = self.datasets_path / str(model_id)
         if dataset_path.exists():
             shutil.rmtree(dataset_path)
@@ -348,30 +374,27 @@ class AIService:
         theme_name: str,
         prompts: List[str],
     ) -> List[str]:
-        """Generate images for a theme in Docker container, referencing your original paths."""
+        """Generate images for a theme and return local paths"""
         try:
-            # Host folder where images will end up
+            # Setup output directory
             output_dir = f"{self.remote_base}/generated_images/{theme_name}"
             instance.execute_command_ssh(f"mkdir -p {output_dir}")
 
-            # We'll set environment variables inside the container for HF_TOKEN, PROMPTS, OUTPUT_DIR, MODEL_PATH
-            # then run `python generation/generate_batch.py`.
-            docker_generation_cmd = f"""
-            docker run --gpus all --rm \
-                -v {self.remote_workspace}:/app/ai-toolkit \
-                -v {self.remote_base}/generated_images:/app/ai-toolkit/generated_images \
-                --workdir /app/ai-toolkit \
-                -e HF_TOKEN='{self.config["HF_TOKEN"]}' \
-                -e PROMPTS='{json.dumps(prompts)}' \
-                -e OUTPUT_DIR='/app/ai-toolkit/generated_images/{theme_name}' \
-                -e MODEL_PATH='{model_path}' \
-                amanzoni1/aitoolkit:arm64-latest \
-                python generation/generate_batch.py
+            # Run generation using repository script
+            generation_cmd = f"""
+            cd {self.remote_workspace} && \
+            source venv/bin/activate && \
+            export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
+            export PROMPTS='{json.dumps(prompts)}' && \
+            export OUTPUT_DIR="{output_dir}" && \
+            export MODEL_PATH="{model_path}" && \
+            python generation/generate_batch.py
             """
-            logger.info(f"Running generation in Docker: {docker_generation_cmd}")
-            result = instance.execute_command_ssh(docker_generation_cmd)
 
-            if "Error" in result or "Exception" in result:
+            logger.info(f"Starting generation for theme: {theme_name}")
+            result = instance.execute_command_ssh(generation_cmd)
+
+            if "Error" in result:
                 logger.error(f"Generation output: {result}")
                 raise Exception(f"Generation failed for theme {theme_name}")
 
@@ -387,6 +410,9 @@ class AIService:
                 instance.download_file_scp(remote_path, str(local_path))
                 local_paths.append(str(local_path))
 
+            logger.info(
+                f"Successfully generated {len(local_paths)} images for {theme_name}"
+            )
             return local_paths
 
         except Exception as e:
@@ -411,10 +437,14 @@ class AIService:
             GENDER_NOUN = "girl"
             PRONOUN = "she"
 
+        # Convert float to integer for simpler display
         age_str = f"{int(user_age_years)} y.o."
+
+        # Perform all replacements
         updated = base_prompt.replace("{GENDER_NOUN}", GENDER_NOUN)
         updated = updated.replace("{PRONOUN}", PRONOUN)
         updated = updated.replace("{AGE}", age_str)
+
         return updated
 
     def safe_int(self, value: Any, default: int) -> int:
@@ -452,61 +482,64 @@ class AIService:
                 dataset_future = executor.submit(
                     self.prepare_dataset, model_id, training_config["file_info"]
                 )
+
                 instance = instance_future.result()
                 dataset_path, _ = dataset_future.result()
 
-            # Pull Docker image
+            # Setup training environment first
             logger.info("Setting up training environment...")
-            self._pull_docker_image(instance)
+            self._setup_training_environment(instance)
+
+            # Update base_training.yaml with model info
+            logger.info("Updating training configuration")
+            model_name = f"model_{model_id}"
+            update_config_cmd = f"""
+            cd {self.remote_workspace} && \
+            sed -i 's/name: ".*"/name: "{model_name}"/' base_training_new.yaml
+            """
+            instance.execute_command_ssh(update_config_cmd)
 
             # Create dataset directory and upload dataset
             logger.info("Uploading dataset")
             remote_dataset_path = f"{self.remote_workspace}/dataset"
             instance.execute_command_ssh(f"mkdir -p {remote_dataset_path}")
+
+            # Upload dataset files
             dataset_files = list(dataset_path.glob("*"))
             for file_path in dataset_files:
                 instance.upload_file_scp(
                     str(file_path), f"{remote_dataset_path}/{file_path.name}"
                 )
 
-            # Update yaml with model name
-            logger.info("Updating training configuration")
-            model_name = f"model_{model_id}"
-            update_config_cmd = f"""
-            cd {self.remote_workspace} && \
-            sed -i 's/name: ".*"/name: "{model_name}"/' base_training_ARM.yaml
-            """
-            instance.execute_command_ssh(update_config_cmd)
-
             # Run training
             logger.info("Starting training")
-            docker_train_cmd = f"""
-            docker run --gpus all --rm \
-                -v {self.remote_workspace}:/app/ai-toolkit \
-                --workdir /app/ai-toolkit \
-                -e HF_TOKEN='{self.config["HF_TOKEN"]}' \
-                amanzoni1/aitoolkit:arm64-latest \
-                python run.py base_training_ARM.yaml
+            train_cmd = f"""
+            cd {self.remote_workspace} && \
+            source venv/bin/activate && \
+            export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
+            python run.py base_training_new.yaml
             """
-            train_result = instance.execute_command_ssh(docker_train_cmd)
-            logger.debug(f"Training command output: {train_result}")
+            result = instance.execute_command_ssh(train_cmd)
+            logger.debug(f"Training command output: {result}")
 
-            if "Error" in train_result or "Exception" in train_result:
+            # Check for training success
+            if "Error" in result or "Exception" in result:
                 log_result = instance.execute_command_ssh(
                     f"cat {self.remote_workspace}/training.log"
                 )
                 raise Exception(f"Training failed with log:\n{log_result}")
 
-            # Download .safetensors
+            # Get model path
             remote_model_path = (
                 f"{self.remote_workspace}/output/{model_name}/{model_name}.safetensors"
             )
-            temp_weights_path = self.base_path / f"{model_name}.safetensors"
-            logger.info(f"Downloading trained weights from {remote_model_path}")
-            instance.download_file_scp(remote_model_path, str(temp_weights_path))
+
+            # Then setup generation environment
+            logger.info("Setting up generation environment...")
+            self._setup_generation_environment(instance)
 
             # Generate photobooks for each theme
-            logger.info("Generating photobooks")
+            logger.info("Generating initial photobooks")
             all_themes = self.config["PHOTOSHOOT_THEMES"]
 
             user_sex = training_config.get("sex", "M")
@@ -531,18 +564,21 @@ class AIService:
 
                 try:
                     logger.info(f"Generating images for theme: {theme_name}")
-                    prompt_items = theme_data["prompts"]
-                    expanded_prompts: List[str] = []
 
+                    prompt_items = theme_data["prompts"]
+
+                    expanded_prompts: List[str] = []
                     for item in prompt_items:
                         base_prompt = item["prompt"]
                         how_many = item["count"]
+
                         for _ in range(how_many):
                             final_prompt = self.adapt_prompt(
                                 base_prompt, user_sex, user_age_years
                             )
                             expanded_prompts.append(final_prompt)
 
+                    # Now pass expanded_prompts to your generate function
                     image_paths = self.generate_theme_images(
                         instance=instance,
                         model_path=remote_model_path,
@@ -556,8 +592,14 @@ class AIService:
                         f"Failed to generate theme {theme_name}: {str(e)}",
                         exc_info=True,
                     )
+                    # Skip this theme, continue with next
                     theme_images[theme_name] = []
                     continue
+
+            # Download weights file
+            logger.info("Downloading trained weights")
+            temp_weights_path = self.base_path / f"{model_name}.safetensors"
+            instance.download_file_scp(remote_model_path, str(temp_weights_path))
 
             return str(temp_weights_path), theme_images
 
@@ -576,11 +618,79 @@ class AIService:
                         json={"instance_ids": [instance.instance_id]},
                     )
                     response.raise_for_status()
-                except Exception as ex:
-                    logger.error(f"Failed to terminate instance: {str(ex)}")
+                except Exception as e:
+                    logger.error(f"Failed to terminate instance: {str(e)}")
 
             if dataset_path and dataset_path.exists():
                 try:
                     shutil.rmtree(dataset_path)
-                except Exception as ex:
-                    logger.error(f"Cleanup error: {str(ex)}")
+                except Exception as e:
+                    logger.error(f"Cleanup error: {str(e)}")
+
+    # def generate_images(self, model_id: int, user_id: int, model_path: str, prompts: List[str]) -> List[str]:
+    #     """Generate images using provided model."""
+    #     instance = None
+    #     generation_dir = self.base_path / f"generation_{model_id}"
+    #     temp_paths = []
+
+    #     try:
+    #         logger.info(f"Starting image generation for model {model_id}")
+
+    #         # Create temporary generation directory
+    #         if generation_dir.exists():
+    #             shutil.rmtree(generation_dir)
+    #         generation_dir.mkdir(parents=True)
+
+    #         # Launch instance and setup
+    #         instance = self.launch_instance()
+    #         self._setup_generation_environment(instance)
+
+    #         # Upload model weights
+    #         logger.info("Uploading model weights")
+    #         remote_model_path = f"{self.remote_base}/model.safetensors"
+    #         instance.upload_file_scp(model_path, remote_model_path)
+
+    #         # Generate images
+    #         for idx, prompt in enumerate(prompts):
+    #             output_path = f"{self.remote_base}/output/gen_{idx:03d}.png"
+
+    #             # Run generation
+    #             logger.info(f"Generating image {idx + 1}/{len(prompts)}")
+    #             generation_cmd = f"""
+    #             cd {self.remote_base} && \
+    #             source venv/bin/activate && \
+    #             export HF_TOKEN='{self.config["HF_TOKEN"]}' && \
+    #             export PROMPT="{prompt}" && \
+    #             export OUTPUT_PATH="{output_path}" && \
+    #             python generate.py
+    #             """
+
+    #             result = instance.execute_command_ssh(generation_cmd)
+
+    #             if "Error" in result or "Exception" in result:
+    #                 raise Exception(f"Generation failed: {result}")
+
+    #             # Download generated image
+    #             local_path = generation_dir / f"gen_{idx:03d}.png"
+    #             instance.download_file_scp(output_path, str(local_path))
+    #             temp_paths.append(str(local_path))
+
+    #         return temp_paths
+
+    #     except Exception as e:
+    #         logger.error(f"Generation error for model {model_id}: {str(e)}")
+    #         raise
+
+    #     finally:
+    #         # Cleanup instance
+    #         if instance:
+    #             try:
+    #                 logger.info("Terminating instance")
+    #                 response = requests.post(
+    #                     f"{self.base_url}/instance-operations/terminate",
+    #                     headers={'Authorization': f'Bearer {self.api_key}'},
+    #                     json={'instance_ids': [instance.instance_id]}
+    #                 )
+    #                 response.raise_for_status()
+    #             except Exception as e:
+    #                 logger.error(f"Failed to terminate instance: {str(e)}")

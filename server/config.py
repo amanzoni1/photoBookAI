@@ -77,8 +77,8 @@ class Config:
         "us-east-2",
         "us-midwest-1",
     ]
-    LAMBDA_INSTANCE_TYPES = ["gpu_1x_h100_pcie", "gpu_1x_h100_sxm5", "gpu_1x_a100_sxm4"]
-    # "gpu_1x_gh200" "gpu_1x_h100_pcie", "gpu_1x_h100_sxm5"
+    LAMBDA_INSTANCE_TYPES = ["gpu_1x_gh200"]
+    # "gpu_1x_gh200" ["gpu_1x_h100_pcie", "gpu_1x_h100_sxm5", "gpu_1x_a100_sxm4"]
 
     # AI Training settings
     HF_TOKEN = os.environ.get("HF_TOKEN")
@@ -280,7 +280,7 @@ class Config:
             ],
         },
         "reading": {
-            "gender": "F",
+            "gender": "U",
             "age_min": 2,
             "age_max": 18,
             "description": "Adorable reading-themed photoshoot, showcasing a love of books and imagination.",
@@ -308,7 +308,7 @@ class Config:
             ],
         },
         "school": {
-            "gender": "U",
+            "gender": "M",
             "age_min": 2,
             "age_max": 18,
             "description": "Cheerful school-themed photoshoot capturing the excitement of learning.",

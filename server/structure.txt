@@ -12,6 +12,7 @@ server/
 │   ├── payments.py
 │   ├── job.py
 ├── services/
+│   ├── templates/
 │   ├── __init__.py
 │   ├── ai_service.py
 │   ├── auth.py
@@ -34,9 +35,10 @@ server/
 
 -ricontrollare training che funzioni
 -capire come settare cheap istance
--capire flux vs flex pro e contro / best set up
--model training piu efficente, creare img profilo
+-model training piu efficente / docker / upload imgs   //////cambio in yaml need new docker??
 -loop per decidere server
+-capire flux vs flex pro e contro / best set up
+-creare img profilo
 
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori
