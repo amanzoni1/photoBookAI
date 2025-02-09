@@ -35,10 +35,10 @@ server/
 
 -ricontrollare training che funzioni
 -capire come settare cheap istance
--model training piu efficente / docker / upload imgs   //////cambio in yaml need new docker??
 -loop per decidere server
 -capire flux vs flex pro e contro / best set up
 -creare img profilo
+-model training piu efficente / docker / upload imgs   //////cambio in yaml need new docker??
 
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori
@@ -56,8 +56,12 @@ in schermata stripe appare photosoot-ai e nn tiny memories
     email_service.send_training_complete(
 TypeError: EmailService.send_training_complete() missing 1 required positional argument: 'model_name'
 --------
+ERROR:services.monitoring:Stats update error: Working outside of application context.
 
-
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+--------
 
 -per seo img in webp e descrizione in js
 

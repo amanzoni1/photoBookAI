@@ -1,13 +1,13 @@
 // LeftMenu.js
 
-import React, { useState, useEffect } from 'react';
-import './LeftMenu.css';
-import CreationForm from './CreationForm';
-import ModelForm from './ModelForm';
-import modelPlaceholder from './images/bab.png';
-import { useModel } from '../../../hooks/useModel';
-import { useCredits } from '../../../contexts/CreditsContext';
-import BuyCreditsModal from '../../BuyCreditsModal/BuyCreditsModal';
+import React, { useState, useEffect } from "react";
+import "./LeftMenu.css";
+import CreationForm from "./CreationForm";
+import ModelForm from "./ModelForm";
+import modelPlaceholder from "./images/bab.png";
+import { useModel } from "../../../hooks/useModel";
+import { useCredits } from "../../../contexts/CreditsContext";
+import BuyCreditsModal from "../../BuyCreditsModal/BuyCreditsModal";
 
 function LeftMenu() {
   const [showModelForm, setShowModelForm] = useState(false);
@@ -20,7 +20,7 @@ function LeftMenu() {
     checkModelStatus,
     fetchModels,
     loading: modelLoading,
-    error: modelError
+    error: modelError,
   } = useModel();
 
   const { credits } = useCredits();
@@ -49,7 +49,7 @@ function LeftMenu() {
       id: trainingInfo.modelId,
       name: modelName,
       isTraining: true,
-      jobId: trainingInfo.jobId
+      jobId: trainingInfo.jobId,
     };
     setCurrentTrainingModel(newModel);
 
@@ -58,20 +58,20 @@ function LeftMenu() {
       try {
         const status = await checkModelStatus(trainingInfo.modelId);
 
-        if (status.status === 'COMPLETED') {
+        if (status.status === "COMPLETED") {
           clearInterval(pollInterval);
-          setModels(prevModels => [
+          setModels((prevModels) => [
             { ...newModel, isTraining: false, ...status },
-            ...prevModels
+            ...prevModels,
           ]);
           setCurrentTrainingModel(null);
-        } else if (status.status === 'FAILED') {
+        } else if (status.status === "FAILED") {
           clearInterval(pollInterval);
           setCurrentTrainingModel(null);
-          alert(`Training failed: ${status.error_message || 'Unknown error'}`);
+          alert(`Training failed: ${status.error_message || "Unknown error"}`);
         }
       } catch (error) {
-        console.error('Error checking training status:', error);
+        console.error("Error checking training status:", error);
         clearInterval(pollInterval);
         setCurrentTrainingModel(null);
       }
@@ -96,12 +96,12 @@ function LeftMenu() {
     const loadUserModels = async () => {
       try {
         let fetchedModels = await fetchModels();
-        fetchedModels = fetchedModels.filter(m => m.status === 'COMPLETED');
-        // Example: only show the first 3 (??) 
-        fetchedModels = fetchedModels.slice(0, 3);
+        fetchedModels = fetchedModels.filter((m) => m.status === "COMPLETED");
+        // Example: only show the first 3 (??)
+        fetchedModels = fetchedModels.slice(0, 5);
         setModels(fetchedModels);
       } catch (err) {
-        console.error('Error fetching models:', err);
+        console.error("Error fetching models:", err);
       }
     };
     loadUserModels();
@@ -123,7 +123,10 @@ function LeftMenu() {
         <>
           {/* Show the "training in progress" placeholder */}
           {currentTrainingModel && (
-            <div key={currentTrainingModel.id} className="model-box training-model">
+            <div
+              key={currentTrainingModel.id}
+              className="model-box training-model"
+            >
               <div className="loading-indicator">
                 <div className="spinner"></div>
                 <p>Training in progress...</p>
@@ -132,7 +135,7 @@ function LeftMenu() {
           )}
 
           {/* Existing completed models */}
-          {models.map(model => (
+          {models.map((model) => (
             <div
               key={model.id}
               className="model-box"
@@ -147,12 +150,15 @@ function LeftMenu() {
 
           {/* Create Model button */}
           <button
-            className={`create-button ${!hasModels ? 'margin-top-10' : 'margin-top-auto'}`}
+            className={`create-button ${
+              !hasModels ? "margin-top-10" : "margin-top-auto"
+            }`}
             onClick={handleCreateModelClick}
           >
             <span className="button-icon">
               <svg
-                width="35" height="35"
+                width="35"
+                height="35"
                 viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -200,10 +206,7 @@ function LeftMenu() {
           <button className="close-button" onClick={handleCloseModelForm}>
             ×
           </button>
-          <ModelForm
-            model={selectedModel}
-            onClose={handleCloseModelForm}
-          />
+          <ModelForm model={selectedModel} onClose={handleCloseModelForm} />
         </div>
       )}
 
