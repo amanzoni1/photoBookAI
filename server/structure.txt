@@ -35,18 +35,18 @@ server/
 
 -ricontrollare training che funzioni
 -capire come settare cheap istance
--loop per decidere server
--capire flux vs flex pro e contro / best set up
--creare img profilo
 -model training piu efficente / docker / upload imgs   //////cambio in yaml need new docker??
+-loop per decidere server
 
+-capire flux vs flex pro e contro / best set up
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori
 
 
 
-
--reindirizzamenti, anche dopo pagamenti ed errori, hardcoded stuff
+-creare img profilo
+-reindirizzamenti, anche dopo pagamenti ed errori
+-refresh dopo azioni per crediti aggiornati ui
 gestire processo crediti e rimborso, anche cio che vedi in ui
 verificare training in progress rimane anche se logout
 in schermata stripe appare photosoot-ai e nn tiny memories
@@ -62,7 +62,13 @@ This typically means that you attempted to use functionality that needed
 the current application. To solve this, set up an application context
 with app.app_context(). See the documentation for more information.
 --------
+ERROR:services.worker:Training error: SSH command failed: Warning: Permanently added '192.222.56.78' (ED25519) to the list of known hosts.
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post "http://%2Fvar%2Frun%2Fdocker.sock/v1.47/images/create?fromImage=amanzoni1%2Faitoolkit&tag=multi-instance": dial unix /var/run/docker.sock: connect: permission denied
+------------
 
+
+
+-hardcoded stuff
 -per seo img in webp e descrizione in js
 
 check finale -ui seo
