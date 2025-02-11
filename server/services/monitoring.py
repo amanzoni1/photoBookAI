@@ -4,6 +4,7 @@ import logging
 from typing import Dict, Any
 from datetime import datetime, timedelta
 from collections import defaultdict
+from flask import Flask
 
 from models import TrainedModel, StorageLocation
 from app import db
@@ -12,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class StorageMonitor:
-    def __init__(self, storage_service):
+    def __init__(self, storage_service, app: Flask):
         self.storage_service = storage_service
+        self.app = app
 
         # Set up scheduled tasks
         import schedule
@@ -42,43 +44,47 @@ class StorageMonitor:
 
     def daily_cleanup(self):
         """Clean up old or unused files"""
-        try:
-            # Find unused models (e.g., not used in 30 days)
-            threshold = datetime.utcnow() - timedelta(days=30)
-            unused_models = TrainedModel.query.filter(
-                TrainedModel.last_used < threshold
-            ).all()
+        with self.app.app_context():
+            try:
+                # Find unused models (e.g., not used in 30 days)
+                threshold = datetime.utcnow() - timedelta(days=30)
+                unused_models = TrainedModel.query.filter(
+                    TrainedModel.last_used < threshold
+                ).all()
 
-            for model in unused_models:
-                try:
-                    # Delete from storage
-                    self.storage_service.delete_file(model.storage_location)
-                    # Delete from database
-                    db.session.delete(model)
-                except Exception as e:
-                    logger.error(f"Error cleaning up model {model.id}: {str(e)}")
+                for model in unused_models:
+                    try:
+                        # Delete from storage
+                        self.storage_service.delete_file(model.storage_location)
+                        # Delete from database
+                        db.session.delete(model)
+                    except Exception as e:
+                        logger.error(f"Error cleaning up model {model.id}: {str(e)}")
 
-            db.session.commit()
+                db.session.commit()
 
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Cleanup error: {str(e)}")
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Cleanup error: {str(e)}")
 
     def update_usage_stats(self):
         """Update storage usage statistics"""
-        try:
-            stats = defaultdict(int)
+        with self.app.app_context():
+            try:
+                stats = defaultdict(int)
 
-            # Calculate storage usage by type
-            for location in StorageLocation.query.all():
-                try:
-                    size = self.storage_service.get_file_size(location)
-                    stats[location.storage_type] += size
-                except Exception as e:
-                    logger.error(f"Error getting file size for {location.id}: {str(e)}")
+                # Calculate storage usage by type
+                for location in StorageLocation.query.all():
+                    try:
+                        size = self.storage_service.get_file_size(location)
+                        stats[location.storage_type] += size
+                    except Exception as e:
+                        logger.error(
+                            f"Error getting file size for {location.id}: {str(e)}"
+                        )
 
-            # Store stats (implement your storage method)
-            logger.info(f"Storage stats updated: {dict(stats)}")
+                # Store stats (implement your storage method)
+                logger.info(f"Storage stats updated: {dict(stats)}")
 
-        except Exception as e:
-            logger.error(f"Stats update error: {str(e)}")
+            except Exception as e:
+                logger.error(f"Stats update error: {str(e)}")

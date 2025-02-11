@@ -8,13 +8,16 @@ import jinja2
 
 logger = logging.getLogger(__name__)
 
+
 class EmailException(Exception):
     """Custom exception for email-related errors."""
+
     pass
+
 
 class EmailService:
     """
-    Provides functionality to send emails using Resend. 
+    Provides functionality to send emails using Resend.
     Uses Jinja2 templates located in EMAIL_TEMPLATES_DIR.
     """
 
@@ -29,19 +32,23 @@ class EmailService:
           - FRONTEND_URL: Base URL for links in emails
         """
         self.config = config
-        self.api_key = config.get('RESEND_API_KEY')
-        self.from_email = config.get('EMAIL_FROM', 'noreply@example.com')
-        self.frontend_url = config.get('FRONTEND_URL', 'http://localhost:3001')
-        self.templates_dir = Path(config.get('EMAIL_TEMPLATES_DIR', 'services/templates/email'))
+        self.api_key = config.get("RESEND_API_KEY")
+        self.from_email = config.get("EMAIL_FROM", "noreply@example.com")
+        self.frontend_url = config.get("FRONTEND_URL", "http://localhost:3001")
+        self.templates_dir = Path(
+            config.get("EMAIL_TEMPLATES_DIR", "services/templates/email")
+        )
 
         if not self.api_key:
-            logger.warning("No RESEND_API_KEY found in config. Emails will fail unless provided.")
+            logger.warning(
+                "No RESEND_API_KEY found in config. Emails will fail unless provided."
+            )
         resend.api_key = self.api_key  # Initialize Resend client
 
         # Initialize Jinja2 environment for HTML templates
         self.template_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(str(self.templates_dir)),
-            autoescape=jinja2.select_autoescape(['html', 'xml'])
+            autoescape=jinja2.select_autoescape(["html", "xml"]),
         )
 
     def _render_template(self, template_name: str, context: Dict[str, Any]) -> str:
@@ -63,7 +70,9 @@ class EmailService:
 
         except jinja2.TemplateError as e:
             logger.error(f"Jinja2 template rendering failed: {str(e)}")
-            raise EmailException(f"Failed to render template '{template_name}': {str(e)}")
+            raise EmailException(
+                f"Failed to render template '{template_name}': {str(e)}"
+            )
 
     def send_email(
         self,
@@ -72,7 +81,7 @@ class EmailService:
         template_name: str,
         context: Dict[str, Any],
         cc: Optional[List[str]] = None,
-        reply_to: Optional[str] = None
+        reply_to: Optional[str] = None,
     ) -> bool:
         """
         Send an email using Resend with an HTML template.
@@ -97,22 +106,24 @@ class EmailService:
 
             # Build payload for Resend
             params = {
-                'from': self.from_email,
-                'to': to_email,
-                'subject': subject,
-                'html': html_content,
+                "from": self.from_email,
+                "to": to_email,
+                "subject": subject,
+                "html": html_content,
             }
             if cc:
-                params['cc'] = cc
+                params["cc"] = cc
             if reply_to:
-                params['reply_to'] = reply_to
+                params["reply_to"] = reply_to
 
             logger.debug(f"Sending email via Resend with params: {params}")
             response = resend.Emails.send(params)
             logger.debug(f"Resend API response: {response}")
 
-            if response and response.get('id'):
-                logger.info(f"Email sent successfully to {to_email} (Resend ID: {response['id']}).")
+            if response and response.get("id"):
+                logger.info(
+                    f"Email sent successfully to {to_email} (Resend ID: {response['id']})."
+                )
                 return True
             else:
                 msg = f"No email ID returned from Resend. Full response: {response}"
@@ -127,15 +138,12 @@ class EmailService:
         """
         Send a welcome email to a new user.
         """
-        context = {
-            'user_name': user_name,
-            'login_url': f"{self.frontend_url}/login"
-        }
+        context = {"user_name": user_name, "login_url": f"{self.frontend_url}/login"}
         return self.send_email(
             to_email=user_email,
             subject="Welcome to AI Training Platform",
             template_name="welcome",
-            context=context
+            context=context,
         )
 
     def send_purchase_confirmation(
@@ -145,53 +153,46 @@ class EmailService:
         product_name: str,
         product_id: str,
         amount: float,
-        credits: Dict[str, Dict[str, Any]]
+        credits: Dict[str, Dict[str, Any]],
     ) -> bool:
         """
         Send a purchase confirmation email with product/credit details.
         """
         context = {
-            'user_name': user_name,
-            'product_name': product_name,
-            'product_id': product_id,
-            'amount': amount,  # in cents
-            'amount_usd': f"${amount / 100:.2f}",
-            'credits': credits,
-            'dashboard_url': f"{self.frontend_url}/dashboard"
+            "user_name": user_name,
+            "product_name": product_name,
+            "product_id": product_id,
+            "amount": amount,  # in cents
+            "amount_usd": f"${amount / 100:.2f}",
+            "credits": credits,
+            "dashboard_url": f"{self.frontend_url}/dashboard",
         }
 
         return self.send_email(
             to_email=user_email,
             subject="Your Purchase Confirmation",
             template_name="purchase_confirmation",
-            context=context
+            context=context,
         )
 
     def send_training_complete(
-        self,
-        user_email: str,
-        user_name: str,
-        model_name: str,
-        success: bool = True
+        self, user_email: str, user_name: str, model_name: str, success: bool = True
     ) -> bool:
         """
         Send training completion notification.
-        Currently, the template doesn't show model_name or time, so it's optional.
         """
         template = "training_complete" if success else "training_failed"
 
         context = {
-            'user_name': user_name,
-            'model_url': f"{self.config['FRONTEND_URL']}/models/{model_name}"  
+            "user_name": user_name,
+            "dashboard_url": f"{self.frontend_url}/dashboard",
         }
 
-        subject = "Training Complete!"
-        if not success:
-            subject = "Training Failed"
+        subject = "Training Complete!" if success else "Training Failed"
 
         return self.send_email(
             to_email=user_email,
             subject=subject,
             template_name=template,
-            context=context
+            context=context,
         )

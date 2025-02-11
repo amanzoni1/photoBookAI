@@ -102,6 +102,8 @@ class LambdaInstance:
                 ssh_key,
                 "-o",
                 "StrictHostKeyChecking=no",
+                "-o",
+                "UserKnownHostsFile=/dev/null",
                 f"ubuntu@{instance_ip}:{remote_path}",
                 local_path,
             ]
@@ -123,6 +125,8 @@ class LambdaInstance:
                 ssh_key,
                 "-o",
                 "StrictHostKeyChecking=no",
+                "-o",
+                "UserKnownHostsFile=/dev/null",
                 f"ubuntu@{instance_ip}",
                 command,
             ]
@@ -513,7 +517,7 @@ class AIService:
             PRONOUN = "she"
 
         # Convert float to integer for simpler display
-        age_str = f"{int(user_age_years)} y.o."
+        age_str = f"{user_age_years:.2f} y.o."
 
         # Perform all replacements
         updated = base_prompt.replace("{GENDER_NOUN}", GENDER_NOUN)
