@@ -77,8 +77,7 @@ class Config:
         "us-east-2",
         "us-midwest-1",
     ]
-    LAMBDA_INSTANCE_TYPES = ["gpu_1x_gh200"]
-    # "gpu_1x_gh200" ["gpu_1x_h100_pcie", "gpu_1x_h100_sxm5", "gpu_1x_a100_sxm4"]
+    LAMBDA_INSTANCE_TYPES = ["gpu_1x_gh200", "gpu_1x_h100_pcie", "gpu_1x_h100_sxm5"]
 
     # AI Training settings
     HF_TOKEN = os.environ.get("HF_TOKEN")
