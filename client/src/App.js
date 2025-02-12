@@ -9,6 +9,8 @@ import LandingPage from "./pages/LandingPage/LandingPage";
 import Signup from "./pages/Signup/Signup";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import PaymentSuccess from "./pages/PaymentSuccess/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel/PaymentCancel";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +57,8 @@ function AppContent() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />
           }
         />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
       </Routes>
     </>
   );
