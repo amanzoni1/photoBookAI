@@ -12,9 +12,10 @@ from queue import Queue
 
 from flask import Flask
 from app import db
-from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook
+from models import JobStatus, TrainedModel, GeneratedImage, PhotoBook, User, CreditType
 from .queue import JobQueue
 from .ai_service import AIService
+from .credits import CreditService
 
 logger = logging.getLogger(__name__)
 
@@ -518,6 +519,20 @@ class WorkerService:
             self.job_queue.update_job_status(
                 job_id, JobStatus.FAILED, {"error": str(e)}
             )
+
+            # Refund credits if the job has reached maximum retries
+            job_data = self.job_queue.get_job_status(job_id)
+            retries = job_data.get("retries", 0) if job_data else 0
+            if retries >= self.max_retries:
+                credit_service = CreditService(self.config)
+                user = User.query.get(job["user_id"])
+                if user and credit_service:
+                    logger.info(
+                        f"Refunding MODEL credit for user {user.id} due to failed training job."
+                    )
+                    credit_service.refund_credits(user, CreditType.MODEL, amount=1)
+
+            raise
 
         finally:
             # 6) Cleanup local directories
