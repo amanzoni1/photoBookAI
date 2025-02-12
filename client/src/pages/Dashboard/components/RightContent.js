@@ -32,6 +32,7 @@ function RightContent({ photobooks, onPhotobooksUpdate }) {
     setShowDeleteModal(true);
   };
 
+  // Load models once on mount
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -71,6 +72,8 @@ function RightContent({ photobooks, onPhotobooksUpdate }) {
     }
   }, [photobooks, fetchPhotobookImages]);
 
+  // Delete handler: if deleting an image, update local state;
+  // if deleting an entire photobook, trigger a refresh via onPhotobooksUpdate.
   const handleDelete = async () => {
     try {
       if (deleteType === "image") {

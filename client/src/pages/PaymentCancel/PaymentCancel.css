@@ -1,0 +1,28 @@
+/* PaymentCancel.css */
+
+.payment-page {
+    min-height: 100vh;
+    padding: 2rem;
+    text-align: center;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.payment-page button {
+    padding: 1rem 2rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #444;
+    color: #fff;
+    transition: background 0.3s;
+}
+
+.payment-page button:hover {
+    background-color: #666;
+}

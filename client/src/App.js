@@ -11,6 +11,9 @@ import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import PaymentSuccess from "./pages/PaymentSuccess/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel/PaymentCancel";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword/ResetPassword";
+import ContactUs from "./pages/ContactUs/ContactUs";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -57,6 +60,9 @@ function AppContent() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
       </Routes>

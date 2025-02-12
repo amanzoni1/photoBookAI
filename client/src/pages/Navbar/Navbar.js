@@ -39,9 +39,11 @@ function Navbar({ isAuthenticated, onLogout }) {
     }
   };
 
-  // Hide all links/buttons when on Login or Signup pages
+  // Hide all links/buttons when not LandingPage
   const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/signup";
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/forgot-password";
 
   return (
     <nav className="navbar">
@@ -70,6 +72,9 @@ function Navbar({ isAuthenticated, onLogout }) {
                 <Link to="/" onClick={() => handleSmoothScroll("faq-section")}>
                   FAQ
                 </Link>
+              </li>
+              <li>
+                <Link to="/contact-us">Contact</Link>
               </li>
             </ul>
           )}
