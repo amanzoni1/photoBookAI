@@ -1,23 +1,26 @@
-// client/src/pages/Dashboard/Dashboard.js
+// Dashboard.js
 
-import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axiosConfig';
-import './Dashboard.css';
-import LeftMenu from './components/LeftMenu';
-import RightContent from './components/RightContent';
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "../../utils/axiosConfig";
+import LeftMenu from "./components/LeftMenu";
+import RightContent from "./components/RightContent";
+import { usePhotoshoot } from "../../hooks/usePhotoshoot";
+import "./Dashboard.css";
 
 function Dashboard() {
+  const { fetchAllPhotobooks } = usePhotoshoot();
   const [user, setUser] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [photobooks, setPhotobooks] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('/api/user/profile');
+        const res = await axios.get("/api/user/profile");
         setUser(res.data.user);
       } catch (err) {
         console.error(err.response?.data);
-        setErrorMessage(err.response?.data?.message || 'An error occurred');
+        setErrorMessage(err.response?.data?.message || "An error occurred");
       }
     };
 
@@ -25,12 +28,24 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    document.body.classList.add('logged-in');
+    document.body.classList.add("logged-in");
     return () => {
-      document.body.classList.remove('logged-in');
+      document.body.classList.remove("logged-in");
     };
   }, []);
 
+  const loadPhotobooks = useCallback(async () => {
+    try {
+      const books = await fetchAllPhotobooks();
+      setPhotobooks(books);
+    } catch (err) {
+      console.error("Error loading photobooks:", err);
+    }
+  }, [fetchAllPhotobooks]);
+
+  useEffect(() => {
+    loadPhotobooks();
+  }, [loadPhotobooks]);
 
   if (errorMessage) {
     return <p className="error-message">{errorMessage}</p>;
@@ -42,8 +57,11 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <LeftMenu />
-      <RightContent />
+      <LeftMenu onPhotobooksUpdate={loadPhotobooks} photobooks={photobooks} />
+      <RightContent
+        photobooks={photobooks}
+        onPhotobooksUpdate={loadPhotobooks}
+      />
     </div>
   );
 }

@@ -1,24 +1,23 @@
 // client/src/pages/PaymentSuccess.js
 
 import React, { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useCredits } from "../../contexts/CreditsContext";
+import { useNavigate } from "react-router-dom";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { refreshCredits } = useCredits();
 
   useEffect(() => {
-    // You can parse the query parameters if you need to verify the session.
-    const searchParams = new URLSearchParams(location.search);
-    const sessionId = searchParams.get("session_id");
-    // Optionally: call your API to verify the session using sessionId
+    // Refresh the user's credits so that any changes from the webhook are reflected.
+    refreshCredits();
 
     // Auto-redirect to the dashboard after 5 seconds.
     const timer = setTimeout(() => {
       navigate("/dashboard");
     }, 5000);
     return () => clearTimeout(timer);
-  }, [location, navigate]);
+  }, [refreshCredits, navigate]);
 
   return (
     <div style={{ padding: "2rem", textAlign: "center" }}>

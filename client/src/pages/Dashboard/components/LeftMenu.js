@@ -1,29 +1,27 @@
 // LeftMenu.js
 
-import React, { useState, useEffect } from "react";
-import "./LeftMenu.css";
+import React, { useState, useEffect, useCallback } from "react";
 import CreationForm from "./CreationForm";
 import ModelForm from "./ModelForm";
 import modelPlaceholder from "./images/bab.png";
 import { useModel } from "../../../hooks/useModel";
 import { useCredits } from "../../../contexts/CreditsContext";
 import BuyCreditsModal from "../../BuyCreditsModal/BuyCreditsModal";
+import "./LeftMenu.css";
 
-function LeftMenu() {
+function LeftMenu({ onPhotobooksUpdate, photobooks }) {
   const [showModelForm, setShowModelForm] = useState(false);
   const [models, setModels] = useState([]);
   const [currentTrainingModel, setCurrentTrainingModel] = useState(null);
   const [selectedModel, setSelectedModel] = useState(null);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
-
+  const { credits, refreshCredits } = useCredits();
   const {
     checkModelStatus,
     fetchModels,
     loading: modelLoading,
     error: modelError,
   } = useModel();
-
-  const { credits } = useCredits();
 
   /**
    * Handle "Create New Model" button.
@@ -68,6 +66,7 @@ function LeftMenu() {
         } else if (status.status === "FAILED") {
           clearInterval(pollInterval);
           setCurrentTrainingModel(null);
+          await refreshCredits();
           alert(`Training failed: ${status.error_message || "Unknown error"}`);
         }
       } catch (error) {
@@ -92,20 +91,31 @@ function LeftMenu() {
   /**
    * Fetch user’s completed models on mount
    */
-  useEffect(() => {
-    const loadUserModels = async () => {
-      try {
-        let fetchedModels = await fetchModels();
-        fetchedModels = fetchedModels.filter((m) => m.status === "COMPLETED");
-        // Example: only show the first 3 (??)
-        fetchedModels = fetchedModels.slice(0, 5);
-        setModels(fetchedModels);
-      } catch (err) {
-        console.error("Error fetching models:", err);
+  const loadUserModels = useCallback(async () => {
+    try {
+      let fetchedModels = await fetchModels();
+      // Separate models by status:
+      const completedModels = fetchedModels.filter(
+        (m) => m.status === "COMPLETED"
+      );
+      const activeModels = fetchedModels.filter(
+        (m) => m.status === "PROCESSING"
+      );
+      setModels(completedModels.slice(0, 5));
+      // If an active (training) model exists, show it:
+      if (activeModels.length > 0) {
+        setCurrentTrainingModel(activeModels[0]);
+      } else {
+        setCurrentTrainingModel(null);
       }
-    };
-    loadUserModels();
+    } catch (err) {
+      console.error("Error fetching models:", err);
+    }
   }, [fetchModels]);
+
+  useEffect(() => {
+    loadUserModels();
+  }, [loadUserModels]);
 
   /**
    * Determine if user has any existing or training models
@@ -206,7 +216,11 @@ function LeftMenu() {
           <button className="close-button" onClick={handleCloseModelForm}>
             ×
           </button>
-          <ModelForm model={selectedModel} onClose={handleCloseModelForm} />
+          <ModelForm
+            model={selectedModel}
+            onClose={handleCloseModelForm}
+            onPhotobooksUpdate={onPhotobooksUpdate}
+          />
         </div>
       )}
 

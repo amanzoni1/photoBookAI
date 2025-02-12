@@ -6,10 +6,9 @@ import { useModel } from "../../../hooks/useModel";
 import { usePhotoshoot } from "../../../hooks/usePhotoshoot";
 import "./RightContent.css";
 
-function RightContent() {
+function RightContent({ photobooks, onPhotobooksUpdate }) {
   const { fetchModels } = useModel();
   const {
-    fetchAllPhotobooks,
     fetchPhotobookImages,
     deletePhotobook,
     deletePhotobookImage,
@@ -17,7 +16,6 @@ function RightContent() {
     error,
   } = usePhotoshoot();
   const [models, setModels] = useState([]);
-  const [photobooks, setPhotobooks] = useState([]);
   const [imagesByPhotobook, setImagesByPhotobook] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteType, setDeleteType] = useState(null);
@@ -27,6 +25,7 @@ function RightContent() {
     currentIndex: 0,
     isOpen: false,
   });
+
   const openDeleteModal = (type, id) => {
     setDeleteType(type);
     setItemToDelete(id);
@@ -45,18 +44,7 @@ function RightContent() {
     loadModels();
   }, [fetchModels]);
 
-  useEffect(() => {
-    const loadPhotobooks = async () => {
-      try {
-        const books = await fetchAllPhotobooks();
-        setPhotobooks(books);
-      } catch (err) {
-        console.error("Error loading photobooks:", err);
-      }
-    };
-    loadPhotobooks();
-  }, [fetchAllPhotobooks]);
-
+  // When the photobooks prop changes, fetch the images for the unlocked ones.
   useEffect(() => {
     const loadImagesForUnlocked = async () => {
       const completedUnlocked = photobooks.filter(
@@ -72,14 +60,12 @@ function RightContent() {
         }
       });
       const results = await Promise.all(requests);
-
       const newImages = {};
       results.forEach((r) => {
         newImages[r.photobookId] = r.images;
       });
       setImagesByPhotobook(newImages);
     };
-
     if (photobooks.length > 0) {
       loadImagesForUnlocked();
     }
@@ -98,7 +84,7 @@ function RightContent() {
         closeLightbox();
       } else {
         await deletePhotobook(itemToDelete);
-        setPhotobooks((prev) => prev.filter((pb) => pb.id !== itemToDelete));
+        onPhotobooksUpdate(); // refresh photobooks in the parent Dashboard
       }
     } catch (err) {
       console.error("Error during deletion:", err);
@@ -178,7 +164,6 @@ function RightContent() {
                   onClick={() => openDeleteModal("photoshoot", book.id)}
                   className="album-delete-button"
                 >
-                  {/* Using the same trash icon */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     height="24px"
@@ -224,7 +209,6 @@ function RightContent() {
         })
       )}
 
-      {/* Lightbox Overlay */}
       {lightbox.isOpen && currentImage && (
         <div className="lightbox-overlay">
           <div className="lightbox-content">
@@ -314,61 +298,10 @@ function RightContent() {
                 />
               ))}
             </div>
-
-            {/* Inline confirmation for image deletion.
-                Positioned below the download button and styled similarly. */}
-            {showDeleteModal && deleteType === "image" && (
-              <div className="modal-overlay">
-                <div className="delete-modal">
-                  <div className="delete-modal-header">
-                    <h3>Delete Image</h3>
-                    <button
-                      className="modal-close"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24px"
-                        viewBox="0 -960 960 960"
-                        width="24px"
-                        fill="#fff"
-                      >
-                        <path d="M251.33-204.67-46.66-46.66L433.33-480 204.67-708.67l46.66-46.66L480-526.67l228.67-228.66 46.66 46.66L526.67-480l228.66 228.67-46.66 46.66L480-433.33 251.33-204.67Z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <p>
-                    This action is irreversible. Are you sure you want to delete
-                    this image?
-                  </p>
-                  <div className="delete-modal-actions">
-                    <button
-                      className="modal-cancel"
-                      onClick={() => setShowDeleteModal(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button className="modal-delete-btn" onClick={handleDelete}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24px"
-                        viewBox="0 -960 960 960"
-                        width="24px"
-                        fill="#fff"
-                      >
-                        <path d="M267.33-120q-27.5 0-47.08-19.58-19.58-19.59-19.58-47.09V-740H160v-66.67h192V-840h256v33.33h192V-740h-40.67v553.33q0 27-19.83 46.84Q719.67-120 692.67-120H267.33Zm425.34-620H267.33v553.33h425.34V-740Zm-328 469.33h66.66v-386h-66.66v386Zm164 0h66.66v-386h-66.66v386ZM267.33-740v553.33V-740Z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {/* Full-screen modal for photoshoot deletion.
-          Uses the same SVG icon for the delete button. */}
       {showDeleteModal && deleteType === "photoshoot" && (
         <div className="modal-overlay">
           <div className="delete-modal">
