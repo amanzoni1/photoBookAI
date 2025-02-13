@@ -28,6 +28,7 @@ credits_bp = Blueprint("credits", __name__, url_prefix="/api/credits")
 model_bp = Blueprint("model", __name__, url_prefix="/api/model")
 photoshoot_bp = Blueprint("photoshoot", __name__, url_prefix="/api/photoshoot")
 job_bp = Blueprint("job", __name__, url_prefix="/api/job")
+contact_bp = Blueprint("contact", __name__, url_prefix="/api/contact")
 
 
 # Service accessor functions
@@ -181,6 +182,7 @@ def init_app(app):
     from .model import model_bp
     from .photoshoot import photoshoot_bp
     from .job import job_bp
+    from .contact import contact_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
@@ -189,4 +191,5 @@ def init_app(app):
     app.register_blueprint(model_bp)
     app.register_blueprint(photoshoot_bp)
     app.register_blueprint(job_bp)
+    app.register_blueprint(contact_bp)
     logger.info("Blueprints registered successfully")

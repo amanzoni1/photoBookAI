@@ -555,6 +555,9 @@ class AIService:
         try:
             logger.info(f"Starting model {model_id} training preparation")
 
+            # time.sleep(5)
+            # raise Exception("Simulated failure for testing refund logic")
+
             # Launch instance and prepare dataset concurrently
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                 instance_future = executor.submit(self.launch_instance)

@@ -36,18 +36,15 @@ server/
 compleanno, documenti, giochi, profili, polaroid, cuori, country or american
 
 
+
 -creare img profilo
-
--gestire processo crediti e rimborso, anche cio che vedi in ui
--refresh dopo azioni per crediti aggiornati ui
--verificare training in progress rimane anche se logout
-
--reset psw, unsubs, link nelle mail
-
--redirect style
 -mail style
 -stripe style
--hardcoded stuff
+-american express e vari tipi pagamento
+
+-CDN ?
+-hardcoded stuff server
 -per seo img in webp e descrizione in js
 
 check finale -ui seo
+infra per monitorare tutto
