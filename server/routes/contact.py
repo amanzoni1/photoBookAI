@@ -9,7 +9,7 @@ from . import get_email_service
 logger = logging.getLogger(__name__)
 
 
-@contact_bp.route("/", methods=["POST"])
+@contact_bp.route("", methods=["POST"])
 @cross_origin()
 def contact():
     """
@@ -27,7 +27,7 @@ def contact():
     try:
         email_service = get_email_service()
         email_service.send_email(
-            to_email="support@example.com",  # Replace with your support email
+            to_email="a.manzoni1@proton.me",
             subject="New Contact Message",
             template_name="contact",
             context={"name": name, "email": email, "message": message},

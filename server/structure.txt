@@ -26,7 +26,6 @@ server/
 │   ├── temp_files.py
 │   └── worker.py
 └── migrations/
-└── cache/
 └── tests/
 
 
@@ -34,17 +33,11 @@ server/
 
 -creare scenari ps
 compleanno, documenti, giochi, profili, polaroid, cuori, country or american
-
-
-
 -creare img profilo
--mail style
--stripe style
--american express e vari tipi pagamento
-
--CDN ?
--hardcoded stuff server
 -per seo img in webp e descrizione in js
 
+
+-hardcoded stuff server
 check finale -ui seo
+stripe account deep
 infra per monitorare tutto
